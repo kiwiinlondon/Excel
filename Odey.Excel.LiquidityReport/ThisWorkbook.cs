@@ -21,9 +21,23 @@ namespace Odey.Excel.LiquidityReport
         private void ThisWorkbook_Startup(object sender, System.EventArgs e)
         {
             LiquidityCalculatorClient client = new LiquidityCalculatorClient();
-            Dictionary<string,LiquidityCalculatorOutput> outputs = client.Calculate(new LiquidityCalculatorInput(20, 20, 2, 50, 5), 4);
+
+            DateTime dateToFind = new DateTime(2011, 8, 1);
+            TimeSpan difference = DateTime.Now.Date.Subtract(dateToFind);
+
+            decimal percentageOfPortfolioToLiquidate = 20;
+            decimal percentageOfDailyVolume = 20;
+            decimal fine = 2;
+            decimal fineCap = 50;
+            decimal numberOfDays = 5;
+
+            Dictionary<string, LiquidityCalculatorOutput> outputs = client.Calculate(new LiquidityCalculatorInput(
+                percentageOfPortfolioToLiquidate, percentageOfDailyVolume, fine, fineCap, numberOfDays), difference.Days);
+
+            
+
             Exc.Worksheet mainWorkSheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets[1];
-            int maxColumn = 9;
+            int maxColumn = 12;
             Exc.Style headingStyle = Globals.ThisWorkbook.Styles.Add("HeadingStyle", missing);
             headingStyle.Interior.Color = Exc.XlRgbColor.rgbCornflowerBlue;
             headingStyle.Interior.Pattern = Exc.XlPattern.xlPatternSolid;
@@ -44,13 +58,42 @@ namespace Odey.Excel.LiquidityReport
             mainGridStyle.Borders[Microsoft.Office.Interop.Excel.XlBordersIndex.xlDiagonalUp].LineStyle = Exc.XlLineStyle.xlLineStyleNone;
 
             //mainWorkSheet.Rows[1].Interior.Color = Exc.XlRgbColor.rgbLightGray;
-            mainWorkSheet.Columns[4].ColumnWidth = 14;
-            mainWorkSheet.Columns[5].ColumnWidth = 14;
-            mainWorkSheet.Columns[8].ColumnWidth = 14;
-            mainWorkSheet.Columns[9].ColumnWidth = 17;
+            mainWorkSheet.Columns[4].ColumnWidth = 13;
+            mainWorkSheet.Columns[5].ColumnWidth = 11;
+            mainWorkSheet.Columns[9].ColumnWidth = 10;
+            mainWorkSheet.Columns[11].ColumnWidth = 10;
+            mainWorkSheet.Columns[12].ColumnWidth = 12;
+            mainWorkSheet.Columns[13].ColumnWidth = 2;
 
+            mainWorkSheet.Cells[4, maxColumn+2] = "Parameters";
+            mainWorkSheet.Cells[5, maxColumn + 2] = "Date";
+            mainWorkSheet.Cells[5, maxColumn + 3] = dateToFind;
+            mainWorkSheet.Cells[6, maxColumn + 2] = "Percentage To Liquidate";
+            mainWorkSheet.Cells[6, maxColumn + 3] = percentageOfPortfolioToLiquidate;
+            mainWorkSheet.Cells[6, maxColumn + 4] = "%";
+            mainWorkSheet.Cells[7, maxColumn + 2] = "Daily Volume";
+            mainWorkSheet.Cells[7, maxColumn + 3] = percentageOfDailyVolume;
+            mainWorkSheet.Cells[7, maxColumn + 4] = "%";
+            mainWorkSheet.Cells[8, maxColumn + 2] = "Fine";
+            mainWorkSheet.Cells[8, maxColumn + 3] = fine;
+            mainWorkSheet.Cells[8, maxColumn + 4] = "%";
+            mainWorkSheet.Cells[9, maxColumn + 2] = "Fine Cap";
+            mainWorkSheet.Cells[9, maxColumn + 3] = fineCap;
+            mainWorkSheet.Cells[9, maxColumn + 4] = "%";
+            mainWorkSheet.Cells[10, maxColumn + 2] = "Number of Days";
+            mainWorkSheet.Cells[10, maxColumn + 3] = numberOfDays;
+            mainWorkSheet.Range[mainWorkSheet.Cells[4, maxColumn + 2], mainWorkSheet.Cells[4, maxColumn + 4]].Style = "HeadingStyle";
+
+            mainWorkSheet.Range[mainWorkSheet.Cells[4, maxColumn + 2], mainWorkSheet.Cells[4, maxColumn + 4]].Merge();
+            mainWorkSheet.Range[mainWorkSheet.Cells[5, maxColumn + 2], mainWorkSheet.Cells[5, maxColumn + 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
+            mainWorkSheet.Range[mainWorkSheet.Cells[5, maxColumn + 3], mainWorkSheet.Cells[5, maxColumn + 4]].Merge();
+            mainWorkSheet.Range[mainWorkSheet.Cells[5, maxColumn + 3], mainWorkSheet.Cells[5, maxColumn + 4]].HorizontalAlignment = Exc.XlHAlign.xlHAlignCenter;
+            mainWorkSheet.Range[mainWorkSheet.Cells[7, maxColumn + 2], mainWorkSheet.Cells[7, maxColumn + 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
+            mainWorkSheet.Range[mainWorkSheet.Cells[9, maxColumn + 2], mainWorkSheet.Cells[9, maxColumn + 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
+            mainWorkSheet.Range[mainWorkSheet.Cells[5, maxColumn + 2], mainWorkSheet.Cells[10, maxColumn + 4]].Borders.Color = Exc.XlRgbColor.rgbBlack;
+            mainWorkSheet.Range[mainWorkSheet.Cells[5, maxColumn + 3], mainWorkSheet.Cells[10, maxColumn + 3]].Borders[Exc.XlBordersIndex.xlEdgeRight].LineStyle = Exc.XlLineStyle.xlLineStyleNone;
             mainWorkSheet.Cells[1, 1] = "Fund";
-            mainWorkSheet.Cells[1, 2] = "GrossNav";
+            mainWorkSheet.Cells[1, 2] = "Gross Nav";
             mainWorkSheet.Columns[2].NumberFormat = "#,###";
             mainWorkSheet.Cells[1, 3] = "Nav";
             mainWorkSheet.Columns[3].NumberFormat = "#,###";
@@ -60,9 +103,15 @@ namespace Odey.Excel.LiquidityReport
             mainWorkSheet.Columns[6].NumberFormat = "#,###";
             mainWorkSheet.Cells[1, 7] = "Unsold Value";
             mainWorkSheet.Columns[7].NumberFormat = "#,###";
-            mainWorkSheet.Cells[1, 8] = "Number Of Exceptions";
-            mainWorkSheet.Cells[1, 9] = "Weighted Number of Days to 100% Liquidated ";
-            mainWorkSheet.Columns[9].NumberFormat = "#,###";
+            mainWorkSheet.Cells[1, 8] = "Unsold Value % of Nav";
+            mainWorkSheet.Columns[8].NumberFormat = "0.00%";
+            mainWorkSheet.Cells[1, 9] = "Number Of Exceptions";
+            mainWorkSheet.Cells[1, 10] = "Value Of Exceptions";
+            mainWorkSheet.Columns[10].NumberFormat = "#,###";
+            mainWorkSheet.Cells[1, 11] = "Exceptions % of Nav";
+            mainWorkSheet.Columns[11].NumberFormat = "0.00%";
+            mainWorkSheet.Cells[1, 12] = "Weighted Number of Days to 100% Liquidated ";
+            mainWorkSheet.Columns[12].NumberFormat = "#,###";
 
 
             
@@ -79,8 +128,11 @@ namespace Odey.Excel.LiquidityReport
                 mainWorkSheet.Cells[row, 5] = output.Value.NumberOfPositions;
                 mainWorkSheet.Cells[row, 6] = output.Value.TotalFine;
                 mainWorkSheet.Cells[row, 7] = output.Value.UnsoldValue;
-                mainWorkSheet.Cells[row, 8] = output.Value.Exceptions.Count;
-                mainWorkSheet.Cells[row, 9] = output.Value.WeightedDaysToLiquidatePortfolio;
+                mainWorkSheet.Cells[row, 8].Formula = String.Format("=G{0}/B{0}", row);
+                mainWorkSheet.Cells[row, 9] = output.Value.Exceptions.Count;
+                mainWorkSheet.Cells[row, 10] = output.Value.TotalMarketValueExceptions;
+                mainWorkSheet.Cells[row, 11].Formula = String.Format("=J{0}/B{0}", row);
+                mainWorkSheet.Cells[row, 12] = output.Value.WeightedDaysToLiquidatePortfolio;
                 if (row % 2 != 0)
                 {
                     mainWorkSheet.Range[mainWorkSheet.Cells[row, 1], mainWorkSheet.Cells[row, maxColumn]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
@@ -142,24 +194,35 @@ namespace Odey.Excel.LiquidityReport
                     fundWorksheet.Cells[fundRow, 13].Formula = String.Format("=Sum(M3:M{0})", fundRow - 1);
                     fundRow++;
                 }
+                fundWorksheet.Columns.AutoFit();
+                fundRow++;
+                
+                fundWorksheet.Columns.NumberFormat = "#,###";
+                fundWorksheet.Cells[fundRow++, 1] = "Exceptions";
+                fundWorksheet.Cells[fundRow, 1] = "Instrument Name";
+                fundWorksheet.Cells[fundRow, 2] = "Net Position";
+                fundWorksheet.Cells[fundRow, 3] = "Market Value";
+                fundWorksheet.Cells[fundRow, 4] = "Delta Market Value";
+                fundWorksheet.Range[fundWorksheet.Cells[fundRow-1, 1], fundWorksheet.Cells[fundRow, 4]].Style = "HeadingStyle";
+                fundWorksheet.Range[fundWorksheet.Cells[fundRow-1, 1], fundWorksheet.Cells[fundRow-1, 4]].Merge();
                 
                 fundRow++;
-                fundWorksheet.Columns.AutoFit();
-                fundWorksheet.Columns.NumberFormat = "#,###";
-                fundWorksheet.Cells[fundRow, 1] = "Exceptions";
-                fundWorksheet.Range[fundWorksheet.Cells[fundRow, 1], fundWorksheet.Cells[fundRow, maxFundColumn]].Style = "HeadingStyle";
-                fundWorksheet.Range[fundWorksheet.Cells[fundRow, 1], fundWorksheet.Cells[fundRow, maxFundColumn]].Merge();
-                fundRow++;
-                foreach (KeyValuePair<string,string> exception in output.Value.Exceptions)
+                foreach (KeyValuePair<string, LiquidityCalculatorException> exception in output.Value.Exceptions.OrderByDescending(a => Math.Abs(a.Value.MarketValue)))
                 {
                     if (fundRow % 2 != 0)
                     {
-                        fundWorksheet.Range[fundWorksheet.Cells[fundRow, 1], fundWorksheet.Cells[fundRow, maxFundColumn]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
+                        fundWorksheet.Range[fundWorksheet.Cells[fundRow, 1], fundWorksheet.Cells[fundRow, 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
                     }
                     fundWorksheet.Cells[fundRow, 1] = exception.Key;
-                    fundWorksheet.Cells[fundRow, 2] = exception.Value;
+                    fundWorksheet.Cells[fundRow, 2] = exception.Value.NetPosition;
+                    fundWorksheet.Cells[fundRow, 3] = exception.Value.MarketValue;
+                    fundWorksheet.Cells[fundRow, 4] = exception.Value.DeltaMarketValue;
                     fundRow++;
                 }
+                fundWorksheet.Columns[1].AutoFit();
+                fundWorksheet.Columns[2].AutoFit();
+                fundWorksheet.Columns[3].AutoFit();
+                fundWorksheet.Columns[4].AutoFit();
                 fundWorksheet.Name = output.Key;
                 sheetNumber++;
                 row++;
@@ -170,9 +233,15 @@ namespace Odey.Excel.LiquidityReport
             mainWorkSheet.Columns[3].AutoFit();            
             mainWorkSheet.Columns[6].AutoFit();
             mainWorkSheet.Columns[7].AutoFit();
+            mainWorkSheet.Columns[8].AutoFit();
+            mainWorkSheet.Columns[10].AutoFit();
 
+            mainWorkSheet.Columns[maxColumn+2].AutoFit();
+            mainWorkSheet.Columns[maxColumn + 4].AutoFit();
+            mainWorkSheet.Rows[4].Autofit();
             Exc.Range mainGridRange =  mainWorkSheet.Range[mainWorkSheet.Cells[2, 1], mainWorkSheet.Cells[row - 1, maxColumn]];
             mainGridRange.Borders.Color = Exc.XlRgbColor.rgbBlack;
+            mainWorkSheet.Cells[1, 1].Select();
         }
 
         private void ThisWorkbook_Shutdown(object sender, System.EventArgs e)
