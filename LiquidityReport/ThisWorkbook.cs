@@ -36,9 +36,11 @@ namespace LiquidityReport
             decimal fineCap = 50;
             decimal numberOfDays = 5;
             int daysToLiquidateNonTradingAssets = 200;
-
+            
+            mainWorkSheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets[1];
+           
             BuildMainPageStructure();
-
+            AddParameterStructure();
             Refresh(DateTime.Now.Date, percentageOfPortfolioToLiquidate, percentageOfDailyVolume, fine, fineCap, numberOfDays, daysToLiquidateNonTradingAssets);
             var buttonRange = Globals.Sheet1.Range["N13:P13"];
             var button = Globals.Sheet1.Controls.AddButton(buttonRange, "Refresh Button");
@@ -47,12 +49,18 @@ namespace LiquidityReport
         }
         #endregion
 
+        
+
         #region Build Main Page Structure
-        private void BuildMainPageStructure(out Exc.Worksheet mainWorkSheet, out int maxColumn)
+        
+        private int maxColumn = 12;
+        private Exc.Worksheet mainWorkSheet = null;
+
+        private void BuildMainPageStructure()
         {
+            mainWorkSheet.Name = "Results";
             AddStyles();
-            maxColumn = 12;
-            mainWorkSheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets[1];
+            
             mainWorkSheet.Range[mainWorkSheet.Cells[1, 1], mainWorkSheet.Cells[1, maxColumn]].Style = "HeadingStyle";
 
             mainWorkSheet.Cells[1, 1] = "Fund";
@@ -79,7 +87,7 @@ namespace LiquidityReport
         #endregion
 
         #region Build Fund Page Structure
-        private void BuildFundPageStructure(Exc.Worksheet fundWorkSheet, int maxFundColumn)
+        private void BuildFundPageStructure(Exc.Worksheet fundWorkSheet, int maxFundColumn, string name)
         {
             fundWorkSheet.Cells[1, 1] = "Non Liquid Positions";
 
@@ -100,11 +108,12 @@ namespace LiquidityReport
             fundWorkSheet.Cells[2, 15] = "Listing Status";
             fundWorkSheet.Range[fundWorkSheet.Cells[1, 1], fundWorkSheet.Cells[2, maxFundColumn]].Style = "HeadingStyle";
             fundWorkSheet.Range[fundWorkSheet.Cells[1, 1], fundWorkSheet.Cells[1, maxFundColumn]].Merge();
+            fundWorkSheet.Name = name;
         }
         #endregion
 
         #region Build Fund Page Structure
-        private void BuildFundExcpetionStructure(Exc.Worksheet fundWorkSheet, int maxFundColumn, LiquidityCalculatorOutput output, int fundRow)
+        private void BuildFundExcpetionStructure(Exc.Worksheet fundWorkSheet, ref int fundRow)
         {
             fundWorkSheet.Columns.NumberFormat = "#,###";
             fundWorkSheet.Cells[fundRow++, 1] = "Exceptions";
@@ -113,18 +122,28 @@ namespace LiquidityReport
             fundWorkSheet.Cells[fundRow, 3] = "Market Value";
             fundWorkSheet.Cells[fundRow, 4] = "Delta Market Value";
             fundWorkSheet.Range[fundWorkSheet.Cells[fundRow - 1, 1], fundWorkSheet.Cells[fundRow, 4]].Style = "HeadingStyle";
-            fundWorkSheet.Range[fundWorkSheet.Cells[fundRow - 1, 1], fundWorkSheet.Cells[fundRow - 1, 4]].Merge();   
+            fundWorkSheet.Range[fundWorkSheet.Cells[fundRow - 1, 1], fundWorkSheet.Cells[fundRow - 1, 4]].Merge();
+            fundWorkSheet.Columns[2].ColumnWidth = 10;
+            fundWorkSheet.Columns[3].ColumnWidth = 10;
+            fundWorkSheet.Columns[4].ColumnWidth = 10;
+            fundWorkSheet.Columns[6].ColumnWidth = 10;
+            fundWorkSheet.Columns[8].ColumnWidth = 10;
+            fundRow++;
         }
         #endregion
 
         #region Build Fund Page Structure
-        private void AddFundExceptionValues(Exc.Worksheet fundWorkSheet, int maxFundColumn, LiquidityCalculatorOutput output, int fundRow)
+        private void AddFundExceptionValues(Exc.Worksheet fundWorkSheet, int maxFundColumn, LiquidityCalculatorOutput output, ref int fundRow)
         {
-            foreach (KeyValuePair<string, LiquidityCalculatorException> exception in output.Value.Exceptions.OrderByDescending(a => Math.Abs(a.Value.MarketValue)))
+            if (output.Exceptions.Count > 0)
+            {
+                BuildFundExcpetionStructure(fundWorkSheet, ref fundRow);
+            }
+            foreach (KeyValuePair<string, LiquidityCalculatorException> exception in output.Exceptions.OrderByDescending(a => Math.Abs(a.Value.MarketValue)))
             {
                 if (fundRow % 2 != 0)
                 {
-                    fundWorksheet.Range[fundWorksheet.Cells[fundRow, 1], fundWorksheet.Cells[fundRow, 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
+                    fundWorkSheet.Range[fundWorkSheet.Cells[fundRow, 1], fundWorkSheet.Cells[fundRow, 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
                 }
                 fundWorkSheet.Cells[fundRow, 1] = exception.Key;
                 fundWorkSheet.Cells[fundRow, 2] = exception.Value.NetPosition;
@@ -136,7 +155,7 @@ namespace LiquidityReport
         #endregion
 
         #region Build Fund Page Structure
-        private void AddFundPageValues(Exc.Worksheet fundWorkSheet, int maxFundColumn, LiquidityCalculatorOutput output, int fundRow)
+        private void AddFundPageValues(Exc.Worksheet fundWorkSheet, int maxFundColumn, LiquidityCalculatorOutput output, ref int fundRow)
         {
             foreach (LiquidityCalculatorNonLiquidatedPosition nonLiquidPosition in output.NonLiquidatedPortfolio.Values.OrderByDescending(a => a.ValueOfAmountUnableTobeLiquidated))
             {
@@ -195,7 +214,7 @@ namespace LiquidityReport
         #endregion
 
         #region Add Parameter Values
-        private void AddParameterValues(Exc.Worksheet mainWorkSheet, int maxColumn,
+        private void AddParameterValues(
             DateTime dateToFind,
             decimal percentageOfPortfolioToLiquidate,
             decimal percentageOfDailyVolume,
@@ -215,7 +234,7 @@ namespace LiquidityReport
         #endregion
 
         #region Add Parameter Structure
-        private void AddParameterStructure(Exc.Worksheet mainWorkSheet, int maxColumn)
+        private void AddParameterStructure()
         {
             mainWorkSheet.Columns[4].ColumnWidth = 13;
             mainWorkSheet.Columns[5].ColumnWidth = 8.1;
@@ -261,6 +280,7 @@ namespace LiquidityReport
             decimal fineCap = (decimal)Globals.Sheet1.Cells[9, 15].Value;
             decimal numberOfDays = (decimal)Globals.Sheet1.Cells[10, 15].Value;
             int daysToLiquidateNonTradingAssets = (int)Globals.Sheet1.Cells[11, 15].Value;
+            Exc.Worksheet mainWorkSheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets[1];
             Refresh(dateToFind, percentageOfPortfolioToLiquidate, percentageOfDailyVolume, fine, fineCap, numberOfDays, daysToLiquidateNonTradingAssets);
         }
         #endregion
@@ -287,10 +307,37 @@ namespace LiquidityReport
         }
         #endregion
 
+        #region Format Main Work Sheet After Data
+        private void FormatMainWorkSheetAfterData(int row)
+        {
+            mainWorkSheet.Activate();
+
+            mainWorkSheet.Columns[2].AutoFit();
+            mainWorkSheet.Columns[3].AutoFit();
+            mainWorkSheet.Columns[6].AutoFit();
+            mainWorkSheet.Columns[7].AutoFit();
+            mainWorkSheet.Columns[8].AutoFit();
+            mainWorkSheet.Columns[maxColumn + 2].AutoFit();
+            mainWorkSheet.Columns[maxColumn + 4].AutoFit();
+            mainWorkSheet.Rows[4].Autofit();
+            mainWorkSheet.Rows[1].Autofit();
+            Exc.Range mainGridRange = mainWorkSheet.Range[mainWorkSheet.Cells[2, 1], mainWorkSheet.Cells[row - 1, maxColumn]];
+            mainGridRange.Borders.Color = Exc.XlRgbColor.rgbBlack;
+            mainWorkSheet.Cells[1, 1].Select();
+        }
+        #endregion
+
+        #region Format Fund Work Sheet After Data
+        private void FormatFundWorkSheetAfterData(Exc.Worksheet fundWorkSheet)
+        {
+            fundWorkSheet.Rows[1].AutoFit();
+            fundWorkSheet.Columns.AutoFit();
+        }
+        #endregion 
+
+
         #region Refresh
-        private void Refresh(
-            Exc.Worksheet mainWorkSheet,
-            int maxColumn,
+        private void Refresh(           
             DateTime dateToFind,
             decimal percentageOfPortfolioToLiquidate,
             decimal percentageOfDailyVolume,
@@ -306,60 +353,53 @@ namespace LiquidityReport
             Dictionary<string, LiquidityCalculatorOutput> outputs = client.Calculate(new LiquidityCalculatorInput(
                 percentageOfPortfolioToLiquidate, percentageOfDailyVolume, fine, fineCap, numberOfDays, daysToLiquidateNonTradingAssets), difference.Days);
 
+            Application.DisplayAlerts = false;
+            //for (int i = 2; i <= Globals.ThisWorkbook.Worksheets.Count; i++)
+
+            
+            foreach(Exc.Worksheet worksheet in Globals.ThisWorkbook.Worksheets)
+            {
+                if (worksheet.Index != 1)
+                {
+                    worksheet.Delete();
+                }
+            }
+            Application.DisplayAlerts = true;
+
+            AddParameterValues(dateToFind, percentageOfPortfolioToLiquidate, percentageOfDailyVolume, fine, fineCap, numberOfDays, daysToLiquidateNonTradingAssets);
             int maxFundColumn = 15;
             int row = 2;
+            mainWorkSheet.Range[mainWorkSheet.Cells[row, 1], mainWorkSheet.Cells[1000, maxColumn]].ClearContents();
             int sheetNumber = 2;
-            Exc.Worksheet fundWorksheet = null;
+            Exc.Worksheet fundWorkSheet = mainWorkSheet;
             foreach (KeyValuePair<string, LiquidityCalculatorOutput> output in outputs.OrderByDescending(a => a.Value.UnsoldValue))
             {
                 AddMainPageValues(output.Key, output.Value, mainWorkSheet,row, maxColumn);
-                
-                
+                                
                 if (Globals.ThisWorkbook.Worksheets.Count < sheetNumber)
                 {
-                    fundWorksheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets.Add(missing, fundWorksheet, missing, missing);
+                    fundWorkSheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets.Add(missing, fundWorkSheet, missing, missing);
                 }
                 else
                 {
-                    fundWorksheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets[sheetNumber];
+                    fundWorkSheet = (Exc.Worksheet)Globals.ThisWorkbook.Worksheets[sheetNumber];
                 }
 
-                BuildFundPageStructure(fundWorksheet, maxFundColumn);
+                BuildFundPageStructure(fundWorkSheet, maxFundColumn, output.Key);
                 
-                fundWorksheet.Rows[1].AutoFit();
+                
                 int fundRow = 3;
-                AddFundPageValues(fundWorksheet, maxFundColumn, output.Value, fundRow);
-                fundWorksheet.Columns.AutoFit();
-                fundRow++;
-
-                AddFundExceptionValues(fundWorksheet, maxFundColumn, output.Value, fundRow);
-
-                fundRow++;
+                AddFundPageValues(fundWorkSheet, maxFundColumn, output.Value, ref fundRow);
                 
-                fundWorksheet.Columns[1].AutoFit();                
-                fundWorksheet.Columns[2].ColumnWidth = 10;
-                fundWorksheet.Columns[3].ColumnWidth = 10;
-                fundWorksheet.Columns[4].ColumnWidth = 10;
-                fundWorksheet.Columns[6].ColumnWidth = 10;
-                fundWorksheet.Columns[8].ColumnWidth = 10;
-                fundWorksheet.Name = output.Key;
+                fundRow++;
+
+                AddFundExceptionValues(fundWorkSheet, maxFundColumn, output.Value, ref fundRow);
+                FormatFundWorkSheetAfterData(fundWorkSheet);      
                 sheetNumber++;
                 row++;
             }
-            mainWorkSheet.Activate();
-            mainWorkSheet.Name = "Results";
-            mainWorkSheet.Columns[2].AutoFit();
-            mainWorkSheet.Columns[3].AutoFit();
-            mainWorkSheet.Columns[6].AutoFit();
-            mainWorkSheet.Columns[7].AutoFit();
-            mainWorkSheet.Columns[8].AutoFit();
-            mainWorkSheet.Columns[maxColumn + 2].AutoFit();
-            mainWorkSheet.Columns[maxColumn + 4].AutoFit();
-            mainWorkSheet.Rows[4].Autofit();
-            Exc.Range mainGridRange = mainWorkSheet.Range[mainWorkSheet.Cells[2, 1], mainWorkSheet.Cells[row - 1, maxColumn]];
-            mainGridRange.Borders.Color = Exc.XlRgbColor.rgbBlack;
-            mainWorkSheet.Cells[1, 1].Select();
-            
+
+            FormatMainWorkSheetAfterData(row);
         }
         #endregion
 
