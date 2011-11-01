@@ -6,11 +6,38 @@ using System.Xml.Linq;
 using Exc = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
 using Microsoft.Office.Tools.Excel;
-
+using Odey.Reporting.Entities;
+using Odey.Reporting.Clients;
+using System.ComponentModel;
 namespace OdeyAddIn
 {
     public partial class ThisAddIn
     {
+
+        private BindingList<Fund> _fundsWithPositions = new BindingList<Fund>();
+        bool fundsLoaded = false;
+
+        public BindingList<Fund> FundsWithPositions
+        {
+            get
+            {
+                
+                return _fundsWithPositions;
+            }            
+        }
+
+        public void LoadFunds()
+        {
+            if (!fundsLoaded)
+            {
+                FundClient client = new FundClient();
+                foreach(Fund fund in client.GetFundsWithPositions())
+                {
+                    _fundsWithPositions.Add(fund);
+                }
+                fundsLoaded = true;
+            }
+        }
 
         private Microsoft.Office.Tools.CustomTaskPane industryControlPane;
 
@@ -18,7 +45,7 @@ namespace OdeyAddIn
         {
             IndustryControlPane industryControlPaneToAdd = new IndustryControlPane();
             industryControlPane = this.CustomTaskPanes.Add(
-                industryControlPaneToAdd, "Liquidity Parameters");
+                industryControlPaneToAdd, "Industry Parameters");
             industryControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
             industryControlPane.VisibleChanged +=
                 new EventHandler(industryControlPanelValue_VisibleChanged);
@@ -26,8 +53,10 @@ namespace OdeyAddIn
 
         private void industryControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
         {
+            LoadFunds();
             Globals.Ribbons.OdeyRibbonTab.industryButton.Checked =
                 industryControlPane.Visible;
+            
         }
 
         public Microsoft.Office.Tools.CustomTaskPane IndustryPane

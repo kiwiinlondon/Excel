@@ -62,44 +62,53 @@ namespace LiquidityReport
         {
             mainWorkSheet.Name = "Results";
             AddStyles();
+            
+           
+            
+            mainWorkSheet.Cells[1, 3] = "Stress Test";
+            mainWorkSheet.Range[mainWorkSheet.Cells[1, 3], mainWorkSheet.Cells[1, 7]].Style = GetStyle(headingStyleLabel);
+            mainWorkSheet.Range[mainWorkSheet.Cells[1, 3], mainWorkSheet.Cells[1, 7]].Merge();
 
-            mainWorkSheet.Range[mainWorkSheet.Cells[1, 1], mainWorkSheet.Cells[1, maxColumn]].Style = GetStyle(headingStyleLabel);
+            
+
+
+            mainWorkSheet.Range[mainWorkSheet.Cells[2, 1], mainWorkSheet.Cells[2, maxColumn]].Style = GetStyle(headingStyleLabel);
             mainWorkSheet.Columns[1].ColumnWidth = 20;
-            mainWorkSheet.Cells[1, 1] = "Fund";
-            mainWorkSheet.Cells[1, 2] = "Nav";
+            mainWorkSheet.Cells[2, 1] = "Fund";
+            mainWorkSheet.Cells[2, 2] = "Nav";
             mainWorkSheet.Columns[2].ColumnWidth = 15;
             mainWorkSheet.Columns[2].NumberFormat = "#,###";
-            mainWorkSheet.Cells[1, 3] = "Number Non-liquidated Positions";
+            mainWorkSheet.Cells[2, 3] = "Non-Liquidated (no.)";
             mainWorkSheet.Columns[3].ColumnWidth = 13;
-            mainWorkSheet.Cells[1, 4] = "Unsold Value";           
+            mainWorkSheet.Cells[2, 4] = "Unsold Value";           
             mainWorkSheet.Columns[4].NumberFormat = "#,###";
-            mainWorkSheet.Cells[1, 5] = "Unsold Value % of Nav";
+            mainWorkSheet.Cells[2, 5] = "Non-Liquidated (% NAV)";
             mainWorkSheet.Columns[5].NumberFormat = "0.00%";
             mainWorkSheet.Columns[5].ColumnWidth = 13;
-            mainWorkSheet.Cells[1, 6] = "Total Fine"; 
+            mainWorkSheet.Cells[2, 6] = "Total Haircut"; 
             mainWorkSheet.Columns[6].NumberFormat = "#,###";
-            mainWorkSheet.Cells[1, 7] = "Total Fine % of Nav";
+            mainWorkSheet.Cells[2, 7] = "Total Haircut (% Nav)";
             mainWorkSheet.Columns[7].NumberFormat = "0.00%";
             mainWorkSheet.Columns[7].ColumnWidth = 20;
 
-            mainWorkSheet.Cells[1, 8] = "Value Greater than Max Day Limit";
+            mainWorkSheet.Cells[2, 8] = "Value Greater than Max Day Limit";
             mainWorkSheet.Columns[8].NumberFormat = "#,###";
-            mainWorkSheet.Cells[1, 9] = "Value Greater Max Day Limit % of Nav";
+            mainWorkSheet.Cells[2, 9] = "Value Greater Max Day Limit % of Nav";
             mainWorkSheet.Columns[9].NumberFormat = "0.00%";
             mainWorkSheet.Columns[9].ColumnWidth =20;
 
-            mainWorkSheet.Cells[1, 10] = "Number Of Exceptions";
+            mainWorkSheet.Cells[2, 10] = "Number Of Exceptions";
             mainWorkSheet.Columns[10].ColumnWidth = 10;
-            mainWorkSheet.Cells[1, 11] = "Value Of Exceptions";
+            mainWorkSheet.Cells[2, 11] = "Value Of Exceptions";
             mainWorkSheet.Columns[11].NumberFormat = "#,###";
             mainWorkSheet.Columns[11].ColumnWidth = 10;
-            mainWorkSheet.Cells[1, 12] = "Exceptions % of Nav";
+            mainWorkSheet.Cells[2, 12] = "Exceptions % of Nav";
             mainWorkSheet.Columns[12].NumberFormat = "0.00%";
             mainWorkSheet.Columns[12].ColumnWidth = 10;
-            mainWorkSheet.Cells[1, 13] = "Weighted Number of Days to 100% Liquidated ";
+            mainWorkSheet.Cells[2, 13] = "Weighted Number of Days to 100% Liquidated ";
             mainWorkSheet.Columns[13].NumberFormat = "#,###";
             mainWorkSheet.Columns[13].ColumnWidth = 13;
-            mainWorkSheet.Cells[1, 14] = "Number of Trading Days";
+            mainWorkSheet.Cells[2, 14] = "Number of Trading Days";
 
             
         }
@@ -111,12 +120,12 @@ namespace LiquidityReport
 
         private void BuildFundPageStructure(Exc.Worksheet fundWorkSheet, int maxFundColumn, string name)
         {
-            fundWorkSheet.Cells[1, 1] = "Non Liquid Positions";
+            fundWorkSheet.Cells[1, 1] = "Holdings not Fully Liquidated After Number of Days in Stress Test";
             fundWorkSheet.Cells[2, 1] = "Instrument Name";
             fundWorkSheet.Cells[2, 2] = "Market Value % Nav";
-            fundWorkSheet.Columns[2].NumberFormat ="0.00%";
+            fundWorkSheet.Columns[2].NumberFormat ="0.0%";
             fundWorkSheet.Cells[2, 3] = "Delta Market Value % Nav";
-            fundWorkSheet.Columns[3].NumberFormat = "0.00%";
+            fundWorkSheet.Columns[3].NumberFormat = "0.0%";
             fundWorkSheet.Cells[2, 4] = "Value To Be Liquidated";
             fundWorkSheet.Columns[4].NumberFormat = "#,###";
             fundWorkSheet.Cells[2, 5] = "Total Value Daily Liquidity";
@@ -124,15 +133,15 @@ namespace LiquidityReport
             fundWorkSheet.Cells[2, 6] = "Value Available Daily Liquidity";
             fundWorkSheet.Columns[6].NumberFormat = "#,###";
             fundWorkSheet.Cells[2, 7] = "Amount Unsold % Value To Liquidate";
-            fundWorkSheet.Columns[7].NumberFormat = "0.00%";
+            fundWorkSheet.Columns[7].NumberFormat = "0.0%";
             fundWorkSheet.Cells[2, 8] = "Excess Days To Liquidate";
             fundWorkSheet.Columns[8].NumberFormat = "#,###.00";
-            fundWorkSheet.Cells[2, 9] = "Fine % Delta Market Value of Position";
-            fundWorkSheet.Columns[9].NumberFormat = "0.00%";
+            fundWorkSheet.Cells[2, 9] = "Haircut % Delta Market Value of Position";
+            fundWorkSheet.Columns[9].NumberFormat = "0.0%";
             fundWorkSheet.Cells[2, 10] = "Days To Liquidate Complete Position";
-            fundWorkSheet.Columns[10].NumberFormat = "#,###.00";
+            fundWorkSheet.Columns[10].NumberFormat = "#,###";
             fundWorkSheet.Cells[2, 11] = "Weighted Days To Liquidate Portfolio";
-            fundWorkSheet.Columns[11].NumberFormat = "0.00";
+            fundWorkSheet.Columns[11].NumberFormat = "#,###";
             fundWorkSheet.Cells[2, 12] = "CIS Days Between Dealing Days";
             fundWorkSheet.Cells[2, 13] = "Listing Status";
             fundWorkSheet.Cells[2, 14] = "Net Position";
@@ -151,7 +160,7 @@ namespace LiquidityReport
             fundWorkSheet.Columns[20].NumberFormat = "#,###";
             fundWorkSheet.Cells[2, 21] = "Value Of Amount Unsold";
             fundWorkSheet.Columns[21].NumberFormat = "#,###";
-            fundWorkSheet.Cells[2, 22] = "Write Down With Fine";
+            fundWorkSheet.Cells[2, 22] = "Haircut";
             fundWorkSheet.Columns[22].NumberFormat = "#,###";
             fundWorkSheet.Range[fundWorkSheet.Cells[1, 1], fundWorkSheet.Cells[2, maxFundColumn]].Style = "HeadingStyle";
             fundWorkSheet.Range[fundWorkSheet.Cells[1, 1], fundWorkSheet.Cells[1, maxFundColumn]].Merge();
@@ -207,19 +216,27 @@ namespace LiquidityReport
         private void AddFundPageValues(Exc.Worksheet fundWorkSheet, int maxFundColumn, decimal maxDaysCap,LiquidityCalculatorOutput output, ref int fundRow, int mainSheetRow, int daysToLiquidateCap,decimal numberOfDays)
         {
             List<LiquidityCalculatorNonLiquidatedPosition> nonLiquidPositions = output.NonLiquidatedPortfolio.Values.OrderByDescending(a => (a.ListedStatus == "Active" ? 1 : 0)).ThenByDescending(a => a.DeltaMarketValue/ a.NetPosition * a.AmountUnableToBeLiquidated).ToList(); ;
+            
             //.ThenByDescending(a => a.AmountUnableToBeLiquidated).ToList();
             int lastNonLiquidableRecord = 0;
             bool illiquidHeadingAdded = false;
+            int startOfSum = fundRow;
+            int? firstSumRow = null;
             foreach (LiquidityCalculatorNonLiquidatedPosition nonLiquidPosition in nonLiquidPositions)
             {
                 if (nonLiquidPosition.ListedStatus != "Active" && !illiquidHeadingAdded)
                 {
-                    
+                    if (fundRow > startOfSum)
+                    {
+                        fundWorkSheet.Cells[fundRow, 3].Formula = String.Format("=Sum(C{0}:C{1})",startOfSum, fundRow - 1);
+                        firstSumRow = fundRow++;
+                    }
                     fundRow++;
                     fundWorkSheet.Range[fundWorkSheet.Cells[fundRow, 1], fundWorkSheet.Cells[fundRow, maxFundColumn]].Merge();
                     fundWorkSheet.Cells[fundRow, 1] = "Completely Illiquid";
                     fundWorkSheet.Range[fundWorkSheet.Cells[fundRow, 1], fundWorkSheet.Cells[fundRow++, maxFundColumn]].Style = "HeadingStyle";
                     illiquidHeadingAdded = true;
+                    startOfSum = fundRow;
                 }
 
                 if (fundRow % 2 != 0)
@@ -265,6 +282,13 @@ namespace LiquidityReport
                 lastNonLiquidableRecord =fundRow;
                 
                 
+                fundRow++;
+            }
+
+            fundWorkSheet.Cells[fundRow++, 3].Formula = String.Format("=Sum(C{0}:C{1})", startOfSum, lastNonLiquidableRecord);
+            if (firstSumRow.HasValue && illiquidHeadingAdded)
+            {
+                fundWorkSheet.Cells[fundRow, 3].Formula = String.Format("=C{0}+C{1}", firstSumRow, fundRow - 1);
                 fundRow++;
             }
             fundRow++;
@@ -319,7 +343,20 @@ namespace LiquidityReport
                 
             }
 
+          //  decimal sumNav = 0;
+          //  int row = 2;
+           // int column = maxFundColumn+2;
             
+            //foreach (LiquidityCalculatorNonLiquidatedPosition nonLiquidPosition in nonLiquidPositions)
+            //{
+            //    fundWorkSheet.Cells[1, column] = nonLiquidPosition.InstrumentName;
+            //    fundWorkSheet.Cells[row, maxFundColumn+1] = sumNav;
+            //    fundWorkSheet.Cells[row++, column] = nonLiquidPosition.ExcessDaysToLiquidate;
+            //    sumNav = sumNav + Math.Abs(nonLiquidPosition.DeltaMarketValue);
+            //    fundWorkSheet.Cells[row, maxFundColumn+1] = sumNav;
+            //    fundWorkSheet.Cells[row++, column++] = nonLiquidPosition.ExcessDaysToLiquidate; 
+            //}
+
 //            var i = series.DataLabels(missing);
 
         }
@@ -390,17 +427,17 @@ namespace LiquidityReport
         {
 
             mainWorkSheet.Columns[maxColumn+1].ColumnWidth = 2;
-            mainWorkSheet.Cells[4, maxColumn + 2] = "Parameters";
+            mainWorkSheet.Cells[4, maxColumn + 2] = "Stress Test";
             mainWorkSheet.Cells[5, maxColumn + 2] = "Date";            
             mainWorkSheet.Cells[6, maxColumn + 2] = "Percentage To Liquidate";            
             mainWorkSheet.Cells[6, maxColumn + 4] = "%";
             mainWorkSheet.Cells[7, maxColumn + 2] = "Daily Volume";
             mainWorkSheet.Cells[7, maxColumn + 4] = "%";
-            mainWorkSheet.Cells[8, maxColumn + 2] = "Fine";   
+            mainWorkSheet.Cells[8, maxColumn + 2] = "Haircut";   
             mainWorkSheet.Cells[8, maxColumn + 4] = "%";
-            mainWorkSheet.Cells[9, maxColumn + 2] = "Fine Cap";            
+            mainWorkSheet.Cells[9, maxColumn + 2] = "Haircut Cap";            
             mainWorkSheet.Cells[9, maxColumn + 4] = "%";
-            mainWorkSheet.Cells[10, maxColumn + 2] = "Number of Days (Daily)";            
+            mainWorkSheet.Cells[10, maxColumn + 2] = "Number of Days";            
             mainWorkSheet.Cells[11, maxColumn + 2] = "Max Days To Liquidate";
             
             mainWorkSheet.Range[mainWorkSheet.Cells[4, maxColumn + 2], mainWorkSheet.Cells[4, maxColumn + 4]].Style = "HeadingStyle";
@@ -485,6 +522,7 @@ namespace LiquidityReport
             mainWorkSheet.Columns[10].Hidden = true;
             mainWorkSheet.Columns[11].Hidden = true;
             mainWorkSheet.Columns[12].Hidden = true;
+            mainWorkSheet.Columns[14].Hidden = true;
         }
         #endregion
 
@@ -496,6 +534,7 @@ namespace LiquidityReport
 
             fundWorkSheet.Columns.AutoFit();
             fundWorkSheet.Columns[2].ColumnWidth = 13;
+            fundWorkSheet.Columns[2].Hidden = true;
             fundWorkSheet.Columns[3].ColumnWidth = 13;
             fundWorkSheet.Columns[4].Hidden = true;
             fundWorkSheet.Columns[5].Hidden = true;
@@ -549,10 +588,11 @@ namespace LiquidityReport
 
             AddParameterValues(dateToFind, percentageOfPortfolioToLiquidate, percentageOfDailyVolume, fine, fineCap, numberOfDays, daysToLiquidateCap);
             int maxFundColumn = 22;
-            int row = 2;
+            int row = 3;
             mainWorkSheet.Range[mainWorkSheet.Cells[row, 1], mainWorkSheet.Cells[29, maxColumn]].ClearContents();
-            int sheetNumber = 2;
+            int sheetNumber = 3;
             Exc.Worksheet fundWorkSheet = mainWorkSheet;
+            //.Where(a=>a.Value.FundName == "OEI")
             foreach (KeyValuePair<string, LiquidityCalculatorOutput> output in outputs.OrderByDescending(a => a.Value.UnsoldValue))
             {
                 AddMainPageValues(output.Key, output.Value, mainWorkSheet,row, maxColumn);
