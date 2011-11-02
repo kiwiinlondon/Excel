@@ -44,7 +44,7 @@ namespace LiquidityReport
             BuildMainPageStructure();
             AddParameterStructure();
             Refresh(DateTime.Now.Date, percentageOfPortfolioToLiquidate, percentageOfDailyVolume, fine, fineCap, numberOfDays, daysToLiquidateCap);
-            var buttonRange = Globals.Sheet1.Range["P13:R14"];
+            var buttonRange = Globals.Sheet1.Range["R13:T14"];
             var button = Globals.Sheet1.Controls.AddButton(buttonRange, "Refresh Button");
             button.Text = "Refresh";
             button.Click += new EventHandler(button_Click);
@@ -55,7 +55,7 @@ namespace LiquidityReport
 
         #region Build Main Page Structure
         
-        private int maxColumn = 14;
+        private int maxColumn = 16;
         private Exc.Worksheet mainWorkSheet = null;
         private string headingStyleLabel = "HeadingStyle";
         private void BuildMainPageStructure()
@@ -84,32 +84,36 @@ namespace LiquidityReport
             mainWorkSheet.Columns[4].NumberFormat = "#,###";
             mainWorkSheet.Cells[2, 5] = "Non-Liquidated (% NAV)";
             mainWorkSheet.Columns[5].NumberFormat = "0.00%";
-            mainWorkSheet.Columns[5].ColumnWidth = 13;
+            mainWorkSheet.Columns[5].ColumnWidth = 11;
             mainWorkSheet.Cells[2, 6] = "Total Haircut"; 
             mainWorkSheet.Columns[6].NumberFormat = "#,###";
             mainWorkSheet.Cells[2, 7] = "Total Haircut (% Nav)";
             mainWorkSheet.Columns[7].NumberFormat = "0.00%";
-            mainWorkSheet.Columns[7].ColumnWidth = 20;
+            mainWorkSheet.Columns[7].ColumnWidth = 13;
 
             mainWorkSheet.Cells[2, 8] = "Value Greater than Max Day Limit";
             mainWorkSheet.Columns[8].NumberFormat = "#,###";
-            mainWorkSheet.Cells[2, 9] = "Value Greater Max Day Limit % of Nav";
+            mainWorkSheet.Cells[2, 9] = "Value Greater Max Day Limit (% Nav)";
             mainWorkSheet.Columns[9].NumberFormat = "0.00%";
-            mainWorkSheet.Columns[9].ColumnWidth =20;
+            mainWorkSheet.Columns[9].ColumnWidth =13;
+            mainWorkSheet.Cells[2, 10] = "Of which Unquoted";
+            mainWorkSheet.Cells[2, 11] = "Of which Unquoted (% Nav)";
+            mainWorkSheet.Columns[11].NumberFormat = "0.00%";
+            mainWorkSheet.Columns[11].ColumnWidth = 11;
 
-            mainWorkSheet.Cells[2, 10] = "Number Of Exceptions";
-            mainWorkSheet.Columns[10].ColumnWidth = 10;
-            mainWorkSheet.Cells[2, 11] = "Value Of Exceptions";
-            mainWorkSheet.Columns[11].NumberFormat = "#,###";
-            mainWorkSheet.Columns[11].ColumnWidth = 10;
-            mainWorkSheet.Cells[2, 12] = "Exceptions % of Nav";
-            mainWorkSheet.Columns[12].NumberFormat = "0.00%";
+            mainWorkSheet.Cells[2, 12] = "Number Of Exceptions";
             mainWorkSheet.Columns[12].ColumnWidth = 10;
-            mainWorkSheet.Cells[2, 13] = "Weighted Number of Days to 100% Liquidated ";
+            mainWorkSheet.Cells[2, 13] = "Value Of Exceptions";
             mainWorkSheet.Columns[13].NumberFormat = "#,###";
-            mainWorkSheet.Columns[13].ColumnWidth = 13;
-            mainWorkSheet.Cells[2, 14] = "Number of Trading Days";
-
+            mainWorkSheet.Columns[13].ColumnWidth = 10;
+            mainWorkSheet.Cells[2, 14] = "Exceptions % of Nav";
+            mainWorkSheet.Columns[14].NumberFormat = "0.00%";
+            mainWorkSheet.Columns[14].ColumnWidth = 10;
+            mainWorkSheet.Cells[2, 15] = "Weighted Number of Days to 100% Liquidated ";
+            mainWorkSheet.Columns[15].NumberFormat = "#,###";
+            mainWorkSheet.Columns[15].ColumnWidth = 13;
+            mainWorkSheet.Cells[2, 16] = "Number of Trading Days";
+            
             
         }
         #endregion
@@ -481,19 +485,23 @@ namespace LiquidityReport
             mainWorkSheet.Cells[row, 7].Formula = String.Format("=F{0}/B{0}", row);
             mainWorkSheet.Cells[row, 8] = output.ValueOutsideLiquidityLimit;
             mainWorkSheet.Cells[row, 9].Formula = String.Format("=H{0}/B{0}", row);
-            mainWorkSheet.Cells[row, 10] = output.Exceptions.Count;
-            mainWorkSheet.Cells[row, 11] = output.TotalMarketValueExceptions;
-            mainWorkSheet.Cells[row, 12].Formula = String.Format("=K{0}/B{0}", row);
+
+            mainWorkSheet.Cells[row, 10] = output.ValueNonTrading;
+            mainWorkSheet.Cells[row, 11].Formula = String.Format("=J{0}/B{0}", row);
+
+            mainWorkSheet.Cells[row, 12] = output.Exceptions.Count;
+            mainWorkSheet.Cells[row, 13] = output.TotalMarketValueExceptions;
+            mainWorkSheet.Cells[row, 14].Formula = String.Format("=M{0}/B{0}", row);
             if (output.WeightedDaysToLiquidatePortfolio >= 1)
             {
-                mainWorkSheet.Cells[row, 13] = output.WeightedDaysToLiquidatePortfolio;
+                mainWorkSheet.Cells[row, 15] = output.WeightedDaysToLiquidatePortfolio;
             }
             else
             {
-                mainWorkSheet.Cells[row, 13] = "<1";
-                mainWorkSheet.Cells[row, 13].HorizontalAlignment = Exc.XlHAlign.xlHAlignRight;
+                mainWorkSheet.Cells[row, 15] = "<1";
+                mainWorkSheet.Cells[row, 15].HorizontalAlignment = Exc.XlHAlign.xlHAlignRight;
             }
-            mainWorkSheet.Cells[row, 14] = output.DaysBetweenDealingDates;
+            mainWorkSheet.Cells[row, 16] = output.DaysBetweenDealingDates;
             if (row % 2 != 0)
             {
                 mainWorkSheet.Range[mainWorkSheet.Cells[row, 1], mainWorkSheet.Cells[row, maxColumn]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
@@ -504,6 +512,7 @@ namespace LiquidityReport
         #region Format Main Work Sheet After Data
         private void FormatMainWorkSheetAfterData(int row)
         {
+            
             mainWorkSheet.Activate();
 
             mainWorkSheet.Columns[4].AutoFit();
@@ -520,9 +529,12 @@ namespace LiquidityReport
             mainWorkSheet.Columns[6].Hidden = true;
             mainWorkSheet.Columns[8].Hidden = true;
             mainWorkSheet.Columns[10].Hidden = true;
-            mainWorkSheet.Columns[11].Hidden = true;
             mainWorkSheet.Columns[12].Hidden = true;
+            mainWorkSheet.Columns[13].Hidden = true;
             mainWorkSheet.Columns[14].Hidden = true;
+            mainWorkSheet.Columns[16].Hidden = true;
+            mainWorkSheet.Rows[1].AutoFit();
+            mainWorkSheet.Rows[2].AutoFit();
         }
         #endregion
 
@@ -530,7 +542,7 @@ namespace LiquidityReport
         private void FormatFundWorkSheetAfterData(Exc.Worksheet fundWorkSheet)
         {
             fundWorkSheet.Rows[1].AutoFit();
-            
+            fundWorkSheet.Rows[2].AutoFit();
 
             fundWorkSheet.Columns.AutoFit();
             fundWorkSheet.Columns[2].ColumnWidth = 13;

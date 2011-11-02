@@ -6,6 +6,8 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Odey.Reporting.Clients;
+using Odey.Framework.Keeley.Entities.Enums;
 
 namespace OdeyAddIn
 {
@@ -14,6 +16,15 @@ namespace OdeyAddIn
         public CountryControlPane()
         {
             InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            
+            PortfolioWebClient client = new PortfolioWebClient();
+
+            AggregatedPortfolioWriter.Write(client.GetAggregatedByCountry(fundAndReferenceDatePicker1.FundId, fundAndReferenceDatePicker1.DaysBeforeToday).OrderBy(a => a.EntityName).ToList(),
+                Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column,EntityTypeIds.Country);        
         }
     }
 }

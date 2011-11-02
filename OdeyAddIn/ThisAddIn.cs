@@ -20,8 +20,7 @@ namespace OdeyAddIn
         public BindingList<Fund> FundsWithPositions
         {
             get
-            {
-                
+            {                
                 return _fundsWithPositions;
             }            
         }
@@ -40,6 +39,8 @@ namespace OdeyAddIn
         }
 
         private Microsoft.Office.Tools.CustomTaskPane industryControlPane;
+        private Microsoft.Office.Tools.CustomTaskPane countryControlPane;
+        private Microsoft.Office.Tools.CustomTaskPane portfolioControlPane;
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
@@ -49,6 +50,20 @@ namespace OdeyAddIn
             industryControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
             industryControlPane.VisibleChanged +=
                 new EventHandler(industryControlPanelValue_VisibleChanged);
+            
+            CountryControlPane countryControlPaneToAdd = new CountryControlPane();
+            countryControlPane = this.CustomTaskPanes.Add(
+                countryControlPaneToAdd, "Country Parameters");
+            countryControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
+            countryControlPane.VisibleChanged +=
+                new EventHandler(countryControlPanelValue_VisibleChanged);
+
+            PortfolioControlPane portfolioControlPaneToAdd = new PortfolioControlPane();
+            portfolioControlPane = this.CustomTaskPanes.Add(
+                portfolioControlPaneToAdd, "Portfolio Parameters");
+            portfolioControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
+            portfolioControlPane.VisibleChanged +=
+                new EventHandler(portfolioControlPanelValue_VisibleChanged);
         }
 
         private void industryControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
@@ -59,6 +74,22 @@ namespace OdeyAddIn
             
         }
 
+        private void countryControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
+        {
+            LoadFunds();
+            Globals.Ribbons.OdeyRibbonTab.countryButton.Checked =
+                countryControlPane.Visible;
+
+        }
+
+        private void portfolioControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
+        {
+            LoadFunds();
+            Globals.Ribbons.OdeyRibbonTab.portfolioButton.Checked =
+                portfolioControlPane.Visible;
+
+        }
+
         public Microsoft.Office.Tools.CustomTaskPane IndustryPane
         {
             get
@@ -67,6 +98,21 @@ namespace OdeyAddIn
             }
         }
 
+        public Microsoft.Office.Tools.CustomTaskPane CountryPane
+        {
+            get
+            {
+                return countryControlPane;
+            }
+        }
+
+        public Microsoft.Office.Tools.CustomTaskPane PortfolioPane
+        {
+            get
+            {
+                return portfolioControlPane;
+            }
+        }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {

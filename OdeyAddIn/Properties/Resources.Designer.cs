@@ -59,5 +59,19 @@ namespace OdeyAddIn.Properties {
                 resourceCulture = value;
             }
         }
+        
+        internal static System.Drawing.Bitmap _033404_rounded_glossy_black_icon_culture_globe_black_sc48 {
+            get {
+                object obj = ResourceManager.GetObject("033404-rounded-glossy-black-icon-culture-globe-black-sc48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap _086211_rounded_glossy_black_icon_business_charts1_sc1 {
+            get {
+                object obj = ResourceManager.GetObject("086211-rounded-glossy-black-icon-business-charts1-sc1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

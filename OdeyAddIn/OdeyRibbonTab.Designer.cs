@@ -37,13 +37,15 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OdeyRibbonTab));
             this.tab1 = this.Factory.CreateRibbonTab();
             this.Odey = this.Factory.CreateRibbonTab();
-            this.Portfolio = this.Factory.CreateRibbonGroup();
+            this.PortfolioGroup = this.Factory.CreateRibbonGroup();
             this.separator1 = this.Factory.CreateRibbonSeparator();
+            this.separator2 = this.Factory.CreateRibbonSeparator();
             this.industryButton = this.Factory.CreateRibbonToggleButton();
-            this.Country = this.Factory.CreateRibbonButton();
+            this.countryButton = this.Factory.CreateRibbonToggleButton();
+            this.portfolioButton = this.Factory.CreateRibbonToggleButton();
             this.tab1.SuspendLayout();
             this.Odey.SuspendLayout();
-            this.Portfolio.SuspendLayout();
+            this.PortfolioGroup.SuspendLayout();
             // 
             // tab1
             // 
@@ -53,21 +55,27 @@
             // 
             // Odey
             // 
-            this.Odey.Groups.Add(this.Portfolio);
+            this.Odey.Groups.Add(this.PortfolioGroup);
             this.Odey.Label = "Odey";
             this.Odey.Name = "Odey";
             // 
-            // Portfolio
+            // PortfolioGroup
             // 
-            this.Portfolio.Items.Add(this.industryButton);
-            this.Portfolio.Items.Add(this.separator1);
-            this.Portfolio.Items.Add(this.Country);
-            this.Portfolio.Label = "Portfolio";
-            this.Portfolio.Name = "Portfolio";
+            this.PortfolioGroup.Items.Add(this.industryButton);
+            this.PortfolioGroup.Items.Add(this.separator1);
+            this.PortfolioGroup.Items.Add(this.countryButton);
+            this.PortfolioGroup.Items.Add(this.separator2);
+            this.PortfolioGroup.Items.Add(this.portfolioButton);
+            this.PortfolioGroup.Label = "Portfolio";
+            this.PortfolioGroup.Name = "PortfolioGroup";
             // 
             // separator1
             // 
             this.separator1.Name = "separator1";
+            // 
+            // separator2
+            // 
+            this.separator2.Name = "separator2";
             // 
             // industryButton
             // 
@@ -78,13 +86,23 @@
             this.industryButton.ShowImage = true;
             this.industryButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.industryButton_Click);
             // 
-            // Country
+            // countryButton
             // 
-            this.Country.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.Country.Image = ((System.Drawing.Image)(resources.GetObject("Country.Image")));
-            this.Country.Label = "Country";
-            this.Country.Name = "Country";
-            this.Country.ShowImage = true;
+            this.countryButton.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.countryButton.Image = global::OdeyAddIn.Properties.Resources._033404_rounded_glossy_black_icon_culture_globe_black_sc48;
+            this.countryButton.Label = "Country";
+            this.countryButton.Name = "countryButton";
+            this.countryButton.ShowImage = true;
+            this.countryButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.countryButton_Click);
+            // 
+            // portfolioButton
+            // 
+            this.portfolioButton.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.portfolioButton.Image = global::OdeyAddIn.Properties.Resources._086211_rounded_glossy_black_icon_business_charts1_sc1;
+            this.portfolioButton.Label = "Portfolio";
+            this.portfolioButton.Name = "portfolioButton";
+            this.portfolioButton.ShowImage = true;
+            this.portfolioButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.portfolioButton_Click);
             // 
             // OdeyRibbonTab
             // 
@@ -97,8 +115,8 @@
             this.tab1.PerformLayout();
             this.Odey.ResumeLayout(false);
             this.Odey.PerformLayout();
-            this.Portfolio.ResumeLayout(false);
-            this.Portfolio.PerformLayout();
+            this.PortfolioGroup.ResumeLayout(false);
+            this.PortfolioGroup.PerformLayout();
 
         }
 
@@ -106,10 +124,12 @@
 
         internal Microsoft.Office.Tools.Ribbon.RibbonTab tab1;
         private Microsoft.Office.Tools.Ribbon.RibbonTab Odey;
-        internal Microsoft.Office.Tools.Ribbon.RibbonGroup Portfolio;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton Country;
+        internal Microsoft.Office.Tools.Ribbon.RibbonGroup PortfolioGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator1;
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton industryButton;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton countryButton;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator2;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton portfolioButton;
     }
 
     partial class ThisRibbonCollection

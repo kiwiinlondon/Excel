@@ -15,21 +15,14 @@ namespace OdeyAddIn
     {
         public IndustryControlPane()
         {
-            InitializeComponent();
-            referenceDatePicker.MaxDate = DateTime.Now.Date;
-            referenceDatePicker.Value = DateTime.Now.Date;
-            comboBox1.DataSource = Globals.ThisAddIn.FundsWithPositions;
-            comboBox1.DisplayMember = "Name";
-            comboBox1.ValueMember = "FundId";            
+            InitializeComponent();                  
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             PortfolioWebClient client = new PortfolioWebClient();
 
-            int daysBeforeToDays = DateTime.Now.Date.Subtract(referenceDatePicker.Value.Date).Days;
-            int fundId = (int)comboBox1.SelectedValue;
-            AggregatedPortfolioWriter.Write(client.GetAggregatedByIndustry(fundId, daysBeforeToDays).OrderBy(a=>a.EntityName).ToList(),
+            AggregatedPortfolioWriter.Write(client.GetAggregatedByIndustry(fundAndReferenceDatePicker1.FundId, fundAndReferenceDatePicker1.DaysBeforeToday).OrderBy(a => a.EntityName).ToList(),
                 Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column,EntityTypeIds.Industry);
         }
     }

@@ -35,7 +35,7 @@
     <PublishUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</PublishUrl>
     <InstallUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.2</ApplicationVersion>
+    <ApplicationVersion>1.0.0.3</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -218,17 +218,23 @@
   -->
   <ItemGroup>
     <Compile Include="AggregatedPortfolioWriter.cs" />
+    <Compile Include="Components\FundAndReferenceDatePicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\FundAndReferenceDatePicker.Designer.cs">
+      <DependentUpon>FundAndReferenceDatePicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\FundPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\ReferenceDatePicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="CountryControlPane.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="CountryControlPane.Designer.cs">
       <DependentUpon>CountryControlPane.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FundPicker.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="FundPicker.Designer.cs">
-      <DependentUpon>FundPicker.cs</DependentUpon>
     </Compile>
     <Compile Include="IndustryControlPane.cs">
       <SubType>UserControl</SubType>
@@ -242,14 +248,31 @@
     <Compile Include="OdeyRibbonTab.Designer.cs">
       <DependentUpon>OdeyRibbonTab.cs</DependentUpon>
     </Compile>
+    <Compile Include="PortfolioControlPane.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PortfolioControlPane.Designer.cs">
+      <DependentUpon>PortfolioControlPane.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PortfolioFields.cs" />
+    <Compile Include="PortfolioWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <EmbeddedResource Include="Components\FundAndReferenceDatePicker.resx">
+      <DependentUpon>FundAndReferenceDatePicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CountryControlPane.resx">
+      <DependentUpon>CountryControlPane.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="IndustryControlPane.resx">
       <DependentUpon>IndustryControlPane.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="OdeyRibbonTab.resx">
       <DependentUpon>OdeyRibbonTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PortfolioControlPane.resx">
+      <DependentUpon>PortfolioControlPane.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -285,6 +308,12 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\033404-rounded-glossy-black-icon-culture-globe-black-sc48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\086211-rounded-glossy-black-icon-business-charts1-sc1.png" />
   </ItemGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

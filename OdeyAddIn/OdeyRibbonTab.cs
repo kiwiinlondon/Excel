@@ -15,12 +15,17 @@ namespace OdeyAddIn
 
         private void industryButton_Click(object sender, RibbonControlEventArgs e)
         {
-
-
-           //industryControlPane.DockPosition.Control.Location = new System.Drawing.Point(15, 15);
-         //   Globals.ThisAddIn.Application.CommandBars["MyCustomTaskPane"].Left = 500;
-
             Globals.ThisAddIn.IndustryPane.Visible = ((RibbonToggleButton)sender).Checked;
+        }
+
+        private void countryButton_Click(object sender, RibbonControlEventArgs e)
+        {
+            Globals.ThisAddIn.CountryPane.Visible = ((RibbonToggleButton)sender).Checked;
+        }
+
+        private void portfolioButton_Click(object sender, RibbonControlEventArgs e)
+        {
+            Globals.ThisAddIn.PortfolioPane.Visible = ((RibbonToggleButton)sender).Checked;
         }
     }
 }
