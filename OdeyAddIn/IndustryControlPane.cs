@@ -11,9 +11,9 @@ using Odey.Framework.Keeley.Entities.Enums;
 
 namespace OdeyAddIn
 {
-    public partial class FundAndDateControlPane : UserControl
+    public partial class IndustryControlPane : UserControl
     {
-        public FundAndDateControlPane()
+        public IndustryControlPane()
         {
             InitializeComponent();
             referenceDatePicker.MaxDate = DateTime.Now.Date;
@@ -32,12 +32,5 @@ namespace OdeyAddIn
             AggregatedPortfolioWriter.Write(client.GetAggregatedByIndustry(fundId, daysBeforeToDays).OrderBy(a=>a.EntityName).ToList(),
                 Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column,EntityTypeIds.Industry);
         }
-
-        
-
-
-    
-
-       
     }
 }

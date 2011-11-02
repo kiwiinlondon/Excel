@@ -1,6 +1,6 @@
 ﻿namespace OdeyAddIn
 {
-    partial class FundAndDateControlPane
+    partial class IndustryControlPane
     {
         /// <summary> 
         /// Required designer variable.

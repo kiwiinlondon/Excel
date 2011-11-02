@@ -224,13 +224,15 @@
     <Compile Include="CountryControlPane.Designer.cs">
       <DependentUpon>CountryControlPane.cs</DependentUpon>
     </Compile>
-    <Compile Include="FundAndDateControlPane.cs">
+    <Compile Include="FundPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FundPicker.Designer.cs">
+      <DependentUpon>FundPicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IndustryControlPane.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FundAndDateControlPane.Designer.cs">
-      <DependentUpon>FundAndDateControlPane.cs</DependentUpon>
-    </Compile>
-    <Compile Include="IndustryControlPane.cs" />
     <Compile Include="IndustryControlPane.Designer.cs">
       <DependentUpon>IndustryControlPane.cs</DependentUpon>
     </Compile>
@@ -243,8 +245,8 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <EmbeddedResource Include="FundAndDateControlPane.resx">
-      <DependentUpon>FundAndDateControlPane.cs</DependentUpon>
+    <EmbeddedResource Include="IndustryControlPane.resx">
+      <DependentUpon>IndustryControlPane.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="OdeyRibbonTab.resx">
       <DependentUpon>OdeyRibbonTab.cs</DependentUpon>
