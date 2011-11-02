@@ -11,9 +11,9 @@ using Odey.Framework.Keeley.Entities.Enums;
 
 namespace OdeyAddIn
 {
-    public partial class IndustryControlPane : UserControl
+    public partial class FundAndDateControlPane : UserControl
     {
-        public IndustryControlPane()
+        public FundAndDateControlPane()
         {
             InitializeComponent();
             referenceDatePicker.MaxDate = DateTime.Now.Date;

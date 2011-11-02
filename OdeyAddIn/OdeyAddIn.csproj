@@ -218,9 +218,19 @@
   -->
   <ItemGroup>
     <Compile Include="AggregatedPortfolioWriter.cs" />
-    <Compile Include="IndustryControlPane.cs">
+    <Compile Include="CountryControlPane.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="CountryControlPane.Designer.cs">
+      <DependentUpon>CountryControlPane.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FundAndDateControlPane.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FundAndDateControlPane.Designer.cs">
+      <DependentUpon>FundAndDateControlPane.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IndustryControlPane.cs" />
     <Compile Include="IndustryControlPane.Designer.cs">
       <DependentUpon>IndustryControlPane.cs</DependentUpon>
     </Compile>
@@ -233,8 +243,8 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <EmbeddedResource Include="IndustryControlPane.resx">
-      <DependentUpon>IndustryControlPane.cs</DependentUpon>
+    <EmbeddedResource Include="FundAndDateControlPane.resx">
+      <DependentUpon>FundAndDateControlPane.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="OdeyRibbonTab.resx">
       <DependentUpon>OdeyRibbonTab.cs</DependentUpon>
@@ -284,7 +294,7 @@
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
         <ProjectProperties HostName="Excel" HostPackage="{D2B20FF5-A6E5-47E1-90E8-463C6860CB05}" OfficeVersion="12.0" VstxVersion="4.0" ApplicationType="Excel" Language="cs" TemplatesPath="" DebugInfoExeName="#Software\Microsoft\Office\12.0\Excel\InstallRoot\Path#excel.exe" AddItemTemplatesGuid="{51063C3A-E220-4D12-8922-BDA915ACD783}" />
         <Host Name="Excel" GeneratedCodeNamespace="OdeyAddIn" PublishedHash="69C324AB27932AA2FBF2B7EA72250886FF164DE6" IconIndex="0">
-          <HostItem Name="ThisAddIn" Code="ThisAddIn.cs" CanonicalName="AddIn" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.cs" PublishedHash="32B47FB66551C83F0B97257B775FFF1D46EB0CFC" />
+          <HostItem Name="ThisAddIn" Code="ThisAddIn.cs" CanonicalName="AddIn" PublishedHash="32B47FB66551C83F0B97257B775FFF1D46EB0CFC" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.cs" />
         </Host>
       </FlavorProperties>
     </VisualStudio>
