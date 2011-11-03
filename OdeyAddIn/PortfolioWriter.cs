@@ -155,7 +155,7 @@ namespace OdeyAddIn
             int titleRow = row;
             if (numberOfRepeatingColumns > 0)
             {
-                titleRow = row++; 
+                titleRow = ++row; 
             }
 
 

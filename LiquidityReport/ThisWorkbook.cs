@@ -197,22 +197,24 @@ namespace LiquidityReport
             if (output.Exceptions.Count > 0)
             {
                 BuildFundExceptionStructure(fundWorkSheet, ref fundRow);
-            }
-            foreach (KeyValuePair<string, LiquidityCalculatorException> exception in output.Exceptions.OrderByDescending(a => Math.Abs(a.Value.MarketValue)))
-            {
-                if (fundRow % 2 != 0)
+                foreach (KeyValuePair<string, LiquidityCalculatorException> exception in output.Exceptions.OrderByDescending(a => Math.Abs(a.Value.MarketValue)))
                 {
-                    fundWorkSheet.Range[fundWorkSheet.Cells[fundRow, 1], fundWorkSheet.Cells[fundRow, 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
+                    if (fundRow % 2 != 0)
+                    {
+                        fundWorkSheet.Range[fundWorkSheet.Cells[fundRow, 1], fundWorkSheet.Cells[fundRow, 4]].Interior.Color = Exc.XlRgbColor.rgbLightGray;
+                    }
+                    fundWorkSheet.Cells[fundRow, 1] = exception.Key;
+                    fundWorkSheet.Cells[fundRow, 2] = exception.Value.NetPosition;
+                    fundWorkSheet.Cells[fundRow, 2].NumberFormat = "#,###";
+                    fundWorkSheet.Cells[fundRow, 3] = exception.Value.MarketValue;
+                    fundWorkSheet.Cells[fundRow, 3].NumberFormat = "#,###";
+                    fundWorkSheet.Cells[fundRow, 4] = exception.Value.DeltaMarketValue;
+                    fundWorkSheet.Cells[fundRow, 4].NumberFormat = "#,###";
+                    fundRow++;
                 }
-                fundWorkSheet.Cells[fundRow, 1] = exception.Key;
-                fundWorkSheet.Cells[fundRow, 2] = exception.Value.NetPosition;
-                fundWorkSheet.Cells[fundRow, 2].NumberFormat = "#,###";
-                fundWorkSheet.Cells[fundRow, 3] = exception.Value.MarketValue;
-                fundWorkSheet.Cells[fundRow, 3].NumberFormat = "#,###";
-                fundWorkSheet.Cells[fundRow, 4] = exception.Value.DeltaMarketValue;
-                fundWorkSheet.Cells[fundRow, 4].NumberFormat = "#,###";
                 fundRow++;
             }
+            
         }
         #endregion
 
@@ -296,10 +298,11 @@ namespace LiquidityReport
                 fundRow++;
             }
             fundRow++;
-
+            
+            AddFundExceptionValues(fundWorkSheet, maxFundColumn, output, ref fundRow);
             DrawChart(fundWorkSheet, lastNonLiquidableRecord, fundRow,output.Nav,maxDaysCap-output.NumberOfTradeDaysUsed, maxFundColumn, nonLiquidPositions);
 
-
+            
             
         }
         #endregion       
@@ -626,9 +629,9 @@ namespace LiquidityReport
                     int fundRow = 3;
                     AddFundPageValues(fundWorkSheet, maxFundColumn,daysToLiquidateCap, output.Value, ref fundRow, row, daysToLiquidateCap, numberOfDays);
 
-                    fundRow++;
+                    
 
-                    AddFundExceptionValues(fundWorkSheet, maxFundColumn, output.Value, ref fundRow);
+                    
                     FormatFundWorkSheetAfterData(fundWorkSheet);
                     sheetNumber++;
                 }
