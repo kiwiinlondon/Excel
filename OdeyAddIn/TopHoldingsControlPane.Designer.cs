@@ -1,6 +1,6 @@
 ﻿namespace OdeyAddIn
 {
-    partial class CountryControlPane
+    partial class TopHoldingsControlPane
     {
         /// <summary> 
         /// Required designer variable.
@@ -29,8 +29,9 @@
         private void InitializeComponent()
         {
             this.fundAndReferenceDatePicker1 = new OdeyAddIn.Components.FundAndReferenceDatePicker();
-            this.button1 = new System.Windows.Forms.Button();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.buttn1 = new System.Windows.Forms.Button();
             this.equityPicker1 = new OdeyAddIn.Components.EquityPicker();
             this.SuspendLayout();
             // 
@@ -41,45 +42,51 @@
             this.fundAndReferenceDatePicker1.Size = new System.Drawing.Size(120, 54);
             this.fundAndReferenceDatePicker1.TabIndex = 0;
             // 
-            // button1
+            // textBox1
             // 
-            this.button1.Location = new System.Drawing.Point(33, 115);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Get";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.textBox1.Location = new System.Drawing.Point(8, 64);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(30, 20);
+            this.textBox1.TabIndex = 1;
+            this.textBox1.Text = "10";
             // 
-            // checkBox1
+            // label1
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Checked = true;
-            this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox1.Location = new System.Drawing.Point(4, 92);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(88, 17);
-            this.checkBox1.TabIndex = 5;
-            this.checkBox1.Text = "Include Cash";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(43, 67);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(94, 13);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Number of Results";
+            // 
+            // buttn1
+            // 
+            this.buttn1.Location = new System.Drawing.Point(29, 124);
+            this.buttn1.Name = "buttn1";
+            this.buttn1.Size = new System.Drawing.Size(75, 23);
+            this.buttn1.TabIndex = 3;
+            this.buttn1.Text = "Get";
+            this.buttn1.UseVisualStyleBackColor = true;
+            this.buttn1.Click += new System.EventHandler(this.buttn1_Click);
             // 
             // equityPicker1
             // 
-            this.equityPicker1.Location = new System.Drawing.Point(4, 65);
+            this.equityPicker1.Location = new System.Drawing.Point(8, 91);
             this.equityPicker1.Name = "equityPicker1";
-            this.equityPicker1.Size = new System.Drawing.Size(134, 21);
-            this.equityPicker1.TabIndex = 6;
+            this.equityPicker1.Size = new System.Drawing.Size(140, 28);
+            this.equityPicker1.TabIndex = 4;
+           
             // 
-            // CountryControlPane
+            // TopHoldingsControlPane
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.equityPicker1);
-            this.Controls.Add(this.checkBox1);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.buttn1);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.textBox1);
             this.Controls.Add(this.fundAndReferenceDatePicker1);
-            this.Name = "CountryControlPane";
-            this.Size = new System.Drawing.Size(169, 150);
+            this.Name = "TopHoldingsControlPane";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -88,9 +95,9 @@
         #endregion
 
         private Components.FundAndReferenceDatePicker fundAndReferenceDatePicker1;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button buttn1;
         private Components.EquityPicker equityPicker1;
-
     }
 }

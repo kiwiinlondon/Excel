@@ -35,10 +35,10 @@
     <PublishUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</PublishUrl>
     <InstallUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.4</ApplicationVersion>
+    <ApplicationVersion>1.0.0.9</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
-    <UpdateInterval>7</UpdateInterval>
+    <UpdateInterval>0</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>OdeyAddIn</ProductName>
     <PublisherName />
@@ -218,6 +218,15 @@
   -->
   <ItemGroup>
     <Compile Include="AggregatedPortfolioWriter.cs" />
+    <Compile Include="Components\CurrencyPicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\EquityPicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\EquityPicker.Designer.cs">
+      <DependentUpon>EquityPicker.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\FundAndReferenceDatePicker.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -235,6 +244,12 @@
     </Compile>
     <Compile Include="CountryControlPane.Designer.cs">
       <DependentUpon>CountryControlPane.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CurrencyControlPane.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CurrencyControlPane.Designer.cs">
+      <DependentUpon>CurrencyControlPane.cs</DependentUpon>
     </Compile>
     <Compile Include="IndustryControlPane.cs">
       <SubType>UserControl</SubType>
@@ -259,11 +274,23 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TopHoldingsControlPane.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="TopHoldingsControlPane.Designer.cs">
+      <DependentUpon>TopHoldingsControlPane.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Components\EquityPicker.resx">
+      <DependentUpon>EquityPicker.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Components\FundAndReferenceDatePicker.resx">
       <DependentUpon>FundAndReferenceDatePicker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CountryControlPane.resx">
       <DependentUpon>CountryControlPane.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CurrencyControlPane.resx">
+      <DependentUpon>CurrencyControlPane.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="IndustryControlPane.resx">
       <DependentUpon>IndustryControlPane.cs</DependentUpon>
@@ -284,6 +311,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="TopHoldingsControlPane.resx">
+      <DependentUpon>TopHoldingsControlPane.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="App.config" />
     <None Include="OdeyAddIn_TemporaryKey.pfx" />
     <None Include="Properties\Settings.settings">
@@ -314,6 +344,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\086211-rounded-glossy-black-icon-business-charts1-sc1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\095447-rounded-glossy-black-icon-signs-scale1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\086238-rounded-glossy-black-icon-business-currency-british-pound-sc35.png" />
   </ItemGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

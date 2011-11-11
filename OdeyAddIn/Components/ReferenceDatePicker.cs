@@ -9,8 +9,16 @@ namespace OdeyAddIn
     {
         public ReferenceDatePicker()
         {
-            MaxDate = DateTime.Now.Date;
-            Value = DateTime.Now.Date;
+            
+        }
+
+        public DateTime CurrentDate
+        {
+            set
+            {
+                MaxDate = value;
+                Value = value;
+            }
         }
     }
 }

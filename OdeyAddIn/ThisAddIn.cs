@@ -15,14 +15,23 @@ namespace OdeyAddIn
     {
 
         private BindingList<Fund> _fundsWithPositions = new BindingList<Fund>();
-        bool fundsLoaded = false;
-
+        private BindingList<Currency> _currencies = new BindingList<Currency>();
+        private bool fundsLoaded = false;
+        private bool currenciesLoaded = false;
         public BindingList<Fund> FundsWithPositions
         {
             get
             {                
                 return _fundsWithPositions;
             }            
+        }
+
+        public BindingList<Currency> Currencies
+        {
+            get
+            {
+                return _currencies;
+            }
         }
 
         public void LoadFunds()
@@ -38,9 +47,24 @@ namespace OdeyAddIn
             }
         }
 
+        public void LoadCurrencies()
+        {
+            if (!currenciesLoaded)
+            {
+                InstrumentClient client = new InstrumentClient();
+                foreach (Currency currency in client.GetCurrencies())
+                {
+                    _currencies.Add(currency);
+                }
+                currenciesLoaded = true;
+            }
+        }
+
         private Microsoft.Office.Tools.CustomTaskPane industryControlPane;
         private Microsoft.Office.Tools.CustomTaskPane countryControlPane;
         private Microsoft.Office.Tools.CustomTaskPane portfolioControlPane;
+        private Microsoft.Office.Tools.CustomTaskPane topHoldingsControlPane;
+        private Microsoft.Office.Tools.CustomTaskPane currencyControlPane;
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
@@ -64,6 +88,20 @@ namespace OdeyAddIn
             portfolioControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
             portfolioControlPane.VisibleChanged +=
                 new EventHandler(portfolioControlPanelValue_VisibleChanged);
+
+            TopHoldingsControlPane topHoldingsControlPaneToAdd = new TopHoldingsControlPane();
+            topHoldingsControlPane = this.CustomTaskPanes.Add(
+                topHoldingsControlPaneToAdd, "Top Holdings Parameters");
+            topHoldingsControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
+            topHoldingsControlPane.VisibleChanged +=
+                new EventHandler(topHoldingsControlPanelValue_VisibleChanged);
+
+            CurrencyControlPane currencyControlPaneToAdd = new CurrencyControlPane();
+            currencyControlPane = this.CustomTaskPanes.Add(
+                currencyControlPaneToAdd, "Currency Parameters");
+            currencyControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
+            currencyControlPane.VisibleChanged +=
+                new EventHandler(currencyControlPanelValue_VisibleChanged);
         }
 
         private void industryControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
@@ -82,9 +120,26 @@ namespace OdeyAddIn
 
         }
 
+        private void topHoldingsControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
+        {
+            LoadFunds();
+            Globals.Ribbons.OdeyRibbonTab.TopHoldings.Checked =
+                topHoldingsControlPane.Visible;
+
+        }
+
+        private void currencyControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
+        {
+            LoadFunds();
+            Globals.Ribbons.OdeyRibbonTab.CurrencyButton.Checked =
+                currencyControlPane.Visible;
+
+        }
+
         private void portfolioControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
         {
             LoadFunds();
+            LoadCurrencies();
             Globals.Ribbons.OdeyRibbonTab.portfolioButton.Checked =
                 portfolioControlPane.Visible;
 
@@ -106,11 +161,27 @@ namespace OdeyAddIn
             }
         }
 
+        public Microsoft.Office.Tools.CustomTaskPane CurrencyPane
+        {
+            get
+            {
+                return currencyControlPane;
+            }
+        }
+
         public Microsoft.Office.Tools.CustomTaskPane PortfolioPane
         {
             get
             {
                 return portfolioControlPane;
+            }
+        }
+
+        public Microsoft.Office.Tools.CustomTaskPane TopHoldingsPane
+        {
+            get
+            {
+                return topHoldingsControlPane;
             }
         }
 

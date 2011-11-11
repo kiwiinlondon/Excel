@@ -27,5 +27,15 @@ namespace OdeyAddIn
         {
             Globals.ThisAddIn.PortfolioPane.Visible = ((RibbonToggleButton)sender).Checked;
         }
+
+        private void TopHoldings_Click(object sender, RibbonControlEventArgs e)
+        {
+            Globals.ThisAddIn.TopHoldingsPane.Visible = ((RibbonToggleButton)sender).Checked;
+        }
+
+        private void CurrencyButton_Click(object sender, RibbonControlEventArgs e)
+        {
+            Globals.ThisAddIn.CurrencyPane.Visible = ((RibbonToggleButton)sender).Checked;
+        }
     }
 }

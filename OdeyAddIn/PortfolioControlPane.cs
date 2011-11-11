@@ -16,27 +16,46 @@ namespace OdeyAddIn
         public PortfolioControlPane()
         {
             InitializeComponent();
+            fundAndReferenceDatePicker1.CurrentDate = DateTime.Now.Date;
         }
 
-        private List<PortfolioWithUnderlyer> GetPortfolio()
+        private List<CompletePortfolio> GetPortfolio()
         {
             PortfolioWebClient client = new PortfolioWebClient();
-            if (checkBox1.Checked)
+           
+            int[] fundIds = null;
+
+            if (!checkBox1.Checked)
             {
-                return client.GetPortfolioWithUnderlyerAllFunds(fundAndReferenceDatePicker1.DaysBeforeToday).OrderBy(a => a.UnderlyerParentInstrumentClass).ToList();
+                fundIds = new int[] {fundAndReferenceDatePicker1.FundId};
             }
-            else
+
+            int? reportCurrencyId = null;
+            if (ReportFXRate.Checked)
             {
-                return client.GetPorfolioWithUnderlyer(fundAndReferenceDatePicker1.FundId, fundAndReferenceDatePicker1.DaysBeforeToday).OrderBy(a => a.UnderlyerParentInstrumentClass).ToList();
+                reportCurrencyId = (int)currencyPicker1.SelectedValue;
             }
+            int[] daysBeforeToday = new int[] {fundAndReferenceDatePicker1.DaysBeforeToday};
+            bool includeShortPositions = true;
+            if (ExcludeShortPositions.Checked)
+            {
+                includeShortPositions = false;
+            }
+            return client.GetCompletePortfolio(fundIds, daysBeforeToday, includeShortPositions, reportCurrencyId, null, null, null, null).OrderBy(a => a.InstrumentClass).ToList();            
         }
 
 
         private void button1_Click(object sender, EventArgs e)
         {
-            List<PortfolioWithUnderlyer> portfolio = GetPortfolio();
+            List<CompletePortfolio> portfolio = GetPortfolio();
             PortfolioFields[] fieldsToReturn = GetFieldsToReturn();
-            PortfolioWriter.Write(portfolio, Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, fieldsToReturn);
+            string reportCurrency = null;
+            if (ReportFXRate.Checked)
+            {
+                reportCurrency = currencyPicker1.Text;
+            }
+
+            PortfolioWriter.Write(portfolio, Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, fieldsToReturn, reportCurrency);
         }
 
         private PortfolioFields[] GetFieldsToReturn()
@@ -63,6 +82,7 @@ namespace OdeyAddIn
             if (DeltaMarketValue.Checked) fieldsToReturn.Add(PortfolioFields.DeltaMarketValue);
             return fieldsToReturn.ToArray();
         }
+
 
 
        

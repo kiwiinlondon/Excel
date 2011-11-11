@@ -73,5 +73,19 @@ namespace OdeyAddIn.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        internal static System.Drawing.Bitmap _086238_rounded_glossy_black_icon_business_currency_british_pound_sc35 {
+            get {
+                object obj = ResourceManager.GetObject("086238-rounded-glossy-black-icon-business-currency-british-pound-sc35", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap _095447_rounded_glossy_black_icon_signs_scale1 {
+            get {
+                object obj = ResourceManager.GetObject("095447-rounded-glossy-black-icon-signs-scale1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

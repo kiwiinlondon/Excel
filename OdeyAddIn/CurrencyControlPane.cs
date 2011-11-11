@@ -11,9 +11,9 @@ using Odey.Framework.Keeley.Entities.Enums;
 
 namespace OdeyAddIn
 {
-    public partial class IndustryControlPane : UserControl
+    public partial class CurrencyControlPane : UserControl
     {
-        public IndustryControlPane()
+        public CurrencyControlPane()
         {
             InitializeComponent();
             fundAndReferenceDatePicker1.CurrentDate = DateTime.Now.Date;
@@ -23,14 +23,9 @@ namespace OdeyAddIn
         {
             PortfolioWebClient client = new PortfolioWebClient();
             bool? equitiesOnly = equityPicker1.Selected;
-
-            bool includeCash = true;
-            if (!checkBox1.Checked)
-            {
-                includeCash = false;
-            }
-            AggregatedPortfolioWriter.Write(client.GetAggregatedByIndustry(fundAndReferenceDatePicker1.FundId, fundAndReferenceDatePicker1.DaysBeforeToday, equitiesOnly, includeCash).OrderBy(a => a.Long).ToList(),
-                Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column,EntityTypeIds.Industry);
+            
+            AggregatedPortfolioWriter.Write(client.GetAggregatedByCurrency(fundAndReferenceDatePicker1.FundId, fundAndReferenceDatePicker1.DaysBeforeToday, equitiesOnly).OrderBy(a => a.Long).ToList(),
+                Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, EntityTypeIds.Industry);
         }
     }
 }

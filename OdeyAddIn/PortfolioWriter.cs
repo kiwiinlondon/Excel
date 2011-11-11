@@ -9,7 +9,25 @@ namespace OdeyAddIn
 {
     public static class PortfolioWriter
     {
-        internal static void WriteCell(Excel.Worksheet worksheet,int row, int? column, object value)
+        private static void WriteCellApendCurrencyName(Excel.Worksheet worksheet, int row, int? column, object value, string currency, string format)
+        {
+            if (!string.IsNullOrWhiteSpace(currency))
+            {
+                value = String.Format("{0}({1})",value, currency);
+            }
+            WriteCell(worksheet, row, column, value, format);
+        }
+
+        private static void WriteCell(Excel.Worksheet worksheet, int row, int? column, decimal value, decimal? fxRate)
+        {
+            if (fxRate.HasValue)
+            {
+                value = value * fxRate.Value;
+            }
+            WriteCell(worksheet, row, column, value);
+        }
+
+        private static void WriteCell(Excel.Worksheet worksheet, int row, int? column, object value)
         {
             WriteCell(worksheet, row, column, value, null);
         }
@@ -38,7 +56,7 @@ namespace OdeyAddIn
             }
         }
 
-        internal static void Write(List<PortfolioWithUnderlyer> portfolio, Excel.Worksheet worksheet, int row, int column, PortfolioFields[] fieldsToReturn)
+        internal static void Write(List<CompletePortfolio> portfolio, Excel.Worksheet worksheet, int row, int column, PortfolioFields[] fieldsToReturn,string currency)
         {
             Dictionary<int, int> instrumentMarketRowIds = new Dictionary<int, int>();
             Dictionary<int, int> fundOffsets = new Dictionary<int, int>();
@@ -125,7 +143,7 @@ namespace OdeyAddIn
             if (fieldsToReturn.Contains(PortfolioFields.UnderlyingBloombergTicker))
             {
                 underlyingBloombergTickerColumn = column + columnCount++;
-            }
+            }            
 
             int numberOfRepeatingColumns = 0;
             int? fundNameOffSet = null;
@@ -180,7 +198,7 @@ namespace OdeyAddIn
             row++;
 
             int maxFundOffset = 0;
-            foreach (PortfolioWithUnderlyer portfolioItem in portfolio)
+            foreach (CompletePortfolio portfolioItem in portfolio)
             {
                 int instrumentMarketRow;
                 if (!instrumentMarketRowIds.TryGetValue(portfolioItem.InstrumentMarketId, out instrumentMarketRow))
@@ -223,14 +241,14 @@ namespace OdeyAddIn
                     int? titleColumn = GetNumericFieldColumn(firstRepeatingColumn, fundOffset, numberOfRepeatingColumns, fundNameOffSet);
                     WriteCell(worksheet, titleRow - 1, titleColumn, portfolioItem.FundName);
                     WriteCell(worksheet,titleRow, netPositionColumn, "Net Position","#,###");
-                    WriteCell(worksheet,titleRow, marketValueColumn, "Market Value","#,###");
-                    WriteCell(worksheet,titleRow, deltaMarketValueColumn,"Delta Market Value","#,###");
+                    WriteCellApendCurrencyName(worksheet,titleRow, marketValueColumn, "Market Value",currency,"#,###");
+                    WriteCellApendCurrencyName(worksheet, titleRow, deltaMarketValueColumn, "Delta Market Value", currency, "#,###");
 
                 }
 
                 WriteCell(worksheet,instrumentMarketRow, netPositionColumn,portfolioItem.NetPosition);
-                WriteCell(worksheet,instrumentMarketRow, marketValueColumn,portfolioItem.MarketValue);
-                WriteCell(worksheet,instrumentMarketRow, deltaMarketValueColumn,portfolioItem.DeltaMarketValue);
+                WriteCell(worksheet, instrumentMarketRow, marketValueColumn, portfolioItem.MarketValue, portfolioItem.FXRateToReportCurrency);
+                WriteCell(worksheet, instrumentMarketRow, deltaMarketValueColumn, portfolioItem.DeltaMarketValue, portfolioItem.FXRateToReportCurrency);
 
             }
             worksheet.Columns.AutoFit();

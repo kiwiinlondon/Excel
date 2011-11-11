@@ -31,5 +31,13 @@ namespace OdeyAddIn.Components
                 return DateTime.Now.Date.Subtract(referenceDatePicker1.Value.Date).Days;
             }
         }
+
+        public DateTime CurrentDate
+        {
+            set
+            {
+                referenceDatePicker1.CurrentDate = value;
+            }
+        }
     }
 }

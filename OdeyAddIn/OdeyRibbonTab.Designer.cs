@@ -40,9 +40,13 @@
             this.PortfolioGroup = this.Factory.CreateRibbonGroup();
             this.separator1 = this.Factory.CreateRibbonSeparator();
             this.separator2 = this.Factory.CreateRibbonSeparator();
+            this.separator3 = this.Factory.CreateRibbonSeparator();
+            this.separator4 = this.Factory.CreateRibbonSeparator();
             this.industryButton = this.Factory.CreateRibbonToggleButton();
             this.countryButton = this.Factory.CreateRibbonToggleButton();
             this.portfolioButton = this.Factory.CreateRibbonToggleButton();
+            this.TopHoldings = this.Factory.CreateRibbonToggleButton();
+            this.CurrencyButton = this.Factory.CreateRibbonToggleButton();
             this.tab1.SuspendLayout();
             this.Odey.SuspendLayout();
             this.PortfolioGroup.SuspendLayout();
@@ -66,6 +70,10 @@
             this.PortfolioGroup.Items.Add(this.countryButton);
             this.PortfolioGroup.Items.Add(this.separator2);
             this.PortfolioGroup.Items.Add(this.portfolioButton);
+            this.PortfolioGroup.Items.Add(this.separator3);
+            this.PortfolioGroup.Items.Add(this.TopHoldings);
+            this.PortfolioGroup.Items.Add(this.separator4);
+            this.PortfolioGroup.Items.Add(this.CurrencyButton);
             this.PortfolioGroup.Label = "Portfolio";
             this.PortfolioGroup.Name = "PortfolioGroup";
             // 
@@ -76,6 +84,14 @@
             // separator2
             // 
             this.separator2.Name = "separator2";
+            // 
+            // separator3
+            // 
+            this.separator3.Name = "separator3";
+            // 
+            // separator4
+            // 
+            this.separator4.Name = "separator4";
             // 
             // industryButton
             // 
@@ -104,6 +120,24 @@
             this.portfolioButton.ShowImage = true;
             this.portfolioButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.portfolioButton_Click);
             // 
+            // TopHoldings
+            // 
+            this.TopHoldings.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.TopHoldings.Image = global::OdeyAddIn.Properties.Resources._095447_rounded_glossy_black_icon_signs_scale1;
+            this.TopHoldings.Label = "Top Holdings";
+            this.TopHoldings.Name = "TopHoldings";
+            this.TopHoldings.ShowImage = true;
+            this.TopHoldings.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.TopHoldings_Click);
+            // 
+            // CurrencyButton
+            // 
+            this.CurrencyButton.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.CurrencyButton.Image = global::OdeyAddIn.Properties.Resources._086238_rounded_glossy_black_icon_business_currency_british_pound_sc35;
+            this.CurrencyButton.Label = "Currency";
+            this.CurrencyButton.Name = "CurrencyButton";
+            this.CurrencyButton.ShowImage = true;
+            this.CurrencyButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CurrencyButton_Click);
+            // 
             // OdeyRibbonTab
             // 
             this.Name = "OdeyRibbonTab";
@@ -130,6 +164,10 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton countryButton;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator2;
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton portfolioButton;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator3;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton TopHoldings;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator4;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton CurrencyButton;
     }
 
     partial class ThisRibbonCollection
