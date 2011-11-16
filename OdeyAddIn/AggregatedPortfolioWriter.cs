@@ -11,68 +11,136 @@ namespace OdeyAddIn
 {
     public static class AggregatedPortfolioWriter
     {
-        private static string GetExcelColumnName(int columnNumber)
+       
+
+        private static int? GetNumericFieldColumn(Dictionary<Tuple<AggregatedPortfolioFields, string, DateTime>, int> detailColumnIds, AggregatedPortfolio portfolio, AggregatedPortfolioFields fieldId)
         {
-            int dividend = columnNumber;
-            string columnName = String.Empty;
-            int modulo;
-
-            while (dividend > 0)
+            Tuple<AggregatedPortfolioFields, string, DateTime> key = new Tuple<AggregatedPortfolioFields, string, DateTime>(fieldId, portfolio.Fund, portfolio.ReferenceDate);
+            int columnId;
+            if (detailColumnIds.TryGetValue(key, out columnId))
             {
-                modulo = (dividend - 1) % 26;
-                columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-                dividend = (int)((dividend - modulo) / 26);
+                return columnId;
             }
-
-            return columnName;
+            return null;
         }
 
 
-        public static void Write(List<AggregatedPortfolio> aggregatedPortfolio, Excel.Worksheet worksheet, int row, int column, EntityTypeIds entityTypeId)
-        {
-            int referenceDateColumn = column;
-            int fundColumn = column+1;
-            int entityNameColumn = column + 2;
-            int shortColumn = column + 3;
-            int shortPercentOfNavColumn = column + 4;
-            int longColumn = column + 5;
-            int longPercentOfNavColumn = column + 6;
-            int fundNavColumn = column + 7;
-            
-            string longColumnLabel = GetExcelColumnName(longColumn);
-            string shortColumnLabel = GetExcelColumnName(shortColumn);
-            string fundNavColumnLabel = GetExcelColumnName(fundNavColumn);
-            worksheet.Cells[row, referenceDateColumn] = "Reference Date";
-            worksheet.Cells[row, fundColumn] = "Fund";
-            worksheet.Cells[row, entityNameColumn] = String.Format("{0} Name", entityTypeId.ToString());
-            worksheet.Cells[row, shortColumn] = String.Format("Short");
-            worksheet.Columns[shortColumn].NumberFormat = "#,###";
-            worksheet.Cells[row, shortPercentOfNavColumn] = String.Format("% of NAV");
-            worksheet.Columns[shortPercentOfNavColumn].NumberFormat = "0.00%";
-            
-            worksheet.Cells[row, longColumn] = String.Format("Long");
-            worksheet.Columns[longColumn].NumberFormat = "#,###";
-            worksheet.Cells[row, longPercentOfNavColumn] = String.Format("% of NAV");
-            worksheet.Columns[longPercentOfNavColumn].NumberFormat = "0.00%";
 
-            worksheet.Cells[row, fundNavColumn] = String.Format("Fund NAV");
-            worksheet.Columns[fundNavColumn].NumberFormat = "#,###";
-            row++;
+        public static void Write(List<AggregatedPortfolio> aggregatedPortfolio, Excel.Worksheet worksheet, int row, int column, EntityTypeIds entityTypeId, AggregatedPortfolioFields[] fieldsToReturn)
+        {
+
+            Dictionary<Tuple<AggregatedPortfolioFields, string, DateTime>, int> detailColumnIds = new Dictionary<Tuple<AggregatedPortfolioFields, string, DateTime>, int>();
+                       
+            DateTime[] referenceDates = aggregatedPortfolio.Select(p => p.ReferenceDate).Distinct().OrderBy(a => a).ToArray();
+            string[] fundNames = aggregatedPortfolio.Select(p => p.Fund).Distinct().OrderBy(a => a).ToArray();
+
+            
+            int entityNameColumn = column++ ;
+            List<AggregatedPortfolioFields> detailColumns = new List<AggregatedPortfolioFields>();
+
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.Short))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.Short);
+            }
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.ShortPercentNav))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.ShortPercentNav);
+            }
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.Long))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.Long);
+            }
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.LongPercentNav))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.LongPercentNav);
+            }
+            
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.Gross))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.Gross);
+            }
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.GrossPercentNav))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.GrossPercentNav);
+            }            
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.Net))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.Net);
+            }
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.NetPercentNav))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.NetPercentNav);
+            }
+            if (fieldsToReturn.Contains(AggregatedPortfolioFields.FundNav))
+            {
+                detailColumns.Add(AggregatedPortfolioFields.FundNav);
+            }
+            int parameterTitleRow = row++;
+            int? fundTitleRow = null;
+            if (fundNames.Length > 1)
+            {
+                fundTitleRow = row++;
+            }
+            int? referenceDateTitleRow = null;
+            if (referenceDates.Length > 1)
+            {
+                referenceDateTitleRow = row++;
+            }
+
+            foreach (AggregatedPortfolioFields detailColumn in detailColumns)
+            {
+                ExcelWriter.WriteCell(worksheet, parameterTitleRow, column, detailColumn.ToString());
+                foreach (string fundName in fundNames)
+                {
+                    ExcelWriter.WriteCell(worksheet, fundTitleRow, column, fundName);                    
+                    foreach (DateTime referenceDate in referenceDates)
+                    {
+                        ExcelWriter.WriteCell(worksheet, referenceDateTitleRow, column, referenceDate,"dd-MMM-yyyy");
+                        detailColumnIds.Add(new Tuple<AggregatedPortfolioFields, string, DateTime>(detailColumn, fundName, referenceDate), column++);
+                    }
+                }
+            }
            
+            worksheet.Cells[row-1, entityNameColumn] = String.Format("{0} Name", entityTypeId.ToString());            
+            
+            Dictionary<string, int> entityRowIds = new Dictionary<string, int>();
             foreach (AggregatedPortfolio aggregatedPortfolioItem in aggregatedPortfolio)
             {
-                worksheet.Cells[row, referenceDateColumn] = aggregatedPortfolioItem.ReferenceDate;
-                worksheet.Cells[row, fundColumn] = aggregatedPortfolioItem.Fund;
-                worksheet.Cells[row, entityNameColumn] = aggregatedPortfolioItem.EntityName;
-                worksheet.Cells[row, shortColumn] = aggregatedPortfolioItem.Short;
-                worksheet.Cells[row, longColumn] = aggregatedPortfolioItem.Long;
-                worksheet.Cells[row, fundNavColumn] = aggregatedPortfolioItem.FundMarketValue;
-              //  Excel.Range r = worksheet.Cells[row, marketValueColumn];
-              //  string a = GetExcelColumnName(r.Column);
-                worksheet.Cells[row, shortPercentOfNavColumn].Formula = String.Format("={0}{1}/{2}{1}", shortColumnLabel, row, fundNavColumnLabel);
-                worksheet.Cells[row, longPercentOfNavColumn].Formula = String.Format("={0}{1}/{2}{1}", longColumnLabel, row, fundNavColumnLabel);
-                row++;
+                int entityRow;
+                if (!entityRowIds.TryGetValue(aggregatedPortfolioItem.EntityName, out entityRow))
+                {
+                    entityRow = row;
+                    ExcelWriter.WriteCell(worksheet, row, entityNameColumn, aggregatedPortfolioItem.EntityName);
+                    entityRowIds.Add(aggregatedPortfolioItem.EntityName, entityRow);
+                    row++;
+                }
+                int? grossColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.Gross);
+                int? grossPercentNavColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.GrossPercentNav);
+
+                int? netColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.Net);
+                int? netPercentNavColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.NetPercentNav);
+
+                int? shortColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.Short);
+                int? shortPercentNavColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.ShortPercentNav);
+                int? longColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.Long);
+                int? longPercentNavColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.LongPercentNav);
+                int? fundNavColumn = GetNumericFieldColumn(detailColumnIds, aggregatedPortfolioItem, AggregatedPortfolioFields.FundNav);
+
+                decimal gross = Math.Abs(aggregatedPortfolioItem.Short) + aggregatedPortfolioItem.Long;
+                decimal net = aggregatedPortfolioItem.Short + aggregatedPortfolioItem.Long;
+
+                ExcelWriter.WriteCell(worksheet, entityRow, grossColumn, gross, "#,###");
+                ExcelWriter.WriteCell(worksheet, entityRow, netColumn, net, "#,###"); 
+                ExcelWriter.WriteCell(worksheet, entityRow, shortColumn, aggregatedPortfolioItem.Short, "#,###");                
+                ExcelWriter.WriteCell(worksheet, entityRow, longColumn, aggregatedPortfolioItem.Long, "#,###");
+                ExcelWriter.WriteCell(worksheet, entityRow, fundNavColumn, aggregatedPortfolioItem.FundMarketValue, "#,###");
+
+                ExcelWriter.WritePercentage(worksheet, entityRow, shortPercentNavColumn, shortColumn, fundNavColumn,aggregatedPortfolioItem.Short, aggregatedPortfolioItem.FundMarketValue, "0.00%");
+                ExcelWriter.WritePercentage(worksheet, entityRow, longPercentNavColumn, longColumn, fundNavColumn, aggregatedPortfolioItem.Long, aggregatedPortfolioItem.FundMarketValue, "0.00%");
+                ExcelWriter.WritePercentage(worksheet, entityRow, grossPercentNavColumn, grossColumn, fundNavColumn, gross, aggregatedPortfolioItem.FundMarketValue, "0.00%");
+                ExcelWriter.WritePercentage(worksheet, entityRow, netPercentNavColumn, netColumn, fundNavColumn, net, aggregatedPortfolioItem.FundMarketValue, "0.00%");
             }
+
             worksheet.Columns.AutoFit();
         }
     }

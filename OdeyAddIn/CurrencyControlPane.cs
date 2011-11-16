@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using Odey.Reporting.Clients;
 using Odey.Framework.Keeley.Entities.Enums;
+using Odey.Reporting.Entities;
 
 namespace OdeyAddIn
 {
@@ -23,9 +24,20 @@ namespace OdeyAddIn
         {
             PortfolioWebClient client = new PortfolioWebClient();
             bool? equitiesOnly = equityPicker1.Selected;
-            
-            AggregatedPortfolioWriter.Write(client.GetAggregatedByCurrency(fundAndReferenceDatePicker1.FundId, fundAndReferenceDatePicker1.DaysBeforeToday, equitiesOnly).OrderBy(a => a.Long).ToList(),
-                Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, EntityTypeIds.Industry);
+
+            AggregatedPortfolioFields[] fieldsToReturn = AggregatedPortfolioFieldsHelper.Get(this.grossNetPicker1.IncludeRawData, this.grossNetPicker1.OutputOption);
+
+            List<AggregatedPortfolio> portfolio = null;
+            if (fundAndReferenceDatePicker1.UsePeriodicity)
+            {                
+                portfolio = client.GetAggregatedByCurrencyMultipleOverTime(fundAndReferenceDatePicker1.FundIds, fundAndReferenceDatePicker1.PeriodicityId, fundAndReferenceDatePicker1.FromDaysPriorToToday, fundAndReferenceDatePicker1.ToDaysPriorToToday, equitiesOnly).OrderBy(a => a.Long).ToList();
+            }
+            else
+            {
+                portfolio = client.GetAggregatedByCurrencyMultiple(fundAndReferenceDatePicker1.FundIds, fundAndReferenceDatePicker1.SelectedDates, equitiesOnly).OrderBy(a => a.Long).ToList();
+            }
+
+            AggregatedPortfolioWriter.Write(portfolio,Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, EntityTypeIds.Industry, fieldsToReturn);
         }
     }
 }

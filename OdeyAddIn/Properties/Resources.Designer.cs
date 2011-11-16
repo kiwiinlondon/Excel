@@ -67,6 +67,13 @@ namespace OdeyAddIn.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap _074091_rounded_glossy_black_icon_alphanumeric_information4_sc49 {
+            get {
+                object obj = ResourceManager.GetObject("074091-rounded-glossy-black-icon-alphanumeric-information4-sc49", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap _086211_rounded_glossy_black_icon_business_charts1_sc1 {
             get {
                 object obj = ResourceManager.GetObject("086211-rounded-glossy-black-icon-business-charts1-sc1", resourceCulture);

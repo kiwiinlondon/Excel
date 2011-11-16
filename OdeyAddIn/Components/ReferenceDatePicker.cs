@@ -9,7 +9,7 @@ namespace OdeyAddIn
     {
         public ReferenceDatePicker()
         {
-            
+            MinDate = new DateTime(1999, 7, 30);
         }
 
         public DateTime CurrentDate
@@ -18,6 +18,7 @@ namespace OdeyAddIn
             {
                 MaxDate = value;
                 Value = value;
+                
             }
         }
     }

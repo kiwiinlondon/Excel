@@ -37,5 +37,11 @@ namespace OdeyAddIn
         {
             Globals.ThisAddIn.CurrencyPane.Visible = ((RibbonToggleButton)sender).Checked;
         }
+
+        private void InstrumentClassPaneButton_Click(object sender, RibbonControlEventArgs e)
+        {
+            Globals.ThisAddIn.InstrumentClassPane.Visible = ((RibbonToggleButton)sender).Checked;
+
+        }
     }
 }

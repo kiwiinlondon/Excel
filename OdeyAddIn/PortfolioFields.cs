@@ -7,7 +7,6 @@ namespace OdeyAddIn
 {
     internal enum PortfolioFields
     {
-        ReferenceDate,
         InstrumentName,
         InstrumentMarketId,
         BBExchangeCode,

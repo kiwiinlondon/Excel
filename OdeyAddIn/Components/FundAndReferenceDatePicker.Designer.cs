@@ -28,18 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.referenceDatePicker1 = new OdeyAddIn.ReferenceDatePicker();
+            this.referenceDatePicker1 = new System.Windows.Forms.ComboBox();
             this.fundPicker1 = new OdeyAddIn.FundPicker();
             this.SuspendLayout();
             // 
             // referenceDatePicker1
             // 
-            this.referenceDatePicker1.Location = new System.Drawing.Point(3, 3);
-            this.referenceDatePicker1.MaxDate = new System.DateTime(2011, 11, 2, 0, 0, 0, 0);
+            this.referenceDatePicker1.FormattingEnabled = true;
+            this.referenceDatePicker1.Location = new System.Drawing.Point(4, 3);
             this.referenceDatePicker1.Name = "referenceDatePicker1";
-            this.referenceDatePicker1.Size = new System.Drawing.Size(114, 20);
-            this.referenceDatePicker1.TabIndex = 1;
-            this.referenceDatePicker1.Value = new System.DateTime(2011, 11, 2, 0, 0, 0, 0);
+            this.referenceDatePicker1.Size = new System.Drawing.Size(113, 21);
+            this.referenceDatePicker1.TabIndex = 3;
+            this.referenceDatePicker1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.referenceDatePicker1_MouseClick);
             // 
             // fundPicker1
             // 
@@ -47,7 +47,7 @@
             this.fundPicker1.FormattingEnabled = true;
             this.fundPicker1.Location = new System.Drawing.Point(3, 29);
             this.fundPicker1.Name = "fundPicker1";
-            this.fundPicker1.Size = new System.Drawing.Size(114, 21);
+            this.fundPicker1.Size = new System.Drawing.Size(114, 95);
             this.fundPicker1.TabIndex = 0;
             this.fundPicker1.ValueMember = "FundId";
             // 
@@ -58,7 +58,7 @@
             this.Controls.Add(this.referenceDatePicker1);
             this.Controls.Add(this.fundPicker1);
             this.Name = "FundAndReferenceDatePicker";
-            this.Size = new System.Drawing.Size(120, 54);
+            this.Size = new System.Drawing.Size(120, 127);
             this.ResumeLayout(false);
 
         }
@@ -66,6 +66,6 @@
         #endregion
 
         private FundPicker fundPicker1;
-        private ReferenceDatePicker referenceDatePicker1;
+        private System.Windows.Forms.ComboBox referenceDatePicker1;
     }
 }

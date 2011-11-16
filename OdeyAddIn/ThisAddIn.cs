@@ -16,8 +16,11 @@ namespace OdeyAddIn
 
         private BindingList<Fund> _fundsWithPositions = new BindingList<Fund>();
         private BindingList<Currency> _currencies = new BindingList<Currency>();
+        private BindingList<Periodicity> _periodicities = new BindingList<Periodicity>();
         private bool fundsLoaded = false;
         private bool currenciesLoaded = false;
+        private bool periodicitiesLoaded = false;
+
         public BindingList<Fund> FundsWithPositions
         {
             get
@@ -31,6 +34,14 @@ namespace OdeyAddIn
             get
             {
                 return _currencies;
+            }
+        }
+
+        public BindingList<Periodicity> Periodicities
+        {
+            get
+            {
+                return _periodicities;
             }
         }
 
@@ -60,11 +71,25 @@ namespace OdeyAddIn
             }
         }
 
+        public void LoadPeriodicities()
+        {
+            if (!periodicitiesLoaded)
+            {
+                ReferenceDataClient client = new ReferenceDataClient();
+                foreach (Periodicity periodicity in client.GetPeriodicities())
+                {
+                    _periodicities.Add(periodicity);
+                }
+                periodicitiesLoaded = true;
+            }
+        }
+
         private Microsoft.Office.Tools.CustomTaskPane industryControlPane;
         private Microsoft.Office.Tools.CustomTaskPane countryControlPane;
         private Microsoft.Office.Tools.CustomTaskPane portfolioControlPane;
         private Microsoft.Office.Tools.CustomTaskPane topHoldingsControlPane;
         private Microsoft.Office.Tools.CustomTaskPane currencyControlPane;
+        private Microsoft.Office.Tools.CustomTaskPane instrumentClassControlPane;
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
@@ -102,11 +127,19 @@ namespace OdeyAddIn
             currencyControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
             currencyControlPane.VisibleChanged +=
                 new EventHandler(currencyControlPanelValue_VisibleChanged);
+
+            InstrumentClassControlPane instrumentClassControlPaneToAdd = new InstrumentClassControlPane();
+            instrumentClassControlPane = this.CustomTaskPanes.Add(
+                instrumentClassControlPaneToAdd, "Instrument Class Parameters");
+            instrumentClassControlPane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
+            instrumentClassControlPane.VisibleChanged +=
+                new EventHandler(instrumentClassControlPanelValue_VisibleChanged);
         }
 
         private void industryControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
         {
             LoadFunds();
+            LoadPeriodicities();
             Globals.Ribbons.OdeyRibbonTab.industryButton.Checked =
                 industryControlPane.Visible;
             
@@ -115,6 +148,7 @@ namespace OdeyAddIn
         private void countryControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
         {
             LoadFunds();
+            LoadPeriodicities();
             Globals.Ribbons.OdeyRibbonTab.countryButton.Checked =
                 countryControlPane.Visible;
 
@@ -123,6 +157,7 @@ namespace OdeyAddIn
         private void topHoldingsControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
         {
             LoadFunds();
+            LoadPeriodicities();
             Globals.Ribbons.OdeyRibbonTab.TopHoldings.Checked =
                 topHoldingsControlPane.Visible;
 
@@ -131,6 +166,7 @@ namespace OdeyAddIn
         private void currencyControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
         {
             LoadFunds();
+            LoadPeriodicities();
             Globals.Ribbons.OdeyRibbonTab.CurrencyButton.Checked =
                 currencyControlPane.Visible;
 
@@ -140,8 +176,18 @@ namespace OdeyAddIn
         {
             LoadFunds();
             LoadCurrencies();
+            LoadPeriodicities();
             Globals.Ribbons.OdeyRibbonTab.portfolioButton.Checked =
                 portfolioControlPane.Visible;
+
+        }
+
+        private void instrumentClassControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
+        {
+            LoadFunds();
+            LoadPeriodicities();
+            Globals.Ribbons.OdeyRibbonTab.InstrumentClassPaneButton.Checked =
+                instrumentClassControlPane.Visible;
 
         }
 
@@ -182,6 +228,14 @@ namespace OdeyAddIn
             get
             {
                 return topHoldingsControlPane;
+            }
+        }
+
+        public Microsoft.Office.Tools.CustomTaskPane InstrumentClassPane
+        {
+            get
+            {
+                return instrumentClassControlPane;
             }
         }
 

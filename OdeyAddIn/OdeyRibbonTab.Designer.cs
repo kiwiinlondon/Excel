@@ -42,11 +42,13 @@
             this.separator2 = this.Factory.CreateRibbonSeparator();
             this.separator3 = this.Factory.CreateRibbonSeparator();
             this.separator4 = this.Factory.CreateRibbonSeparator();
+            this.separator5 = this.Factory.CreateRibbonSeparator();
             this.industryButton = this.Factory.CreateRibbonToggleButton();
             this.countryButton = this.Factory.CreateRibbonToggleButton();
             this.portfolioButton = this.Factory.CreateRibbonToggleButton();
             this.TopHoldings = this.Factory.CreateRibbonToggleButton();
             this.CurrencyButton = this.Factory.CreateRibbonToggleButton();
+            this.InstrumentClassPaneButton = this.Factory.CreateRibbonToggleButton();
             this.tab1.SuspendLayout();
             this.Odey.SuspendLayout();
             this.PortfolioGroup.SuspendLayout();
@@ -74,6 +76,8 @@
             this.PortfolioGroup.Items.Add(this.TopHoldings);
             this.PortfolioGroup.Items.Add(this.separator4);
             this.PortfolioGroup.Items.Add(this.CurrencyButton);
+            this.PortfolioGroup.Items.Add(this.separator5);
+            this.PortfolioGroup.Items.Add(this.InstrumentClassPaneButton);
             this.PortfolioGroup.Label = "Portfolio";
             this.PortfolioGroup.Name = "PortfolioGroup";
             // 
@@ -92,6 +96,10 @@
             // separator4
             // 
             this.separator4.Name = "separator4";
+            // 
+            // separator5
+            // 
+            this.separator5.Name = "separator5";
             // 
             // industryButton
             // 
@@ -138,6 +146,15 @@
             this.CurrencyButton.ShowImage = true;
             this.CurrencyButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CurrencyButton_Click);
             // 
+            // InstrumentClassPaneButton
+            // 
+            this.InstrumentClassPaneButton.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.InstrumentClassPaneButton.Image = global::OdeyAddIn.Properties.Resources._074091_rounded_glossy_black_icon_alphanumeric_information4_sc49;
+            this.InstrumentClassPaneButton.Label = "Instrument Class";
+            this.InstrumentClassPaneButton.Name = "InstrumentClassPaneButton";
+            this.InstrumentClassPaneButton.ShowImage = true;
+            this.InstrumentClassPaneButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.InstrumentClassPaneButton_Click);
+            // 
             // OdeyRibbonTab
             // 
             this.Name = "OdeyRibbonTab";
@@ -168,6 +185,8 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton TopHoldings;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator4;
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton CurrencyButton;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator5;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton InstrumentClassPaneButton;
     }
 
     partial class ThisRibbonCollection

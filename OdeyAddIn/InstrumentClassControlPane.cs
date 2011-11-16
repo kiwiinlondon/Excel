@@ -12,9 +12,9 @@ using Odey.Reporting.Entities;
 
 namespace OdeyAddIn
 {
-    public partial class IndustryControlPane : UserControl
+    public partial class InstrumentClassControlPane : UserControl
     {
-        public IndustryControlPane()
+        public InstrumentClassControlPane()
         {
             InitializeComponent();
             fundAndReferenceDatePicker1.CurrentDate = DateTime.Now.Date;
@@ -36,15 +36,14 @@ namespace OdeyAddIn
 
             List<AggregatedPortfolio> portfolio = null;
             if (fundAndReferenceDatePicker1.UsePeriodicity)
-            {                
-                portfolio = client.GetAggregatedByIndustryMultipleOverTime(fundIds, fundAndReferenceDatePicker1.PeriodicityId, fundAndReferenceDatePicker1.FromDaysPriorToToday, fundAndReferenceDatePicker1.ToDaysPriorToToday, equitiesOnly, includeCash).OrderBy(a => a.Long).ToList();
+            {
+                portfolio = client.GetAggregatedByInstrumentClassMultipleOverTime(fundIds, fundAndReferenceDatePicker1.PeriodicityId, fundAndReferenceDatePicker1.FromDaysPriorToToday,fundAndReferenceDatePicker1.ToDaysPriorToToday, equitiesOnly, includeCash).OrderBy(a => a.Long).ToList();
             }
             else
             {
-                portfolio = client.GetAggregatedByIndustryMultiple(fundIds, fundAndReferenceDatePicker1.SelectedDates, equitiesOnly, includeCash).OrderBy(a => a.Long).ToList();
+                portfolio = client.GetAggregatedByInstrumentClassMultiple(fundIds, fundAndReferenceDatePicker1.SelectedDates, equitiesOnly, includeCash).OrderBy(a => a.Long).ToList();
             }
-
-            AggregatedPortfolioWriter.Write(portfolio,Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, EntityTypeIds.Industry, fieldsToReturn);
+            AggregatedPortfolioWriter.Write(portfolio,Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, EntityTypeIds.InstrumentClass, fieldsToReturn);
         }
         
     }

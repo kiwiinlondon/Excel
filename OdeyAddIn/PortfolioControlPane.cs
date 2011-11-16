@@ -27,7 +27,7 @@ namespace OdeyAddIn
 
             if (!checkBox1.Checked)
             {
-                fundIds = new int[] {fundAndReferenceDatePicker1.FundId};
+                fundIds = fundAndReferenceDatePicker1.FundIds;
             }
 
             int? reportCurrencyId = null;
@@ -35,13 +35,23 @@ namespace OdeyAddIn
             {
                 reportCurrencyId = (int)currencyPicker1.SelectedValue;
             }
-            int[] daysBeforeToday = new int[] {fundAndReferenceDatePicker1.DaysBeforeToday};
+            int[] daysBeforeToday = fundAndReferenceDatePicker1.SelectedDates;
             bool includeShortPositions = true;
             if (ExcludeShortPositions.Checked)
             {
                 includeShortPositions = false;
             }
-            return client.GetCompletePortfolio(fundIds, daysBeforeToday, includeShortPositions, reportCurrencyId, null, null, null, null).OrderBy(a => a.InstrumentClass).ToList();            
+
+            if (fundAndReferenceDatePicker1.UsePeriodicity)
+            {
+                return client.GetCompletePortfolioOverTime(fundIds, fundAndReferenceDatePicker1.PeriodicityId, fundAndReferenceDatePicker1.FromDaysPriorToToday, fundAndReferenceDatePicker1.ToDaysPriorToToday, includeShortPositions, reportCurrencyId, null, null, null, null).OrderBy(a => a.InstrumentClass).ToList();            
+            }
+            else
+            {
+                return client.GetCompletePortfolio(fundIds, daysBeforeToday, includeShortPositions, reportCurrencyId, null, null, null, null).OrderBy(a => a.InstrumentClass).ToList();            
+            }
+
+            
         }
 
 
@@ -61,7 +71,6 @@ namespace OdeyAddIn
         private PortfolioFields[] GetFieldsToReturn()
         {
             List<PortfolioFields> fieldsToReturn = new List<PortfolioFields>();
-            if (ReferenceDate.Checked)fieldsToReturn.Add(PortfolioFields.ReferenceDate);
             if (InstrumentName.Checked) fieldsToReturn.Add(PortfolioFields.InstrumentName);
             if (ExchangeCode.Checked) fieldsToReturn.Add(PortfolioFields.BBExchangeCode);
             if (InstrumentClass.Checked)  fieldsToReturn.Add(PortfolioFields.InstrumentClass);

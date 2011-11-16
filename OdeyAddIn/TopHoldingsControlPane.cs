@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using Odey.Reporting.Clients;
 using Odey.Framework.Keeley.Entities.Enums;
+using Odey.Reporting.Entities;
 
 namespace OdeyAddIn
 {
@@ -24,13 +25,23 @@ namespace OdeyAddIn
             
             PortfolioWebClient client = new PortfolioWebClient();
             bool? equitiesOnly = equityPicker1.Selected;
-            
+
+            AggregatedPortfolioFields[] fieldsToReturn = AggregatedPortfolioFieldsHelper.Get(this.grossNetPicker1.IncludeRawData, this.grossNetPicker1.OutputOption);
 
             int numberOfResults = 0;
             if (int.TryParse(textBox1.Text, out numberOfResults))
             {
-                AggregatedPortfolioWriter.Write(client.GetTopHoldings(fundAndReferenceDatePicker1.FundId, fundAndReferenceDatePicker1.DaysBeforeToday, equitiesOnly, numberOfResults).ToList(),
-                    Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column,EntityTypeIds.InstrumentMarket);        
+                List<AggregatedPortfolio> portfolio = null;
+                if (fundAndReferenceDatePicker1.UsePeriodicity)
+                {
+                    portfolio = client.GetTopHoldingsMultipleOverTime(fundAndReferenceDatePicker1.FundIds, fundAndReferenceDatePicker1.PeriodicityId, fundAndReferenceDatePicker1.FromDaysPriorToToday, fundAndReferenceDatePicker1.ToDaysPriorToToday, equitiesOnly, numberOfResults).OrderByDescending(a => a.Long + Math.Abs(a.Short)).ToList();
+                }
+                else
+                {
+                    portfolio = client.GetTopHoldingsMultiple(fundAndReferenceDatePicker1.FundIds, fundAndReferenceDatePicker1.SelectedDates, equitiesOnly, numberOfResults).ToList();
+                }
+
+                AggregatedPortfolioWriter.Write(portfolio,Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, EntityTypeIds.InstrumentMarket, fieldsToReturn);        
             }
         
         }
