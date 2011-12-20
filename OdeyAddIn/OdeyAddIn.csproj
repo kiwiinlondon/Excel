@@ -35,7 +35,7 @@
     <PublishUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</PublishUrl>
     <InstallUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.10</ApplicationVersion>
+    <ApplicationVersion>1.0.0.15</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>

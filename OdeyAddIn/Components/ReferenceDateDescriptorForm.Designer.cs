@@ -28,34 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.shapeContainer1 = new Microsoft.VisualBasic.PowerPacks.ShapeContainer();
-            this.lineShape1 = new Microsoft.VisualBasic.PowerPacks.LineShape();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
-            this.referenceDateDescriptionPicker1 = new OdeyAddIn.Components.ReferenceDateDescriptionPicker();
             this.elementHost1 = new System.Windows.Forms.Integration.ElementHost();
             this.multipleReferenceDatePicker1 = new OdeyAddIn.Components.MultipleReferenceDatePicker();
+            this.referenceDateDescriptionPicker1 = new OdeyAddIn.Components.ReferenceDateDescriptionPicker();
             this.SuspendLayout();
-            // 
-            // shapeContainer1
-            // 
-            this.shapeContainer1.Location = new System.Drawing.Point(0, 0);
-            this.shapeContainer1.Margin = new System.Windows.Forms.Padding(0);
-            this.shapeContainer1.Name = "shapeContainer1";
-            this.shapeContainer1.Shapes.AddRange(new Microsoft.VisualBasic.PowerPacks.Shape[] {
-            this.lineShape1});
-            this.shapeContainer1.Size = new System.Drawing.Size(252, 378);
-            this.shapeContainer1.TabIndex = 1;
-            this.shapeContainer1.TabStop = false;
-            // 
-            // lineShape1
-            // 
-            this.lineShape1.BorderColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.lineShape1.Name = "lineShape1";
-            this.lineShape1.X1 = 21;
-            this.lineShape1.X2 = 222;
-            this.lineShape1.Y1 = 200;
-            this.lineShape1.Y2 = 200;
             // 
             // radioButton1
             // 
@@ -79,13 +57,6 @@
             this.radioButton2.UseVisualStyleBackColor = true;
             this.radioButton2.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
             // 
-            // referenceDateDescriptionPicker1
-            // 
-            this.referenceDateDescriptionPicker1.Location = new System.Drawing.Point(33, 224);
-            this.referenceDateDescriptionPicker1.Name = "referenceDateDescriptionPicker1";
-            this.referenceDateDescriptionPicker1.Size = new System.Drawing.Size(181, 96);
-            this.referenceDateDescriptionPicker1.TabIndex = 0;
-            // 
             // elementHost1
             // 
             this.elementHost1.Location = new System.Drawing.Point(33, 12);
@@ -94,6 +65,13 @@
             this.elementHost1.TabIndex = 5;
             this.elementHost1.Text = "elementHost1";
             this.elementHost1.Child = this.multipleReferenceDatePicker1;
+            // 
+            // referenceDateDescriptionPicker1
+            // 
+            this.referenceDateDescriptionPicker1.Location = new System.Drawing.Point(33, 224);
+            this.referenceDateDescriptionPicker1.Name = "referenceDateDescriptionPicker1";
+            this.referenceDateDescriptionPicker1.Size = new System.Drawing.Size(207, 96);
+            this.referenceDateDescriptionPicker1.TabIndex = 0;
             // 
             // ReferenceDateDescriptorForm
             // 
@@ -104,7 +82,6 @@
             this.Controls.Add(this.radioButton2);
             this.Controls.Add(this.radioButton1);
             this.Controls.Add(this.referenceDateDescriptionPicker1);
-            this.Controls.Add(this.shapeContainer1);
             this.Name = "ReferenceDateDescriptorForm";
             this.Text = "ReferenceDateDescriptorForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ReferenceDateDescriptorForm_FormClosing);
@@ -116,8 +93,6 @@
         #endregion
 
         private ReferenceDateDescriptionPicker referenceDateDescriptionPicker1;
-        private Microsoft.VisualBasic.PowerPacks.ShapeContainer shapeContainer1;
-        private Microsoft.VisualBasic.PowerPacks.LineShape lineShape1;
         private System.Windows.Forms.RadioButton radioButton1;
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.Integration.ElementHost elementHost1;

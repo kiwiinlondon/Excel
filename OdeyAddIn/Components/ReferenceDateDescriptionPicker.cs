@@ -43,11 +43,18 @@ namespace OdeyAddIn.Components
             }
         }        
 
-        public int FromDaysBeforeToday
+        public int? FromDaysBeforeToday
         {
             get
             {
-                return DateTime.Now.Date.Subtract(referenceDatePicker1.Value.Date).Days;
+                if (checkBox1.Checked)
+                {
+                    return null;
+                }
+                else
+                {
+                    return DateTime.Now.Date.Subtract(referenceDatePicker1.Value.Date).Days;
+                }
             }
         }
 
@@ -56,6 +63,18 @@ namespace OdeyAddIn.Components
             get
             {
                 return DateTime.Now.Date.Subtract(referenceDatePicker2.Value.Date).Days;
+            }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+            {
+                this.referenceDatePicker1.Enabled = false;
+            }
+            else
+            {
+                this.referenceDatePicker1.Enabled = true;
             }
         }
     }

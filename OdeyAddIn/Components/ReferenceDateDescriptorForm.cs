@@ -42,7 +42,7 @@ namespace OdeyAddIn.Components
             }
         }
 
-        public int FromDaysBeforeToday
+        public int? FromDaysBeforeToday
         {
             get
             {
