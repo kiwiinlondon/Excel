@@ -48,7 +48,7 @@ namespace OdeyAddIn
             }
             else
             {
-                return client.GetCompletePortfolio(fundIds, daysBeforeToday, includeShortPositions, reportCurrencyId, null, null, null, null).OrderBy(a => a.InstrumentClass).ToList();            
+                return client.GetCompletePortfolio(fundIds, daysBeforeToday, includeShortPositions, reportCurrencyId, null, null, null, null);//.OrderBy(a => a.InstrumentClass).ToList();            
             }
 
             

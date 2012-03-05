@@ -323,11 +323,13 @@ namespace LiquidityReport
             myChart.Chart.HasTitle = true;
             myChart.Chart.ChartTitle.Text = "Position Value vs Days to Liquidate";
             Exc.Axis xAxis = (Exc.Axis)myChart.Chart.Axes(Exc.XlAxisType.xlCategory);
+            
             xAxis.HasTitle = true;
             xAxis.AxisTitle.Text = "Percentage of Nav";
             Exc.Axis yAxis = myChart.Chart.Axes(Exc.XlAxisType.xlValue);
             yAxis.HasTitle = true;
             yAxis.AxisTitle.Text = "Excess Days to Liquidate";
+            yAxis.ScaleType = Exc.XlScaleType.xlScaleLogarithmic;
             Exc.Series series = myChart.Chart.SeriesCollection(missing).NewSeries();
            
             series.XValues = nonLiquidPositions.Select(a => (double)(Math.Abs(a.DeltaMarketValue) / fundNav*100)).ToArray<double>();
