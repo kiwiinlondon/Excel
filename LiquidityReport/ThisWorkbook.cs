@@ -13,6 +13,8 @@ using Microsoft.Office.Tools.Excel.Extensions;
 using Office = Microsoft.Office.Core;
 using Odey.LiquidityCalculator.Clients;
 using Odey.LiquidityCalculator.Contracts;
+using Odey.Reporting.Entities;
+using Odey.Reporting.Clients;
 
 namespace LiquidityReport
 {
@@ -300,18 +302,24 @@ namespace LiquidityReport
             fundRow++;
             
             AddFundExceptionValues(fundWorkSheet, maxFundColumn, output, ref fundRow);
-            DrawChart(fundWorkSheet, lastNonLiquidableRecord, fundRow,output.Nav,maxDaysCap-output.NumberOfTradeDaysUsed, maxFundColumn, nonLiquidPositions);
-
+            DrawChart(fundWorkSheet, lastNonLiquidableRecord, ref fundRow,output.Nav,maxDaysCap-output.NumberOfTradeDaysUsed,  maxFundColumn, nonLiquidPositions);
+            if (output.FundId != 0)
+            {
+                DrawLiquidityChart(fundWorkSheet, ref fundRow, maxFundColumn, output.FundId);
+            }
             
             
         }
         #endregion       
 
         #region DrawChart
-        private void DrawChart(Exc.Worksheet fundWorkSheet, int lastNonLiquidableRecord, int fundRow,decimal fundNav,decimal maxDaysCap, int maxFundColumn, List<LiquidityCalculatorNonLiquidatedPosition> nonLiquidPositions)
+        private void DrawChart(Exc.Worksheet fundWorkSheet, int lastNonLiquidableRecord, ref int fundRow,decimal fundNav,decimal maxDaysCap, int maxFundColumn, List<LiquidityCalculatorNonLiquidatedPosition> nonLiquidPositions)
         {
             Exc.ChartObjects xlCharts = (Exc.ChartObjects)fundWorkSheet.ChartObjects(Type.Missing);
-            Exc.Range cells = fundWorkSheet.Range[fundWorkSheet.Cells[fundRow, 1], fundWorkSheet.Cells[fundRow + 30, maxFundColumn]];
+            
+            int startRow = fundRow;
+            fundRow = fundRow + 30;
+            Exc.Range cells = fundWorkSheet.Range[fundWorkSheet.Cells[startRow, 1], fundWorkSheet.Cells[fundRow, maxFundColumn]];
             Exc.ChartObject myChart = (Exc.ChartObject)xlCharts.Add(cells.Left, cells.Top, cells.Width, cells.Height);
             // fundWorkSheet.Range.Areas.
             myChart.Chart.ChartType = Microsoft.Office.Interop.Excel.XlChartType.xlXYScatter;
@@ -350,24 +358,86 @@ namespace LiquidityReport
                 }
                
                 
-            }
+            }        
+        }
+        #endregion
 
-          //  decimal sumNav = 0;
-          //  int row = 2;
-           // int column = maxFundColumn+2;
+        #region Draw Liquidity Chart
+        private void DrawLiquidityChart(Exc.Worksheet fundWorkSheet, ref int fundRow, int maxFundColumn,int fundId)
+        {
+
+            Exc.ChartObjects xlCharts = (Exc.ChartObjects)fundWorkSheet.ChartObjects(Type.Missing);
+            fundRow = fundRow + 2;
+            int startRow = fundRow;
+            fundRow = fundRow + 30;
+            Exc.Range cells = fundWorkSheet.Range[fundWorkSheet.Cells[startRow, 1], fundWorkSheet.Cells[fundRow, maxFundColumn]];
+            Exc.ChartObject myChart = (Exc.ChartObject)xlCharts.Add(cells.Left, cells.Top, cells.Width, cells.Height);
+            // fundWorkSheet.Range.Areas.
+            myChart.Chart.ChartType = Microsoft.Office.Interop.Excel.XlChartType.xlLine;
+
+           
+            myChart.Chart.HasLegend = true;
+            myChart.Chart.HasTitle = true;
+            myChart.Chart.ChartTitle.Text = "Liquidity Over Time";
+
+            Exc.Axis xAxis = (Exc.Axis)myChart.Chart.Axes(Exc.XlAxisType.xlCategory);
+            xAxis.HasTitle = true;           
+            xAxis.AxisTitle.Text = "Date";
+
+            Exc.Axis yAxis = myChart.Chart.Axes(Exc.XlAxisType.xlValue, Exc.XlAxisGroup.xlPrimary);
+            yAxis.HasTitle = true;
+            yAxis.AxisTitle.Text = "Number of Days";
+
             
-            //foreach (LiquidityCalculatorNonLiquidatedPosition nonLiquidPosition in nonLiquidPositions)
+
+            AnalyticClient client = new AnalyticClient();
+            List<Analytic> analytics = client.GetLiquidityOverTime(fundId);                     
+
+            Exc.Series weightedAverageNumberDaysSeries = myChart.Chart.SeriesCollection(missing).NewSeries();
+            Exc.Series nonLiquidatedPercentageOfNavSeries = myChart.Chart.SeriesCollection(missing).NewSeries();
+            Exc.Series valueGreaterMaxDailyLimitPercentNAV = myChart.Chart.SeriesCollection(missing).NewSeries();
+            Exc.Series haircutPercentNAV = myChart.Chart.SeriesCollection(missing).NewSeries();
+            
+
+            weightedAverageNumberDaysSeries.XValues = analytics.Where(a=>a.AnalyticTypeID == 2).Select(a => a.ReferenceDate).ToArray<DateTime>();
+            weightedAverageNumberDaysSeries.Values = analytics.Where(a => a.AnalyticTypeID == 2).Select(a => (double) a.Value).ToArray<double>();
+            weightedAverageNumberDaysSeries.Name = "Weighted Average Number Days";
+
+            nonLiquidatedPercentageOfNavSeries.XValues = analytics.Where(a => a.AnalyticTypeID == 3).Select(a => a.ReferenceDate).ToArray<DateTime>(); ;
+            nonLiquidatedPercentageOfNavSeries.Values = analytics.Where(a => a.AnalyticTypeID == 3).Select(a => (double)a.Value).ToArray<double>();
+            nonLiquidatedPercentageOfNavSeries.AxisGroup = Exc.XlAxisGroup.xlSecondary;
+            nonLiquidatedPercentageOfNavSeries.Name = "Non-Liquidated (% Nav)";
+
+            valueGreaterMaxDailyLimitPercentNAV.XValues = analytics.Where(a => a.AnalyticTypeID == 4).Select(a => a.ReferenceDate).ToArray<DateTime>(); ;
+            valueGreaterMaxDailyLimitPercentNAV.Values = analytics.Where(a => a.AnalyticTypeID == 4).Select(a => (double)a.Value).ToArray<double>();
+            valueGreaterMaxDailyLimitPercentNAV.AxisGroup = Exc.XlAxisGroup.xlSecondary;
+            valueGreaterMaxDailyLimitPercentNAV.Name = "Value Greater Max Day Limit(% Nav)";
+
+            haircutPercentNAV.XValues = analytics.Where(a => a.AnalyticTypeID == 5).Select(a => a.ReferenceDate).ToArray<DateTime>(); ;
+            haircutPercentNAV.Values = analytics.Where(a => a.AnalyticTypeID == 5).Select(a => (double)a.Value).ToArray<double>();
+            haircutPercentNAV.AxisGroup = Exc.XlAxisGroup.xlSecondary;
+            haircutPercentNAV.Name = "Haircut (% Nav)";
+
+            Exc.Axis secondaryYAxis = myChart.Chart.Axes(Exc.XlAxisType.xlValue, Exc.XlAxisGroup.xlSecondary);
+            secondaryYAxis.HasTitle = true;
+            secondaryYAxis.AxisTitle.Text = "Percentage of NAV";
+
+            //var b = series.XValues;
+            //Exc.Points points = series.Points();
+            //int i = 0;
+
+            //foreach (Exc.Point point in points)
             //{
-            //    fundWorkSheet.Cells[1, column] = nonLiquidPosition.InstrumentName;
-            //    fundWorkSheet.Cells[row, maxFundColumn+1] = sumNav;
-            //    fundWorkSheet.Cells[row++, column] = nonLiquidPosition.ExcessDaysToLiquidate;
-            //    sumNav = sumNav + Math.Abs(nonLiquidPosition.DeltaMarketValue);
-            //    fundWorkSheet.Cells[row, maxFundColumn+1] = sumNav;
-            //    fundWorkSheet.Cells[row++, column++] = nonLiquidPosition.ExcessDaysToLiquidate; 
+            //    LiquidityCalculatorNonLiquidatedPosition nonLiquidPosition = nonLiquidPositions[i++];
+            //    decimal percentageofNav = Math.Abs(nonLiquidPosition.DeltaMarketValue) / fundNav * 100;
+            //    if (percentageofNav > .7m || (20 < nonLiquidPosition.ExcessDaysToLiquidate && nonLiquidPosition.ExcessDaysToLiquidate < maxDaysCap))
+            //    {
+            //        point.HasDataLabel = true;
+            //        point.DataLabel.Text = nonLiquidPosition.InstrumentName;
+            //    }
+
+
             //}
-
-//            var i = series.DataLabels(missing);
-
         }
         #endregion
 
@@ -609,7 +679,7 @@ namespace LiquidityReport
             mainWorkSheet.Range[mainWorkSheet.Cells[row, 1], mainWorkSheet.Cells[29, maxColumn]].ClearContents();
             int sheetNumber = 3;
             Exc.Worksheet fundWorkSheet = mainWorkSheet;
-            //.Where(a=>a.Value.FundName == "OEI")
+            //Where(a=>a.Value.FundName == "OUAR").
             foreach (KeyValuePair<string, LiquidityCalculatorOutput> output in outputs.OrderByDescending(a => a.Value.UnsoldValue))
             {
                 AddMainPageValues(output.Key, output.Value, mainWorkSheet,row, maxColumn);

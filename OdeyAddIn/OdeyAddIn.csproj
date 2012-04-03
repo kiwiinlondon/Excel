@@ -169,6 +169,9 @@
     <Reference Include="Odey.Reporting.Entities">
       <HintPath>..\Binaries\Odey.Reporting\Odey.Reporting.Entities.dll</HintPath>
     </Reference>
+    <Reference Include="Odey.Reporting.Entities.Specialised">
+      <HintPath>..\Binaries\Odey.Reporting\Odey.Reporting.Entities.Specialised.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />

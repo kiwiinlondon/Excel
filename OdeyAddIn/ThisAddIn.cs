@@ -142,7 +142,6 @@ namespace OdeyAddIn
             LoadPeriodicities();
             Globals.Ribbons.OdeyRibbonTab.industryButton.Checked =
                 industryControlPane.Visible;
-            
         }
 
         private void countryControlPanelValue_VisibleChanged(object sender, System.EventArgs e)
