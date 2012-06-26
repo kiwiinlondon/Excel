@@ -21,7 +21,7 @@
     <PublishUrl>\\oam.odey.com\shared\Share\ODEYAPPS\LiquidityReport\</PublishUrl>
     <InstallUrl>\\oam.odey.com\shared\Share\ODEYAPPS\LiquidityReport\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.37</ApplicationVersion>
+    <ApplicationVersion>1.0.0.38</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
