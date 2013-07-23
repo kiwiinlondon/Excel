@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odey.Excel", "Odey.Excel\Od
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdeyAddIn", "OdeyAddIn\OdeyAddIn.csproj", "{0A0D0150-0C51-4216-AE5C-465002D0327A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OUAR Valuation Matrix", "OUAR Valuation Matrix\OUAR Valuation Matrix.csproj", "{B81D02DC-8319-4D3B-8D55-923C40258A56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,16 @@ Global
 		{0A0D0150-0C51-4216-AE5C-465002D0327A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{0A0D0150-0C51-4216-AE5C-465002D0327A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{0A0D0150-0C51-4216-AE5C-465002D0327A}.Release|x86.ActiveCfg = Release|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{B81D02DC-8319-4D3B-8D55-923C40258A56}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

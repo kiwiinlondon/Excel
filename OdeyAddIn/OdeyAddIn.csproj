@@ -35,7 +35,7 @@
     <PublishUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</PublishUrl>
     <InstallUrl>\\oam.odey.com\shared\Share\ODEYAPPS\OdeyAddIn\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.23</ApplicationVersion>
+    <ApplicationVersion>1.0.0.24</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
@@ -144,11 +144,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
+    <ManifestKeyFile>odeyappcert.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>0275847DBAEA8193DF022F257E7846D28F2D090D</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>670BA1A4842084D08EE13C25AC72242EC894521B</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!--
     This section specifies references for the project.
@@ -371,6 +370,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="OdeyAddIn_TemporaryKey.pfx" />
+    <None Include="odeyappcert.pfx" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
