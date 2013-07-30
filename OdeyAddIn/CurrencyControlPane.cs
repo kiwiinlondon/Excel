@@ -34,7 +34,7 @@ namespace OdeyAddIn
             }
             else
             {
-                portfolio = client.GetAggregatedByCurrencyMultiple(fundAndReferenceDatePicker1.FundIds, fundAndReferenceDatePicker1.SelectedDates, equitiesOnly).OrderBy(a => a.Long).ToList();
+                portfolio = null;// client.GetAggregatedByCurrencyMultiple(fundAndReferenceDatePicker1.FundIds, fundAndReferenceDatePicker1.SelectedDates, equitiesOnly, null).OrderBy(a => a.Long).ToList();
             }
 
             AggregatedPortfolioWriter.Write(portfolio,Globals.ThisAddIn.Application.ActiveSheet, Globals.ThisAddIn.Application.ActiveCell.Row, Globals.ThisAddIn.Application.ActiveCell.Column, EntityTypeIds.Industry, fieldsToReturn);
