@@ -89,7 +89,6 @@ namespace OUAR_Valuation_Matrix
             ReplaceFormulasWithTheirValues(TotalInventorySheetName);
             ReplaceFormulasWithTheirValues(HighQualtityInventorySheetName);
             ReplaceFormulasWithTheirValues(LowQualtityInventorySheetName);
-            ReplaceFormulasWithTheirValues(LongOnlySummarySheetName);
 
             SortSheet(MainSheetName, 10, null, "BX", new Tuple<string,string>[]{ new Tuple<string,string>("Median valuation of Longs",null)},true);
             SortSheet(LongOnlySheetName, 10, null, "BY", null,true);
@@ -98,6 +97,7 @@ namespace OUAR_Valuation_Matrix
             SortSheet(HighQualtityInventorySheetName, 11, null, "BU", null, true);
             SortSheet(HighQualtityInventorySheetName, 11, null, "BU", new Tuple<string,string>[]{ new Tuple<string,string>("NA","BU")}, false);
             SortSheet(LowQualtityInventorySheetName, 11, null, "BU", null, true);
+            ReplaceFormulasWithTheirValues(LongOnlySummarySheetName);
             SortSheet(LongOnlySummarySheetName, 5,"D", "D", null, true);
             SortSheet(LongOnlySummarySheetName, 5, "D", "D", new Tuple<string, string>[] { new Tuple<string, string>("NA", "D") }, false);
             ExportToPDF(fileNameWithoutExtension);
