@@ -113,7 +113,7 @@ namespace OUAR_Valuation_Matrix
         private readonly static string HighQualtityInventorySheetName = "High quality inventory";
         private readonly static string LowQualtityInventorySheetName = "Low quality inventory";
         private readonly static string LongOnlySummarySheetName = "Long only summary";
-        private readonly static string DirectoryForCopies = @"\\oam.odey.com\shared\Share\OUAR valuations2\Old Sheets";
+        private readonly static string DirectoryForCopies = @"\\oam.odey.com\shared\Share\OUAR valuations\Old Sheets";
 
         private readonly string[] WorksheetsForPDF = new string[] { MainSheetName, LongOnlySheetName, TotalInventorySheetName, HighQualtityInventorySheetName, LowQualtityInventorySheetName, LongOnlySummarySheetName };
 
