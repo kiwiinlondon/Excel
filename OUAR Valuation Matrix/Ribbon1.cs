@@ -107,7 +107,7 @@ namespace OUAR_Valuation_Matrix
             FinalSave();
         }
 
-        private readonly static string MainSheetName = "OUAR";
+        private readonly static string MainSheetName = "OAR";
         private readonly static string LongOnlySheetName = "Longonly";
         private readonly static string TotalInventorySheetName = "Total Inventory";
         private readonly static string HighQualtityInventorySheetName = "High quality inventory";
@@ -162,7 +162,7 @@ namespace OUAR_Valuation_Matrix
         {
             PortfolioWebClient client = new PortfolioWebClient();
             List<SimplePortfolio> portfolios = client.GetEquityPortfolio(new int[] { 3609, 6253 }, DateTime.Now);
-            WritePortfolio(1,"OUAR Weightings", "OUAR", portfolios);
+            WritePortfolio(1,"OAR Weightings", "OUAR", portfolios);
             WritePortfolio(2,"Long only weightings", "DEVM", portfolios);
         }
 
