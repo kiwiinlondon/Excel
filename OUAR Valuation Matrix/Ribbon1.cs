@@ -162,7 +162,7 @@ namespace OUAR_Valuation_Matrix
         {
             PortfolioWebClient client = new PortfolioWebClient();
             List<SimplePortfolio> portfolios = client.GetEquityPortfolio(new int[] { 3609, 6253 }, DateTime.Now);
-            WritePortfolio(1,"OAR Weightings", "OUAR", portfolios);
+            WritePortfolio(1,"OAR Weightings", "OAR", portfolios);
             WritePortfolio(2,"Long only weightings", "DEVM", portfolios);
         }
 
