@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odey.Excel", "Odey.Excel\Odey.Excel.csproj", "{6360204E-D66D-444E-96A6-AEAAF147BBEB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdeyAddIn", "OdeyAddIn\OdeyAddIn.csproj", "{0A0D0150-0C51-4216-AE5C-465002D0327A}"
