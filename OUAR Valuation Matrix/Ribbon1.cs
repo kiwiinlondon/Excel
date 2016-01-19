@@ -103,7 +103,6 @@ namespace OUAR_Valuation_Matrix
             ExportToPDF(fileNameWithoutExtension);
             Excel.Worksheet worksheet = Globals.ThisWorkbook.Worksheets[MainSheetName];
             worksheet.Activate();
-           // Globals.ThisWorkbook.Application.Calculation = Excel.XlCalculation.xlCalculationAutomatic;
             FinalSave();
         }
 
@@ -161,9 +160,9 @@ namespace OUAR_Valuation_Matrix
         private void button2_Click(object sender, RibbonControlEventArgs e)
         {
             PortfolioWebClient client = new PortfolioWebClient();
-            List<SimplePortfolio> portfolios = client.GetEquityPortfolio(new int[] { 3609, 6253 }, DateTime.Now);
+            List<SimplePortfolio> portfolios = client.GetEquityPortfolio(new int[] { 3609, 7493 }, DateTime.Now);
             WritePortfolio(1,"OAR Weightings", "OAR", portfolios);
-            WritePortfolio(2,"Long only weightings", "DEVM", portfolios);
+            WritePortfolio(2, "Long only weightings", "FDXH", portfolios);
         }
 
         private void WritePortfolio(int rowNumber, string worksheetName, string fundName, List<SimplePortfolio> portfolios)
