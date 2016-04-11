@@ -91,22 +91,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Odey.LiquidityCalculator.Clients">
-      <HintPath>..\Binaries\Odey.LiquidityCalculator\Odey.LiquidityCalculator.Clients.dll</HintPath>
+      <HintPath>..\..\Binaries\Odey.LiquidityCalculator\Odey.LiquidityCalculator.Clients.dll</HintPath>
     </Reference>
     <Reference Include="Odey.LiquidityCalculator.Contracts">
-      <HintPath>..\Binaries\Odey.LiquidityCalculator\Odey.LiquidityCalculator.Contracts.dll</HintPath>
+      <HintPath>..\..\Binaries\Odey.LiquidityCalculator\Odey.LiquidityCalculator.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Clients">
-      <HintPath>..\Binaries\Odey.Reporting\Odey.Reporting.Clients.dll</HintPath>
+      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Clients.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Contracts">
-      <HintPath>..\Binaries\Odey.Reporting\Odey.Reporting.Contracts.dll</HintPath>
+      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Entities">
-      <HintPath>..\Binaries\Odey.Reporting\Odey.Reporting.Entities.dll</HintPath>
+      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Entities.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Entities.Specialised">
-      <HintPath>..\Binaries\Odey.Reporting\Odey.Reporting.Entities.Specialised.dll</HintPath>
+      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Entities.Specialised.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
