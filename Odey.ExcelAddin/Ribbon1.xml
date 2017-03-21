@@ -3,11 +3,10 @@
   <ribbon>
     <tabs>
       <tab idMso="TabHome">
-        <group id="Odey"
-               label="Odey">
-          <button id="textButton" label="Refresh Tickers"
-               screentip="Text" onAction="OnActionCallback"
-               supertip="Inserts text at the cursor location."/>
+        <group id="Odey" label="Odey">
+          <button id="textButton" label="Load Weightings"
+               screentip="ARFF, BVFF, DEVM, FDXH, OUAR" onAction="OnActionCallback" size="large"
+               supertip="Inserts current fund weightings into the Weightings sheet" imageMso="CreateTable" />
         </group>
       </tab>
     </tabs>

@@ -54,18 +54,20 @@ namespace Odey.ExcelAddin
             Excel.Worksheet sheet;
             try
             {
-                sheet = app.Sheets["Exposures"];
+                sheet = app.Sheets["Weightings"];
             }
             catch
             {
                 sheet = app.Sheets.Add(After: app.Sheets[app.Sheets.Count]);
-                sheet.Name = "Exposures";
+                sheet.Name = "Weightings";
             }
 
             // Clear content
             sheet.UsedRange.ClearContents();
 
             // Headers
+            sheet.Cells[1, 1] = "Ticker";
+            sheet.Cells[1, 2] = "Name";
             var startColumn = 3;
             foreach (var fund in funds)
             {
@@ -123,6 +125,9 @@ namespace Odey.ExcelAddin
             // Set number format
             Excel.Range numbers = sheet.Range[sheet.Cells[2, startColumn], sheet.Cells[row - 1, startColumn + funds.Count()]];
             numbers.NumberFormat = "0.00%";
+
+            // Trigger refresh all
+            Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
         }
 
         #endregion
