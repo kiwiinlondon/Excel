@@ -1,48 +1,6 @@
+bin
+obj
+*.suo
+*.user
 
-# /
-/*.suo
-/*.ncb
-/*.sdf
-/*.opensdf
-/ipch
-/*.user
-/_ReSharper.*
-
-# /ConsoleApplication1/
-/ConsoleApplication1/[Bb]in
-/ConsoleApplication1/obj
-/ConsoleApplication1/[Dd]ebug
-/ConsoleApplication1/[Rr]elease
-/ConsoleApplication1/*.user
-/ConsoleApplication1/*.aps
-/ConsoleApplication1/*.eto
-/ConsoleApplication1/ClientBin
-/ConsoleApplication1/GeneratedArtifacts
-/ConsoleApplication1/_Pvt_Extensions
-
-# /LiquidityReport/
-/LiquidityReport/[Bb]in
-/LiquidityReport/obj
-/LiquidityReport/[Dd]ebug
-/LiquidityReport/[Rr]elease
-/LiquidityReport/*.user
-/LiquidityReport/*.aps
-/LiquidityReport/*.eto
-
-# /Odey.Excel/
-/Odey.Excel/[Bb]in
-/Odey.Excel/obj
-/Odey.Excel/[Dd]ebug
-/Odey.Excel/[Rr]elease
-/Odey.Excel/*.user
-/Odey.Excel/*.aps
-/Odey.Excel/*.eto
-
-# /OdeyAddIn/
-/OdeyAddIn/[Bb]in
-/OdeyAddIn/obj
-/OdeyAddIn/[Dd]ebug
-/OdeyAddIn/[Rr]elease
-/OdeyAddIn/*.user
-/OdeyAddIn/*.aps
-/OdeyAddIn/*.eto
+/.vs
