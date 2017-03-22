@@ -67,10 +67,10 @@ namespace Odey.ExcelAddin
 
             app.StatusBar = "Writing weightings...";
             WriteWeightings(app, data, watchList);
-            
+
             // Refresh all
-            //app.StatusBar = "Refreshing queries...";
-            //Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
+            app.StatusBar = "Refreshing queries...";
+            Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
 
             app.StatusBar = null;
             //}
@@ -91,7 +91,7 @@ namespace Odey.ExcelAddin
             const int tickerColumn = 1;
             const string tickerColumnName = "TICKER";
             const int managerColumn = 50;
-            const string managerColumnName = "JH Manager Override";
+            const string managerColumnName = "Portfolio Manager";
 
             const int headerRow = 5;
 
@@ -248,7 +248,7 @@ namespace Odey.ExcelAddin
             lov.ListColumns["DEVM"].Range.NumberFormat = "0.00%";
             lov.ListColumns["FDXH"].Range.NumberFormat = "0.00%";
             lov.ListColumns["OAR"].Range.NumberFormat = "0.00%";
-
+            lov.Disconnect();
 
             //var currencies = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Currency).OrderBy(p => p.PositionCurrency).ToLookup(p => p.PositionCurrencyId);
             //foreach (var currency in currencies)
