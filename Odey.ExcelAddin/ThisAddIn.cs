@@ -13,6 +13,7 @@ namespace Odey.ExcelAddin
     {
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
+            Application.Workbooks.Open("C:\\Users\\jannesm\\Desktop\\Inventory Model.xlsm");
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)

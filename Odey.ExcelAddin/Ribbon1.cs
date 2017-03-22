@@ -9,9 +9,16 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Odey.ExcelAddin
 {
+    public class WatchListItem
+    {
+        public string Ticker { get; set; }
+        public string JHManagerOverride { get; set; }
+    }
+
     [ComVisible(true)]
     public class Ribbon1 : Office.IRibbonExtensibility
     {
@@ -43,41 +50,40 @@ namespace Odey.ExcelAddin
         public void OnActionCallback(Office.IRibbonControl control)
         {
             var app = Globals.ThisAddIn.Application;
-
+            
+            //try
+            //{
             app.StatusBar = "Loading portfolio weightings...";
-
-            try
+            //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
+            var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
             {
-                //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
-                var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
-                {
-                    FundIds = funds.Cast<int>().ToArray(),
-                    ReferenceDates = new[] { DateTime.Today },
-                });
+                FundIds = funds.Cast<int>().ToArray(),
+                ReferenceDates = new[] { DateTime.Today },
+            });
 
+            app.StatusBar = "Reading watch list...";
+            var watchList = GetWatchList(app, data);
 
-                WriteWatchList(app, data);
-                WriteWeightings(app, data);
+            app.StatusBar = "Writing weightings...";
+            WriteWeightings(app, data, watchList);
+            
+            // Refresh all
+            //app.StatusBar = "Refreshing queries...";
+            //Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
 
-                app.StatusBar = "Refreshing queries...";
-
-                // Trigger refresh all
-                Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
-
-                app.StatusBar = null;
-            }
-            catch (Exception e)
-            {
-                app.StatusBar = e.Message;
-            }
-
+            app.StatusBar = null;
+            //}
+            //catch (Exception e)
+            //{
+            //    app.StatusBar = e.Message;
+            //}
         }
 
         #endregion
 
         #region Helpers
 
-        private void WriteWatchList(Excel.Application app, List<PortfolioDTO> data)
+        private Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, List<PortfolioDTO> data)
         {
             const string sheetName = "Watch List";
 
@@ -109,23 +115,37 @@ namespace Odey.ExcelAddin
             EnsureText(sheet, headerRow, managerColumn, managerColumnName);
 
             // Read existing tickers
-            var currentTickers = new List<string>();
-            var i = 1;
-            Excel.Range x = sheet.Cells[headerRow + i, tickerColumn];
-            while (!string.IsNullOrEmpty(x.Text))
+            var watchList = new Dictionary<string, WatchListItem>();
+            var row = headerRow + 1;
+            var ticker = ReadText(sheet, row, tickerColumn);
+            while (ticker != null)
             {
-                currentTickers.Add(x.Text);
-                ++i;
-                x = sheet.Cells[headerRow + i, tickerColumn];
+                watchList.Add(ticker, new WatchListItem {
+                    Ticker = ticker,
+                    JHManagerOverride = ReadText(sheet, row, managerColumn),
+                });
+                ticker = ReadText(sheet, ++row, tickerColumn);
             }
 
             // Add new tickers
-            var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(currentTickers).OrderBy(t => t);
+            var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(watchList.Keys).OrderBy(t => t);
             foreach (var newTicker in newTickers)
             {
-                sheet.Cells[headerRow + i, tickerColumn] = newTicker;
-                ++i;
+                sheet.Cells[row, tickerColumn] = newTicker;
+                ++row;
             }
+
+            return watchList;
+        }
+
+        private string ReadText(Excel.Worksheet sheet, int row, int column)
+        {
+            var ret = sheet.Cells[row, column].Text;
+            if (string.IsNullOrWhiteSpace(ret))
+            {
+                return null;
+            }
+            return ret;
         }
 
         private void EnsureText(Excel.Worksheet sheet, int row, int column, string text)
@@ -137,7 +157,7 @@ namespace Odey.ExcelAddin
             }
         }
 
-        private void WriteWeightings(Excel.Application app, List<PortfolioDTO> data)
+        private void WriteWeightings(Excel.Application app, List<PortfolioDTO> data, Dictionary<string, WatchListItem> watchList)
         {
             Excel.Worksheet sheet;
             try
@@ -151,7 +171,7 @@ namespace Odey.ExcelAddin
             }
 
             // Clear content
-            sheet.UsedRange.ClearContents();
+            sheet.Cells.ClearContents();
 
             // Headers
             sheet.Cells[1, 1] = "Ticker";
@@ -164,12 +184,15 @@ namespace Odey.ExcelAddin
                 sheet.Cells[1, startColumn + Array.IndexOf(funds, fund)] = fund.ToString();
             }
 
+            Debug.WriteLine($"Header complete");
+
             // Rows
             var row = 2;
-
             var instruments = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Primary).OrderBy(p => p.BloombergTicker);
-            foreach (var instrument in instruments.ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.StrategyName }))
+            foreach (var instrument in instruments.ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.StrategyName }).ToList())
             {
+                Debug.WriteLine($"Writing {instrument.Key.BloombergTicker}");
+
                 // Ticker
                 var ticker = instrument.Key.BloombergTicker;
                 sheet.Cells[row, 1] = ticker;
@@ -181,12 +204,21 @@ namespace Odey.ExcelAddin
                 // Manager
                 sheet.Cells[row, 3] = instrument.Key.ManagerName;
 
+                // Manager override
+                if (instrument.Key.ManagerName == "James Hanbury" && ticker != null && watchList.ContainsKey(ticker))
+                {
+                    var item = watchList[ticker];
+                    if (item.JHManagerOverride != null)
+                    {
+                        sheet.Cells[row, 3] = item.JHManagerOverride;
+                    }
+                }
+
                 // Strategy
                 if (instrument.Key.StrategyName != "None")
                 {
                     sheet.Cells[row, 4] = instrument.Key.StrategyName;
                 }
-
 
                 // Exposure %NAV
                 foreach (var fund in instrument.ToLookup(p => p.FundId))
