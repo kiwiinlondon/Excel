@@ -46,23 +46,31 @@ namespace Odey.ExcelAddin
 
             app.StatusBar = "Loading portfolio weightings...";
 
-            //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
-            var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
+            try
             {
-                FundIds = funds.Cast<int>().ToArray(),
-                ReferenceDates = new[] { DateTime.Today },
-            });
+                //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
+                var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
+                {
+                    FundIds = funds.Cast<int>().ToArray(),
+                    ReferenceDates = new[] { DateTime.Today },
+                });
 
 
-            WriteWatchList(app, data);
-            WriteWeightings(app, data);
+                WriteWatchList(app, data);
+                WriteWeightings(app, data);
 
-            app.StatusBar = "Refreshing queries...";
+                app.StatusBar = "Refreshing queries...";
 
-            // Trigger refresh all
-            Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
+                // Trigger refresh all
+                Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
 
-            app.StatusBar = null;
+                app.StatusBar = null;
+            }
+            catch (Exception e)
+            {
+                app.StatusBar = e.Message;
+            }
+
         }
 
         #endregion
@@ -72,7 +80,12 @@ namespace Odey.ExcelAddin
         private void WriteWatchList(Excel.Application app, List<PortfolioDTO> data)
         {
             const string sheetName = "Watch List";
-            const string tickerColumnName = "Ticker";
+
+            const int tickerColumn = 1;
+            const string tickerColumnName = "TICKER";
+            const int managerColumn = 50;
+            const string managerColumnName = "JH Manager Override";
+
             const int headerRow = 5;
 
             Excel.Worksheet sheet;
@@ -88,27 +101,39 @@ namespace Odey.ExcelAddin
                 sheet.Name = sheetName;
 
                 // Set header
-                Excel.Range cell = sheet.Cells[headerRow, 1];
-                cell.Value = tickerColumnName;
+                sheet.Cells[headerRow, tickerColumn] = tickerColumnName;
+                sheet.Cells[headerRow, managerColumn] = managerColumnName;
             }
-            
+
+            EnsureText(sheet, headerRow, tickerColumn, tickerColumnName);
+            EnsureText(sheet, headerRow, managerColumn, managerColumnName);
+
             // Read existing tickers
             var currentTickers = new List<string>();
             var i = 1;
-            Excel.Range x = sheet.Cells[headerRow + i, 1];
-            while (!string.IsNullOrWhiteSpace(x.Text))
+            Excel.Range x = sheet.Cells[headerRow + i, tickerColumn];
+            while (!string.IsNullOrEmpty(x.Text))
             {
                 currentTickers.Add(x.Text);
                 ++i;
-                x = sheet.Cells[headerRow + i, 1];
+                x = sheet.Cells[headerRow + i, tickerColumn];
             }
 
             // Add new tickers
-            var newTickers = data.Select(p => p.BloombergTicker).Where(t => t != null).Distinct().Except(currentTickers).OrderBy(t => t);
+            var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(currentTickers).OrderBy(t => t);
             foreach (var newTicker in newTickers)
             {
-                sheet.Cells[headerRow + i, 1] = newTicker;
+                sheet.Cells[headerRow + i, tickerColumn] = newTicker;
                 ++i;
+            }
+        }
+
+        private void EnsureText(Excel.Worksheet sheet, int row, int column, string text)
+        {
+            Excel.Range c = sheet.Cells[row, column];
+            if (c.Text != text)
+            {
+                throw new Exception($"Unexpected value '{c.Text}'. Expected '{text}'");
             }
         }
 
