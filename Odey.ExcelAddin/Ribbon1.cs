@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Odey.Reporting.Clients;
+using System.Collections.Generic;
 
 namespace Odey.ExcelAddin
 {
@@ -42,7 +42,11 @@ namespace Odey.ExcelAddin
 
         public void OnActionCallback(Office.IRibbonControl control)
         {
-            var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
+            var app = Globals.ThisAddIn.Application;
+
+            app.StatusBar = "Loading portfolio weightings...";
+
+            //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
             var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
             {
                 FundIds = funds.Cast<int>().ToArray(),
@@ -50,7 +54,66 @@ namespace Odey.ExcelAddin
             });
 
 
-            Excel.Application app = Globals.ThisAddIn.Application;
+            WriteWatchList(app, data);
+            WriteWeightings(app, data);
+
+            app.StatusBar = "Refreshing queries...";
+
+            // Trigger refresh all
+            Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
+
+            app.StatusBar = null;
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private void WriteWatchList(Excel.Application app, List<PortfolioDTO> data)
+        {
+            const string sheetName = "Watch List";
+            const string tickerColumnName = "Ticker";
+            const int headerRow = 5;
+
+            Excel.Worksheet sheet;
+            try
+            {
+                // Get exisiting sheet
+                sheet = app.Sheets[sheetName];
+            }
+            catch
+            {
+                // Create sheet
+                sheet = app.Sheets.Add(Before: app.Sheets[1]);
+                sheet.Name = sheetName;
+
+                // Set header
+                Excel.Range cell = sheet.Cells[headerRow, 1];
+                cell.Value = tickerColumnName;
+            }
+            
+            // Read existing tickers
+            var currentTickers = new List<string>();
+            var i = 1;
+            Excel.Range x = sheet.Cells[headerRow + i, 1];
+            while (!string.IsNullOrWhiteSpace(x.Text))
+            {
+                currentTickers.Add(x.Text);
+                ++i;
+                x = sheet.Cells[headerRow + i, 1];
+            }
+
+            // Add new tickers
+            var newTickers = data.Select(p => p.BloombergTicker).Where(t => t != null).Distinct().Except(currentTickers).OrderBy(t => t);
+            foreach (var newTicker in newTickers)
+            {
+                sheet.Cells[headerRow + i, 1] = newTicker;
+                ++i;
+            }
+        }
+
+        private void WriteWeightings(Excel.Application app, List<PortfolioDTO> data)
+        {
             Excel.Worksheet sheet;
             try
             {
@@ -68,7 +131,9 @@ namespace Odey.ExcelAddin
             // Headers
             sheet.Cells[1, 1] = "Ticker";
             sheet.Cells[1, 2] = "Name";
-            var startColumn = 3;
+            sheet.Cells[1, 3] = "Manager";
+            sheet.Cells[1, 4] = "Strategy";
+            var startColumn = 5;
             foreach (var fund in funds)
             {
                 sheet.Cells[1, startColumn + Array.IndexOf(funds, fund)] = fund.ToString();
@@ -77,62 +142,75 @@ namespace Odey.ExcelAddin
             // Rows
             var row = 2;
 
-            var instruments = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Primary).OrderBy(p => p.BloombergTicker).ToLookup(p => p.EquivalentInstrumentMarketId);
-            foreach (var instrument in instruments)
+            var instruments = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Primary).OrderBy(p => p.BloombergTicker);
+            foreach (var instrument in instruments.ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.StrategyName }))
             {
-                var ticker = instrument.Select(p => p.BloombergTicker).Distinct().Single();
+                // Ticker
+                var ticker = instrument.Key.BloombergTicker;
                 sheet.Cells[row, 1] = ticker;
 
+                // Name
                 var nonCFD = instrument.FirstOrDefault(p => p.InstrumentClassId != (int)InstrumentClassIds.ContractForDifference);
                 sheet.Cells[row, 2] = (nonCFD ?? instrument.First()).InstrumentName;
 
-                foreach (var fund in instrument.ToLookup(p => p.FundId)) {
+                // Manager
+                sheet.Cells[row, 3] = instrument.Key.ManagerName;
+
+                // Strategy
+                if (instrument.Key.StrategyName != "None")
+                {
+                    sheet.Cells[row, 4] = instrument.Key.StrategyName;
+                }
+
+
+                // Exposure %NAV
+                foreach (var fund in instrument.ToLookup(p => p.FundId))
+                {
                     var fundNAV = fund.Select(p => p.FundNAV).Distinct().Single();
                     var column = (startColumn + Array.IndexOf(funds, (FundIds)fund.Key));
                     sheet.Cells[row, column] = fund.Sum(p => p.Exposure) / fundNAV;
                 }
+
                 ++row;
             }
 
-            ++row;
-            var currencies = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Currency).OrderBy(p => p.PositionCurrency).ToLookup(p => p.PositionCurrencyId);
-            foreach (var currency in currencies)
-            {
-                sheet.Cells[row, 2] = currency.Select(p => p.PositionCurrency).Distinct().Single();
-                foreach (var fund in currency.ToLookup(p => p.FundId))
-                {
-                    var fundNAV = fund.Select(p => p.FundNAV).Distinct().Single();
-                    var column = (startColumn + Array.IndexOf(funds, (FundIds)fund.Key));
-                    var exposure = fund.Sum(p => p.Exposure);
-                    if (Funds[fund.Key].CurrencyId == currency.Key)
-                    {
-                        exposure -= fundNAV;
-                        Excel.Range cell = sheet.Cells[row, column];
-                        cell.Font.Bold = true;
-                    }
-                    sheet.Cells[row, column] = exposure / fundNAV;
-                }
-                ++row;
-            }
-
-            // Set column width
-            Excel.Range firstColumn = sheet.Range[sheet.Cells[1, 1], sheet.Cells[1, 1]];
-            firstColumn.ColumnWidth = 22;
-
-            Excel.Range secondColumn = sheet.Range[sheet.Cells[1, 2], sheet.Cells[1, 2]];
-            secondColumn.ColumnWidth = 35;
+            //++row;
+            //var currencies = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Currency).OrderBy(p => p.PositionCurrency).ToLookup(p => p.PositionCurrencyId);
+            //foreach (var currency in currencies)
+            //{
+            //    sheet.Cells[row, 2] = currency.Select(p => p.PositionCurrency).Distinct().Single();
+            //    foreach (var fund in currency.ToLookup(p => p.FundId))
+            //    {
+            //        var fundNAV = fund.Select(p => p.FundNAV).Distinct().Single();
+            //        var column = (startColumn + Array.IndexOf(funds, (FundIds)fund.Key));
+            //        var exposure = fund.Sum(p => p.Exposure);
+            //        if (Funds[fund.Key].CurrencyId == currency.Key)
+            //        {
+            //            exposure -= fundNAV;
+            //            Excel.Range cell = sheet.Cells[row, column];
+            //            cell.Font.Bold = true;
+            //        }
+            //        sheet.Cells[row, column] = exposure / fundNAV;
+            //    }
+            //    ++row;
+            //}
 
             // Set number format
             Excel.Range numbers = sheet.Range[sheet.Cells[2, startColumn], sheet.Cells[row - 1, startColumn + funds.Count()]];
             numbers.NumberFormat = "0.00%";
 
-            // Trigger refresh all
-            Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
+            // Set column widths
+            SetColumnWidth(sheet, 1, 22);
+            SetColumnWidth(sheet, 2, 35);
+            SetColumnWidth(sheet, 3, 20);
+            SetColumnWidth(sheet, 4, 20);
         }
 
-        #endregion
-
-        #region Helpers
+        private void SetColumnWidth(Excel.Worksheet sheet, int columnIndex, int width)
+        {
+            Excel.Range column = sheet.Range[sheet.Cells[1, columnIndex], sheet.Cells[1, columnIndex]];
+            column.ColumnWidth = width;
+        }
 
         private static string GetResourceText(string resourceName)
         {
