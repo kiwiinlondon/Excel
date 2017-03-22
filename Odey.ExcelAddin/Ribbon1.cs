@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.Office.Tools.Excel;
 
 namespace Odey.ExcelAddin
 {
@@ -120,7 +121,8 @@ namespace Odey.ExcelAddin
             var ticker = ReadText(sheet, row, tickerColumn);
             while (ticker != null)
             {
-                watchList.Add(ticker, new WatchListItem {
+                watchList.Add(ticker, new WatchListItem
+                {
                     Ticker = ticker,
                     JHManagerOverride = ReadText(sheet, row, managerColumn),
                 });
@@ -159,79 +161,95 @@ namespace Odey.ExcelAddin
 
         private void WriteWeightings(Excel.Application app, List<PortfolioDTO> data, Dictionary<string, WatchListItem> watchList)
         {
-            Excel.Worksheet sheet;
+            Worksheet sheet;
             try
             {
-                sheet = app.Sheets["Weightings"];
+                sheet = Globals.Factory.GetVstoObject(app.Sheets["Weightings"]);
             }
             catch
             {
-                sheet = app.Sheets.Add(After: app.Sheets[app.Sheets.Count]);
+                sheet = Globals.Factory.GetVstoObject(app.Sheets.Add(After: app.Sheets[app.Sheets.Count]));
                 sheet.Name = "Weightings";
             }
 
-            // Clear content
-            sheet.Cells.ClearContents();
+            // Fund NAVs
+            var navs = data.GroupBy(p => p.FundId).ToDictionary(g => (FundIds)g.Key, g => g.Select(p => p.FundNAV).Distinct().Single());
 
-            // Headers
-            sheet.Cells[1, 1] = "Ticker";
-            sheet.Cells[1, 2] = "Name";
-            sheet.Cells[1, 3] = "Manager";
-            sheet.Cells[1, 4] = "Strategy";
-            var startColumn = 5;
-            foreach (var fund in funds)
+            // Get table
+            ListObject lov = null;
+            foreach (Excel.ListObject lo in sheet.ListObjects)
             {
-                sheet.Cells[1, startColumn + Array.IndexOf(funds, fund)] = fund.ToString();
+                if (lo.Name == "weightings")
+                {
+                    Debug.WriteLine("Found existing list object");
+                    lov = Globals.Factory.GetVstoObject(lo);
+                }
             }
 
-            Debug.WriteLine($"Header complete");
-
-            // Rows
-            var row = 2;
-            var instruments = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Primary).OrderBy(p => p.BloombergTicker);
-            foreach (var instrument in instruments.ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.StrategyName }).ToList())
+            if (lov == null)
             {
-                Debug.WriteLine($"Writing {instrument.Key.BloombergTicker}");
+                Debug.WriteLine("Creating new list object");
+                Excel.Range range = sheet.Cells[1, 1];
+                lov = sheet.Controls.AddListObject(range, "weightings");
+            }
 
-                // Ticker
-                var ticker = instrument.Key.BloombergTicker;
-                sheet.Cells[row, 1] = ticker;
+            var rows = data
+                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary)
+                .OrderBy(p => p.BloombergTicker)
+                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.StrategyName })
+                .Select(g => {
+                    var ticker = g.Key.BloombergTicker;
+                    var nonCFD = g.FirstOrDefault(p => p.InstrumentClassId != (int)InstrumentClassIds.ContractForDifference);
 
-                // Name
-                var nonCFD = instrument.FirstOrDefault(p => p.InstrumentClassId != (int)InstrumentClassIds.ContractForDifference);
-                sheet.Cells[row, 2] = (nonCFD ?? instrument.First()).InstrumentName;
-
-                // Manager
-                sheet.Cells[row, 3] = instrument.Key.ManagerName;
-
-                // Manager override
-                if (instrument.Key.ManagerName == "James Hanbury" && ticker != null && watchList.ContainsKey(ticker))
-                {
-                    var item = watchList[ticker];
-                    if (item.JHManagerOverride != null)
+                    // Manager
+                    var manager = g.Key.ManagerName;
+                    if (manager == "James Hanbury" && ticker != null && watchList.ContainsKey(ticker))
                     {
-                        sheet.Cells[row, 3] = item.JHManagerOverride;
+                        var item = watchList[ticker];
+                        if (item.JHManagerOverride != null)
+                        {
+                            // Manager override
+                            manager = item.JHManagerOverride;
+                        }
                     }
-                }
 
-                // Strategy
-                if (instrument.Key.StrategyName != "None")
-                {
-                    sheet.Cells[row, 4] = instrument.Key.StrategyName;
-                }
+                    // Strategy
+                    var strategy = g.Key.StrategyName;
+                    if (strategy == "None")
+                    {
+                        strategy = null;
+                    }
 
-                // Exposure %NAV
-                foreach (var fund in instrument.ToLookup(p => p.FundId))
-                {
-                    var fundNAV = fund.Select(p => p.FundNAV).Distinct().Single();
-                    var column = (startColumn + Array.IndexOf(funds, (FundIds)fund.Key));
-                    sheet.Cells[row, column] = fund.Sum(p => p.Exposure) / fundNAV;
-                }
+                    var items = g.ToLookup(p => (FundIds)p.FundId);
 
-                ++row;
-            }
+                    return new
+                    {
+                        Ticker = ticker,
+                        Name = (nonCFD ?? g.First()).InstrumentName,
+                        Manager = manager,
+                        Strategy = strategy,
+                        ARFF = items[FundIds.ARFF].Any() ? items[FundIds.ARFF].Sum(p => p.Exposure) / navs[FundIds.ARFF] : null,
+                        BVFF = items[FundIds.BVFF].Any() ? items[FundIds.BVFF].Sum(p => p.Exposure) / navs[FundIds.BVFF] : null,
+                        DEVM = items[FundIds.DEVM].Any() ? items[FundIds.DEVM].Sum(p => p.Exposure) / navs[FundIds.DEVM] : null,
+                        FDXH = items[FundIds.FDXH].Any() ? items[FundIds.FDXH].Sum(p => p.Exposure) / navs[FundIds.FDXH] : null,
+                        OAR  = items[FundIds.OUAR].Any() ? items[FundIds.OUAR].Sum(p => p.Exposure) / navs[FundIds.OUAR] : null,
+                    };
+                })
+                .ToList();
 
-            //++row;
+            lov.AutoSetDataBoundColumnHeaders = true;
+            lov.SetDataBinding(rows);
+            lov.ListColumns["Ticker"].Range.ColumnWidth = 22;
+            lov.ListColumns["Name"].Range.ColumnWidth = 35;
+            lov.ListColumns["Manager"].Range.ColumnWidth = 20;
+            lov.ListColumns["Strategy"].Range.ColumnWidth = 20;
+            lov.ListColumns["ARFF"].Range.NumberFormat = "0.00%";
+            lov.ListColumns["BVFF"].Range.NumberFormat = "0.00%";
+            lov.ListColumns["DEVM"].Range.NumberFormat = "0.00%";
+            lov.ListColumns["FDXH"].Range.NumberFormat = "0.00%";
+            lov.ListColumns["OAR"].Range.NumberFormat = "0.00%";
+
+
             //var currencies = data.Where(p => p.ExposureTypeId == ExposureTypeIds.Currency).OrderBy(p => p.PositionCurrency).ToLookup(p => p.PositionCurrencyId);
             //foreach (var currency in currencies)
             //{
@@ -251,16 +269,6 @@ namespace Odey.ExcelAddin
             //    }
             //    ++row;
             //}
-
-            // Set number format
-            Excel.Range numbers = sheet.Range[sheet.Cells[2, startColumn], sheet.Cells[row - 1, startColumn + funds.Count()]];
-            numbers.NumberFormat = "0.00%";
-
-            // Set column widths
-            SetColumnWidth(sheet, 1, 22);
-            SetColumnWidth(sheet, 2, 35);
-            SetColumnWidth(sheet, 3, 20);
-            SetColumnWidth(sheet, 4, 20);
         }
 
         private void SetColumnWidth(Excel.Worksheet sheet, int columnIndex, int width)
