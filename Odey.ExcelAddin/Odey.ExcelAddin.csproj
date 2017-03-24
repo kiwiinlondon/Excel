@@ -33,7 +33,7 @@
     <PublishUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</PublishUrl>
     <InstallUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.3</ApplicationVersion>
+    <ApplicationVersion>1.0.0.4</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -187,6 +187,7 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="VstoExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
