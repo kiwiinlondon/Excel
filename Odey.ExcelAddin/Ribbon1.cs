@@ -25,7 +25,7 @@ namespace Odey.ExcelAddin
     {
         private Office.IRibbonUI ribbon;
         private static FundIds[] funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR };
-        private Dictionary<FundIds, decimal?> NAVs;
+        private Dictionary<int, decimal?> NAVs;
 
         public Ribbon1()
         {
@@ -63,7 +63,8 @@ namespace Odey.ExcelAddin
             });
 
             // Cache fund NAVs
-            NAVs = data.GroupBy(p => p.FundId).ToDictionary(g => (FundIds)g.Key, g => g.Select(p => p.FundNAV).Distinct().Single());
+
+            NAVs = data.GroupBy(p => p.FundId).ToDictionary(g => g.Key, g => g.Select(p => p.FundNAV).Distinct().Single());
 
             app.StatusBar = "Reading watch list...";
             var watchList = GetWatchList(app, data);
@@ -221,7 +222,7 @@ namespace Odey.ExcelAddin
                 .Select(g => new {
                     Ticker = g.Key.BloombergTicker,
                     Name = g.Select(p => p.Issuer).Distinct().Single(),
-                    Exposure = g.Sum(p => p.Exposure) / NAVs[fundId],
+                    Exposure = g.Sum(p => p.Exposure) / NAVs[(int)fundId],
                 })
                 .ToList();
 
@@ -236,42 +237,35 @@ namespace Odey.ExcelAddin
             lo.Disconnect();
         }
 
+        private static Dictionary<string, string> managerInitials = new Dictionary<string, string>
+        {
+            { "Adrian Courtenay", "AC" },
+            { "Jamie Grimston", "JG" },
+            { "James Hanbury", "JH" },
+        };
 
         private void WriteWeightings(Excel.Application app, List<PortfolioDTO> data, Dictionary<string, WatchListItem> watchList)
         {
             var rows = data
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary)
                 .OrderBy(p => p.BloombergTicker)
-                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.Issuer, p.ManagerName })
-                .Select(g => {
-                    var nonCFD = g.FirstOrDefault(p => p.InstrumentClassId != (int)InstrumentClassIds.ContractForDifference);
-                    var items = g.ToLookup(p => (FundIds)p.FundId);
-                    return new
-                    {
-                        Ticker = g.Key.BloombergTicker,
-                        Issuer = g.Key.Issuer,
-                        Manager = g.Key.ManagerName,
-                        ARFF = items[FundIds.ARFF].Any() ? items[FundIds.ARFF].Sum(p => p.Exposure) / NAVs[FundIds.ARFF] : null,
-                        BVFF = items[FundIds.BVFF].Any() ? items[FundIds.BVFF].Sum(p => p.Exposure) / NAVs[FundIds.BVFF] : null,
-                        DEVM = items[FundIds.DEVM].Any() ? items[FundIds.DEVM].Sum(p => p.Exposure) / NAVs[FundIds.DEVM] : null,
-                        FDXH = items[FundIds.FDXH].Any() ? items[FundIds.FDXH].Sum(p => p.Exposure) / NAVs[FundIds.FDXH] : null,
-                        OAR  = items[FundIds.OUAR].Any() ? items[FundIds.OUAR].Sum(p => p.Exposure) / NAVs[FundIds.OUAR] : null,
-                    };
+                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.Issuer, p.ManagerName, p.FundName })
+                .Select(g => new {
+                    Ticker = g.Key.BloombergTicker,
+                    Issuer = g.Key.Issuer,
+                    Manager = managerInitials.ContainsKey(g.Key.ManagerName) ? managerInitials[g.Key.ManagerName] : g.Key.ManagerName,
+                    Fund = g.Key.FundName,
+                    PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
                 })
                 .ToList();
 
             var sheet = app.GetOrCreateVstoWorksheet("Weightings");
-            var lo = sheet.GetOrCreateListObject("weightings", 1, 1);
+            var lo = sheet.GetOrCreateListObject("weightings");
             lo.AutoSetDataBoundColumnHeaders = true;
             lo.SetDataBinding(rows);
             lo.ListColumns["Ticker"].Range.ColumnWidth = 22;
             lo.ListColumns["Issuer"].Range.ColumnWidth = 35;
-            lo.ListColumns["Manager"].Range.ColumnWidth = 20;
-            lo.ListColumns["ARFF"].Range.NumberFormat = "0.00%";
-            lo.ListColumns["BVFF"].Range.NumberFormat = "0.00%";
-            lo.ListColumns["DEVM"].Range.NumberFormat = "0.00%";
-            lo.ListColumns["FDXH"].Range.NumberFormat = "0.00%";
-            lo.ListColumns["OAR"].Range.NumberFormat = "0.00%";
+            lo.ListColumns["PercentNAV"].Range.NumberFormat = "0.00%";
             lo.Disconnect();
         }
 
