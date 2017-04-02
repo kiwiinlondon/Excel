@@ -21,7 +21,7 @@ namespace Odey.ExcelAddin
             return sheet;
         }
 
-        public static ListObject GetOrCreateListObject(this Worksheet sheet, string name, int row = 1, int column = 1)
+        public static ListObject GetListObject(this Worksheet sheet, string name)
         {
             ListObject lov = null;
             foreach (Excel.ListObject lo in sheet.ListObjects)
@@ -31,17 +31,23 @@ namespace Odey.ExcelAddin
                     lov = Globals.Factory.GetVstoObject(lo);
                 }
             }
-            if (lov == null)
-            {
-                lov = sheet.Controls.AddListObject(sheet.Cells[row, column], name);
-            }
             return lov;
+        }
+
+        public static ListObject CreateListObject(this Worksheet sheet, string name, int row = 1, int column = 1)
+        {
+            return sheet.Controls.AddListObject(sheet.Cells[row, column], name);
         }
 
         public static void SetColumnWidth(this Excel.Worksheet sheet, int column, int width)
         {
             Excel.Range cell = sheet.Cells[1, column];
             cell.ColumnWidth = width;
+        }
+
+        public static Excel.Range GetCell(this Worksheet sheet, int row, int column)
+        {
+            return sheet.Cells[row, column];
         }
     }
 }

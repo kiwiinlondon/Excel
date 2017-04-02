@@ -18,29 +18,289 @@ namespace Odey.ExcelAddin
     {
         public string Ticker { get; set; }
         public string JHManagerOverride { get; set; }
+        public string Conviction { get; set; }
+    }
+
+    public class ExposureItem
+    {
+        public string Ticker { get; set; }
+        public string Issuer { get; set; }
+        public string Manager { get; set; }
+        public string Fund { get; set; }
+        public int? FundId { get; set; }
+        public decimal? PercentNAV { get; set; }
+        public decimal? NetPosition { get; set; }
+    }
+
+    public class ColumnDef
+    {
+        public string Name { get; set; }
+        public string Formula { get; set; }
+        public string NumberFormat { get; set; }
+        public double Width { get; set; }
     }
 
     [ComVisible(true)]
     public class Ribbon1 : Office.IRibbonExtensibility
     {
         private Office.IRibbonUI ribbon;
+
         private static FundIds[] funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR };
-        private Dictionary<int, decimal?> NAVs;
+
+        private static Dictionary<string, string> managerInitials = new Dictionary<string, string>
+        {
+            { "Adrian Courtenay", "AC" },
+            { "Jamie Grimston", "JG" },
+            { "James Hanbury", "JH" },
+        };
+
+        private static List<ColumnDef> PortfolioColumns = new List<ColumnDef>
+        {
+            new ColumnDef
+            {
+                Name = "NAME",
+                Formula = "=BDP([Ticker],\"SHORT_NAME\",\"Fill=B\")",
+                Width = 18.29,
+            },
+            new ColumnDef
+            {
+                Name = "SECTOR",
+                Formula = "=BDP([Ticker],\"GICS_SECTOR_NAME\",\"Fill=B\")",
+                Width = 26.14,
+            },
+            new ColumnDef
+            {
+                Name = "COUNTRY",
+                Formula = "=BDP([Ticker],\"COUNTRY_FULL_NAME\",\"Fill=B\")",
+                Width = 16.14,
+            },
+            //new ColumnDef
+            //{
+            //    Name = "UPSIDE",
+            //    Formula = "=(H15-I15)/I15",
+            //    Width = 12.29,
+            //    NumberFormat = "0%",
+            //},
+            //new ColumnDef
+            //{
+            //    Name = "BASIS for TARGET PRICE",
+            //    Formula = "",
+            //    Width = 15.43,
+            //},
+            //new ColumnDef
+            //{
+            //    Name = "TARGET PRICE",
+            //    Formula = "=VLOOKUP([Ticker], Watch_List_Table, 5, FALSE) & \"\"",
+            //    Width = 12.29,
+            //    NumberFormat = "#,##0.00",
+            //},
+            new ColumnDef
+            {
+                Name = "PRICE",
+                Formula = "=BDP([Ticker],\"PX_LAST\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "#,##0.00",
+            },
+            //new ColumnDef
+            //{
+            //    Name = "UPSIDE/Weight(%)",
+            //    Formula = "=IFERROR([UPSIDE]/[PercentNAV], \"\")",
+            //    Width = 12.29,
+            //    NumberFormat = "0.00",
+            //},
+            new ColumnDef
+            {
+                Name = "MARKET CAP $ (Mln)",
+                Formula = "=BDP([Ticker],\"CRNCY_ADJ_MKT_CAP\",\"EQY_FUND_CRNCY\",\"USD\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "#,##0",
+            },
+            new ColumnDef
+            {
+                Name = "NET DEBT Inc PENSIONS (Mln)",
+                Formula = "=BDP([Ticker],\"NET_DEBT_ADJ_FOR_PENSION_PR_LIAB\",\"SCALING_FORMAT\",\"MLN\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "#,##0",
+            },
+            new ColumnDef
+            {
+                Name = "ENTERPRISE VALUE",
+                Formula = "=BDP([Ticker],\"CURR_ENTP_VAL\",\"SCALING_FORMAT\",\"MLN\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "#,##0",
+            },
+            new ColumnDef
+            {
+                Name = "ENTERPRISE VALUE EST",
+                Formula = "=BDP([Ticker],\"BEST_EV\",\"BEST_FPERIOD_OVERRIDE\",\"1BF\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "#,##0",
+            },
+            new ColumnDef
+            {
+                Name = "DIVIDEND YIELD",
+                Formula = "=BDP([Ticker],\"EQY_DVD_YLD_IND\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "#,##0.00",
+            },
+            new ColumnDef
+            {
+                Name = "DIVIDEND YIELD EST",
+                Formula = "=BDP([Ticker],\"BEST_DIV_YLD\",\"BEST_FPERIOD_OVERRIDE\",\"1BF\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.00",
+            },
+            new ColumnDef
+            {
+                Name = "EBIT (Mln)",
+                Formula = "=BDP([Ticker],\"EBIT\",\"SCALING_FORMAT\",\"MLN\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0",
+            },
+            new ColumnDef
+            {
+                Name = "EBIT EST",
+                Formula = "=BDP([Ticker],\"BEST_EBIT\",\"BEST_FPERIOD_OVERRIDE=1BF\",\"SCALING_FORMAT\",\"MLN\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0",
+            },
+            //new ColumnDef
+            //{
+            //    Name = "EV/EBIT",
+            //    Formula = "=IFERROR(M15/Q15,\"\")",
+            //    Width = 12.29,
+            //    NumberFormat = "#,##0.00",
+            //},
+            new ColumnDef
+            {
+                Name = "EV/EBIT EST",
+                Formula = "=BDP([Ticker],\"BEST_EV_TO_BEST_EBIT\",\"BEST_FPERIOD_OVERRIDE=1BF\",\"SCALING_FORMAT\",\"MLN\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "#,##0.00",
+            },
+            new ColumnDef
+            {
+                Name = "Sales",
+                Formula = "=BDP([Ticker],\"SALES_REV_TURN\",\"SCALING_FORMAT\",\"MLN\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0",
+            },
+            new ColumnDef
+            {
+                Name = "Sales EST",
+                Formula = "=BDP([Ticker],\"BEST_SALES\", \"BEST_FPERIOD_OVERRIDE=1BF\",\"SCALING_FORMAT\",\"MLN\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0",
+            },
+            //new ColumnDef
+            //{
+            //    Name = "EV/Sales",
+            //    Formula = "=IFERROR(M15/U15,\"\")",
+            //    Width = 12.29,
+            //    NumberFormat = "#,##0.00",
+            //},
+            //new ColumnDef
+            //{
+            //    Name = "EV/Sales EST",
+            //    Formula = "=IFERROR(N15/V15,\"\")",
+            //    Width = 12.29,
+            //    NumberFormat = "#,##0.00",
+            //},
+            new ColumnDef
+            {
+                Name = "TRAIL 12M EPS",
+                Formula = "=BDP([Ticker],\"TRAIL_12M_EPS_BEF_XO_ITEM\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "EPS EST",
+                Formula = "=BDP([Ticker],\"BEST_EPS\",\"BEST_FPERIOD_OVERRIDE=1BF\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "P/E Ratio",
+                Formula = "=BDP([Ticker],\"PE_RATIO\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "P/E Ratio EST",
+                Formula = "=BDP([Ticker],\"BEST_PE_RATIO\",\"BEST_FPERIOD_OVERRIDE=1BF\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "Book Value Per SH",
+                Formula = "=BDP([Ticker],\"BOOK_VAL_PER_SH\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "Book Value Per SH EST",
+                Formula = "=BDP([Ticker],\"BEST_BPS\",\"BEST_FPERIOD_OVERRIDE=1Bf\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "P/NAV",
+                Formula = "=BDP([Ticker],\"PX_TO_BOOK_RATIO\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "P/NAV EST",
+                Formula = "=BDP([Ticker],\"BEST_PX_BPS_RATIO\",\"BEST_FPERIOD_OVERRIDE=1BF\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "Tang Book Value Per SH",
+                Formula = "=BDP([Ticker],\"TANG_BOOK_VAL_PER_SH\",\"Fill=B\")",
+                Width = 0,
+                NumberFormat = "0.0",
+            },
+            new ColumnDef
+            {
+                Name = "P/TNAV",
+                Formula = "=BDP([Ticker],\"PX_TO_TANG_BV_PER_SH\",\"Fill=B\")",
+                Width = 12.29,
+                NumberFormat = "0.0",
+            },
+            //new ColumnDef
+            //{
+            //    Name = "EV/EBITDA",
+            //    Formula = "",
+            //    Width = 9.43,
+            //    NumberFormat = "General",
+            //},
+            new ColumnDef
+            {
+                Name = "60-day beta (MSCI world TR relevant currency for fund)",
+                Formula = "=BDP([Ticker],\"BETA_ADJ_OVERRIDABLE\",\"BETA_OVERRIDE_REL_INDEX=gdduwi index\",\"BETA_OVERRIDE_START_DT\",TEXT('Watch List'!BO6,\"YYYYMMDD\"),\"BETA_OVERRIDE_PERIOD=d\",\"Fill=B\")",
+                Width = 10.71,
+                NumberFormat = "#,##0",
+            },
+        };
 
         public Ribbon1()
         {
         }
-
-        #region IRibbonExtensibility Members
 
         public string GetCustomUI(string ribbonID)
         {
             return GetResourceText("Odey.ExcelAddin.Ribbon1.xml");
         }
 
-        #endregion
-
-        #region Ribbon Callbacks
         //Create callback methods here. For more information about adding callback methods, visit http://go.microsoft.com/fwlink/?LinkID=271226
 
         public void Ribbon_Load(Office.IRibbonUI ribbonUI)
@@ -51,9 +311,14 @@ namespace Odey.ExcelAddin
         public void OnActionCallback(Office.IRibbonControl control)
         {
             var app = Globals.ThisAddIn.Application;
-            
-            //try
-            //{
+
+            var prevScreenUpdating = app.ScreenUpdating;
+            var prevEvents = app.EnableEvents;
+            var prevCalculation = app.Calculation;
+            app.ScreenUpdating = false;
+            app.EnableEvents = false;
+            app.Calculation = Excel.XlCalculation.xlCalculationManual;
+
             app.StatusBar = "Loading portfolio weightings...";
             //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
             var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
@@ -61,10 +326,6 @@ namespace Odey.ExcelAddin
                 FundIds = funds.Cast<int>().ToArray(),
                 ReferenceDates = new[] { DateTime.Today },
             });
-
-            // Cache fund NAVs
-
-            NAVs = data.GroupBy(p => p.FundId).ToDictionary(g => g.Key, g => g.Select(p => p.FundNAV).Distinct().Single());
 
             app.StatusBar = "Reading watch list...";
             var watchList = GetWatchList(app, data);
@@ -104,26 +365,188 @@ namespace Odey.ExcelAddin
                 }
             }
 
-            // Write sheets
-            app.StatusBar = "Writing weightings...";
-            WriteWeightings(app, data, watchList);
+            // Write exposure sheets
+            foreach (var fund in funds)
+            {
+                app.StatusBar = $"Writing {fund} exposure sheet...";
+                WriteExposureSheet(app, fund, data, watchList);
+            }
 
-            // Refresh all
-            app.StatusBar = "Refreshing queries...";
-            Globals.ThisAddIn.Application.ActiveWorkbook.RefreshAll();
+            // Write portfolio sheets
+            foreach (var fund in funds)
+            {
+                app.StatusBar = $"Writing {fund} portfolio sheet...";
+                WritePortfolioSheet(app, fund, data, watchList);
+            }
 
             app.StatusBar = null;
-            //}
-            //catch (Exception e)
-            //{
-            //    app.StatusBar = e.Message;
-            //    throw;
-            //}
+
+            app.EnableEvents = prevEvents;
+            app.ScreenUpdating = prevScreenUpdating;
+            app.Calculation = prevCalculation;
         }
 
-        #endregion
+        private void WriteExposureSheet(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
+        {
+            var rows = weightings
+                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null)
+                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.FundId })
+                .Select(g => new
+                {
+                    Ticker = g.Key.BloombergTicker,
+                    Manager = managerInitials.ContainsKey(g.Key.ManagerName) ? managerInitials[g.Key.ManagerName] : g.Key.ManagerName,
+                    FundId = g.Key.FundId,
+                    PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
+                    NetPosition = g.Sum(p => p.NetPosition),
+                })
+                .ToList();
+            var sheet = app.GetOrCreateVstoWorksheet($"Exposure {fundId}");
 
-        #region Helpers
+            var managers = new Dictionary<string, int>
+            {
+                { "JH", 28 },
+                { "AC", 12 },
+                { "JG", 10 },
+            };
+
+            var row = 1;
+            foreach (var manager in managers)
+            {
+                sheet.GetCell(row, 1).Value = managerInitials.Single(x => x.Value == manager.Key).Key;
+                ++row;
+
+                var fund = rows.Where(x => x.Manager == manager.Key && x.FundId == (int)fundId);
+                var longs = fund.Where(x => x.PercentNAV > 0).OrderByDescending(x => x.PercentNAV).Take(manager.Value).Select((x, j) => new
+                {
+                    Rank = j + 1,
+                    Long = x.Ticker,
+                    PercentNAV = x.PercentNAV,
+                    NetPosition = x.NetPosition
+                }).ToList();
+                var shorts = fund.Where(x => x.PercentNAV < 0).OrderBy(x => x.PercentNAV).Take(manager.Value).Select((x, j) => new
+                {
+                    Rank = j + 1,
+                    Short = x.Ticker,
+                    PercentNAV = x.PercentNAV,
+                    NetPosition = x.NetPosition
+                }).ToList();
+
+
+                var column = 1;
+
+                if (longs.Any())
+                {
+                    var tName = $"Exposure_{fundId}_{manager.Key}_Long";
+                    var longTable = sheet.GetListObject(tName);
+                    if (longTable == null)
+                    {
+                        longTable = sheet.CreateListObject(tName, row, column);
+                        longTable.ShowTableStyleRowStripes = false;
+                    }
+                    longTable.AutoSetDataBoundColumnHeaders = true;
+                    longTable.SetDataBinding(longs);
+                    longTable.ListColumns["Long"].Range.ColumnWidth = 22;
+                    longTable.ListColumns["PercentNAV"].Range.ColumnWidth = 14;
+                    longTable.ListColumns["PercentNAV"].Range.NumberFormat = "0.00%";
+                    longTable.ListColumns["NetPosition"].Range.NumberFormat = "#,###";
+                    longTable.ListColumns["NetPosition"].Range.ColumnWidth = 15;
+                    longTable.Disconnect();
+                    column += longTable.ListColumns.Count + 1;
+                }
+
+                if (shorts.Any())
+                {
+                    var tName = $"Exposure_{fundId}_{manager.Key}_Short";
+                    var shortTable = sheet.GetListObject(tName);
+                    if (shortTable == null)
+                    {
+                        shortTable = sheet.CreateListObject(tName, row, column);
+                        shortTable.ShowTableStyleRowStripes = false;
+                    }
+                    shortTable.AutoSetDataBoundColumnHeaders = true;
+                    shortTable.SetDataBinding(shorts);
+                    shortTable.ListColumns["Short"].DataBodyRange.ColumnWidth = 22;
+                    shortTable.ListColumns["PercentNAV"].DataBodyRange.ColumnWidth = 14;
+                    shortTable.ListColumns["PercentNAV"].DataBodyRange.NumberFormat = "0.00%";
+                    shortTable.ListColumns["NetPosition"].DataBodyRange.NumberFormat = "#,###";
+                    shortTable.ListColumns["NetPosition"].Range.EntireColumn.Hidden = true;
+                    shortTable.Disconnect();
+
+                    // Daily Vol
+                    var col = shortTable.ListColumns.Add();
+                    col.Name = "% Daily Volume";
+                    var AverageVolumeAllExchanges3M = "BDP([Short], \"INTERVAL_AVG\", \"MARKET_DATA_OVERRIDE=pq718\", \"CALC_INTERVAL=3m\")";
+                    col.DataBodyRange.Formula = $"=[NetPosition]/{AverageVolumeAllExchanges3M}";
+                    col.DataBodyRange.NumberFormat = "0.00%";
+                    col.Range.ColumnWidth = 15;
+
+                    // Conviction
+                    var col2 = shortTable.ListColumns.Add();
+                    col2.Name = "Conviction";
+                    var convictionColumn = 51;
+                    col2.DataBodyRange.Formula = $"=VLOOKUP([Short], Watch_List_Table, {convictionColumn}, FALSE) & \"\"";
+
+                    column += shortTable.ListColumns.Count;
+                }
+
+                if (column > 1)
+                {
+                    Excel.Range header = sheet.Range[sheet.Cells[row - 1, 1], sheet.Cells[row - 1, column - 1]];
+                    //header.Merge();
+                }
+
+                row += manager.Value + 5;
+            }
+        }
+        
+        private void WritePortfolioSheet(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
+        {
+            var rows = weightings
+                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
+                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName })
+                .Select(g => new
+                {
+                    Ticker = g.Key.BloombergTicker,
+                    Manager = managerInitials.ContainsKey(g.Key.ManagerName) ? managerInitials[g.Key.ManagerName] : g.Key.ManagerName,
+                    PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
+                })
+                .ToList();
+
+            var sheet = app.GetOrCreateVstoWorksheet($"Portfolio {fundId}");
+
+            var tName = $"Portfolio_{fundId}";
+            var table = sheet.GetListObject(tName);
+            if (table == null)
+            {
+                table = sheet.CreateListObject(tName, 14, 1);
+                table.ShowTableStyleRowStripes = false;
+                table.ShowTableStyleFirstColumn = true;
+                table.AutoSetDataBoundColumnHeaders = true;
+                table.HeaderRowRange.WrapText = true;
+                table.HeaderRowRange.RowHeight = 75;
+                table.HeaderRowRange.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+                table.HeaderRowRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            }
+
+            table.SetDataBinding(rows);
+            table.ListColumns["Ticker"].DataBodyRange.ColumnWidth = 22;
+            table.ListColumns["PercentNAV"].DataBodyRange.ColumnWidth = 14;
+            table.ListColumns["PercentNAV"].DataBodyRange.NumberFormat = "0.00%";
+            table.Disconnect();
+
+            foreach (var column in PortfolioColumns)
+            {
+                var col = table.ListColumns.Add();
+                col.Name = column.Name;
+                col.Range.ColumnWidth = column.Width;
+                if (column.NumberFormat != null)
+                {
+                    col.Range.NumberFormat = column.NumberFormat;
+                }
+                col.DataBodyRange.Formula = column.Formula.Replace("[Ticker]", "$A15");
+            }
+
+        }
 
         private Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, List<PortfolioDTO> data)
         {
@@ -133,6 +556,8 @@ namespace Odey.ExcelAddin
             const string tickerColumnName = "TICKER";
             const int managerColumn = 50;
             const string managerColumnName = "Portfolio Manager";
+            const int convictionColumn = 51;
+            const string convictionColName = "Conviction Level";
 
             const int headerRow = 5;
 
@@ -141,6 +566,11 @@ namespace Odey.ExcelAddin
             {
                 // Get exisiting sheet
                 sheet = app.Sheets[sheetName];
+
+                // Make sure the header is in the right format
+                EnsureText(sheet, headerRow, tickerColumn, tickerColumnName);
+                EnsureText(sheet, headerRow, managerColumn, managerColumnName);
+                EnsureText(sheet, headerRow, convictionColumn, convictionColName);
             }
             catch
             {
@@ -151,18 +581,8 @@ namespace Odey.ExcelAddin
                 // Set header
                 sheet.Cells[headerRow, tickerColumn] = tickerColumnName;
                 sheet.Cells[headerRow, managerColumn] = managerColumnName;
+                sheet.Cells[headerRow, convictionColumn] = convictionColName;
             }
-            
-            //for (var i = 1; i < 100; ++i)
-            //{
-            //    Excel.Range cell = sheet.Cells[headerRow, i];
-            //    Excel.Range cell2 = sheet.Cells[headerRow + 1, i];
-
-            //    Debug.WriteLine($"{cell.Address} {cell.Text} {cell2.Formula}");
-            //}
-
-            EnsureText(sheet, headerRow, tickerColumn, tickerColumnName);
-            EnsureText(sheet, headerRow, managerColumn, managerColumnName);
 
             // Read existing tickers
             var watchList = new Dictionary<string, WatchListItem>();
@@ -174,9 +594,12 @@ namespace Odey.ExcelAddin
                 {
                     Ticker = ticker,
                     JHManagerOverride = ReadText(sheet, row, managerColumn),
+                    Conviction = ReadText(sheet, row, convictionColumn),
                 });
                 ticker = ReadText(sheet, ++row, tickerColumn);
             }
+
+
 
             // Add new tickers
             var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(watchList.Keys).OrderBy(t => t).ToList();
@@ -212,63 +635,6 @@ namespace Odey.ExcelAddin
             }
         }
 
-        private void WritePortfolio(Excel.Application app, List<PortfolioDTO> data, Dictionary<string, WatchListItem> watchList, FundIds fundId)
-        {
-            var rows = data
-                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary)
-                .Where(p => p.FundId == (int)fundId)
-                .OrderBy(p => p.BloombergTicker)
-                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker })
-                .Select(g => new {
-                    Ticker = g.Key.BloombergTicker,
-                    Name = g.Select(p => p.Issuer).Distinct().Single(),
-                    Exposure = g.Sum(p => p.Exposure) / NAVs[(int)fundId],
-                })
-                .ToList();
-
-            var sheet = app.GetOrCreateVstoWorksheet($"Portfolio - {fundId}");
-            var lo = sheet.GetOrCreateListObject($"Portfolio - {fundId}");
-
-            lo.AutoSetDataBoundColumnHeaders = true;
-            lo.SetDataBinding(rows);
-            lo.ListColumns["Ticker"].Range.ColumnWidth = 22;
-            lo.ListColumns["Name"].Range.ColumnWidth = 35;
-            lo.ListColumns["Exposure"].Range.NumberFormat = "0.00%";
-            lo.Disconnect();
-        }
-
-        private static Dictionary<string, string> managerInitials = new Dictionary<string, string>
-        {
-            { "Adrian Courtenay", "AC" },
-            { "Jamie Grimston", "JG" },
-            { "James Hanbury", "JH" },
-        };
-
-        private void WriteWeightings(Excel.Application app, List<PortfolioDTO> data, Dictionary<string, WatchListItem> watchList)
-        {
-            var rows = data
-                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary)
-                .OrderBy(p => p.BloombergTicker)
-                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.Issuer, p.ManagerName, p.FundName })
-                .Select(g => new {
-                    Ticker = g.Key.BloombergTicker,
-                    Issuer = g.Key.Issuer,
-                    Manager = managerInitials.ContainsKey(g.Key.ManagerName) ? managerInitials[g.Key.ManagerName] : g.Key.ManagerName,
-                    Fund = g.Key.FundName,
-                    PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
-                })
-                .ToList();
-
-            var sheet = app.GetOrCreateVstoWorksheet("Weightings");
-            var lo = sheet.GetOrCreateListObject("weightings");
-            lo.AutoSetDataBoundColumnHeaders = true;
-            lo.SetDataBinding(rows);
-            lo.ListColumns["Ticker"].Range.ColumnWidth = 22;
-            lo.ListColumns["Issuer"].Range.ColumnWidth = 35;
-            lo.ListColumns["PercentNAV"].Range.NumberFormat = "0.00%";
-            lo.Disconnect();
-        }
-
         private static string GetResourceText(string resourceName)
         {
             Assembly asm = Assembly.GetExecutingAssembly();
@@ -289,6 +655,5 @@ namespace Odey.ExcelAddin
             return null;
         }
 
-        #endregion
     }
 }
