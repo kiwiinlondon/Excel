@@ -433,15 +433,23 @@ namespace Odey.ExcelAddin
             var columnList = new[] { "B", "E", "F", "S", "T", "U", "W", "Z", "AD", "AI", "AM", "AQ", "AS", "AT", "AW", "BK" };
             var y = 14;
             Excel.Range r = sheet.Range[sheet.Cells[y, 1], sheet.Cells[y + topX, 1 + columnList.Length]];
-            Debug.WriteLine(r.Address);
             r.ClearContents();
 
             // Write header
-            sheet.Cells[y, 1] = "Ticker";
+            Excel.Range headerRange = sheet.Range[sheet.Cells[y, 1], sheet.Cells[y, 1 + columnList.Length]];
+            headerRange.WrapText = true;
+            headerRange.RowHeight = 75;
+            headerRange.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+            headerRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            Excel.Range cell = sheet.Cells[y, 1];
+            cell.Value = "Ticker";
+            cell.ColumnWidth = 14;
             var x = 2;
             foreach (var columnIndex in columnList)
             {
-                sheet.Cells[y, x].Formula = $"='Watch List'!{columnIndex}{5}";
+                cell = sheet.Cells[y, x];
+                cell.Formula = $"='Watch List'!{columnIndex}{5}";
+                cell.ColumnWidth = 14;
                 ++x;
             }
             ++y;
