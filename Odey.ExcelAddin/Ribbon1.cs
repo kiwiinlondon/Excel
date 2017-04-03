@@ -25,13 +25,17 @@ namespace Odey.ExcelAddin
         public double? Upside { get; set; }
     }
 
-    public static class WatchListColumns
+    public class WatchList
     {
-        public static ColumnDef Ticker = new ColumnDef { Index = 1, Name = "TICKER" };
-        public static ColumnDef Upside = new ColumnDef { Index = 20, Name = "TICKER" };
-        public static ColumnDef Quality = new ColumnDef { Index = 49, Name = "TICKER" };
-        public static ColumnDef Manager = new ColumnDef { Index = 50, Name = "TICKER" };
-        public static ColumnDef Conviction = new ColumnDef { Index = 51, Name = "TICKER" };
+        public static int HeaderRow = 4;
+        public static int FirstColumn = 1;
+
+        public static ColumnDef Ticker = new ColumnDef { Index = 1, AlphabeticalIndex = "A", Name = "Ticker" };
+        public static ColumnDef Upside = new ColumnDef { Index = 20, AlphabeticalIndex = "T", Name = "Upside" };
+        public static ColumnDef AverageVolume = new ColumnDef { Index = 47, AlphabeticalIndex = "AU", Name = "Average volume all exchanges 3m" };
+        public static ColumnDef Quality = new ColumnDef { Index = 49, AlphabeticalIndex = "AW", Name = "High (H) or Low (L) Quality?" };
+        public static ColumnDef Manager = new ColumnDef { Index = 50, AlphabeticalIndex = "AX", Name = "Portfolio Manager" };
+        public static ColumnDef Conviction = new ColumnDef { Index = 51, AlphabeticalIndex = "AY", Name = "Conviction Level" };
     }
 
     public class ExposureItem
@@ -48,6 +52,8 @@ namespace Odey.ExcelAddin
     public class ColumnDef
     {
         public int? Index { get; set; }
+        public string AlphabeticalIndex { get; set; }
+
         public string Name { get; set; }
         public string Formula { get; set; }
         public string NumberFormat { get; set; }
@@ -351,17 +357,17 @@ namespace Odey.ExcelAddin
                 WriteWatchList(app, watchList, "Watch List Low Quality", false, "L");
                 foreach (var fund in funds)
                 {
-                    //WriteExposureSheet(app, fund, data, watchList);
+                    WriteExposureSheet(app, fund, data, watchList);
                 }
                 foreach (var fund in funds)
                 {
                     WritePortfolioSheet(app, fund, data, watchList);
                 }
             }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message, e.GetType().Name);
-            }
+            //catch (Exception e)
+            //{
+            //    MessageBox.Show(e.Message, e.GetType().Name);
+            //}
             finally
             {
                 app.StatusBar = null;
@@ -473,13 +479,12 @@ namespace Odey.ExcelAddin
             app.StatusBar = $"Writing {fundId} exposure sheet...";
 
             var rows = weightings
-                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null)
-                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.FundId })
+                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
+                .ToLookup(p => new { p.BloombergTicker, p.ManagerName })
                 .Select(g => new
                 {
                     Ticker = g.Key.BloombergTicker,
                     Manager = managerInitials.ContainsKey(g.Key.ManagerName) ? managerInitials[g.Key.ManagerName] : g.Key.ManagerName,
-                    FundId = g.Key.FundId,
                     PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
                     NetPosition = g.Sum(p => p.NetPosition),
                 })
@@ -493,96 +498,112 @@ namespace Odey.ExcelAddin
                 { "JG", 12 },
             };
 
+            var headers = new[] {
+                new ColumnDef { Name = "#", Width = 3.4 },
+                new ColumnDef { Name = "Ticker", Width = 22 },
+                new ColumnDef { Name = "% NAV", Width = 7, NumberFormat = "0.00%" },
+                new ColumnDef { Name = "Net Position", Width = 0, NumberFormat = "#,###" },
+                new ColumnDef { Name = "Upside", Width = 7 },
+                new ColumnDef { Name = "Daily Volume", Width = 7.5 },
+                new ColumnDef { Name = "Conviction", Width = 9.7 }
+            };
+
             var row = 1;
             foreach (var manager in managers)
             {
-                sheet.GetCell(row, 1).Value = managerInitials.Single(x => x.Value == manager.Key).Key;
+                var fund = rows.Where(x => x.Manager == manager.Key);
+
+                // Write portfolio manager
+                var column = 1;
+                sheet.Cells[row, column] = managerInitials.Single(x => x.Value == manager.Key).Key;
                 ++row;
 
-                var fund = rows.Where(x => x.Manager == manager.Key && x.FundId == (int)fundId);
-                var longs = fund.Where(x => x.PercentNAV > 0).OrderByDescending(x => x.PercentNAV).Take(manager.Value).Select((x, j) => new
-                {
-                    Rank = j + 1,
-                    Long = x.Ticker,
-                    PercentNAV = x.PercentNAV,
-                    NetPosition = x.NetPosition
-                }).ToList();
-                var shorts = fund.Where(x => x.PercentNAV < 0).OrderBy(x => x.PercentNAV).Take(manager.Value).Select((x, j) => new
-                {
-                    Rank = j + 1,
-                    Short = x.Ticker,
-                    PercentNAV = x.PercentNAV,
-                    NetPosition = x.NetPosition
-                }).ToList();
+                // Clear longs
+                Excel.Range range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + manager.Value, column + headers.Length - 1]];
+                range.ClearContents();
 
+                // Write longs
+                var longs = fund.Where(x => x.PercentNAV > 0).OrderByDescending(x => x.PercentNAV).Take(manager.Value).ToList();
+                WriteIndexColumn(sheet, row, column++, headers[0], longs.Count());
+                WriteFieldColumn(sheet, row, column++, headers[1], longs, "Ticker");
+                WriteFieldColumn(sheet, row, column++, headers[2], longs, "PercentNAV");
+                WriteFieldColumn(sheet, row, column++, headers[3], longs, "NetPosition");
+                WriteWatchListColumn(sheet, row, column++, headers[4], longs, watchList, WatchList.Upside);
+                WriteWatchListColumn(sheet, row, column++, headers[5], longs, watchList, WatchList.AverageVolume);
+                WriteWatchListColumn(sheet, row, column++, headers[6], longs, watchList, WatchList.Conviction);
 
-                var column = 1;
+                // Divider
+                range = sheet.Columns[column++];
+                range.ColumnWidth = 4;
 
-                if (longs.Any())
+                // Clear shorts
+                range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + manager.Value, column + headers.Length - 1]];
+                range.ClearContents();
+
+                // Write shorts
+                var shorts = fund.Where(x => x.PercentNAV < 0).OrderBy(x => x.PercentNAV).Take(manager.Value).ToList();
+                WriteIndexColumn(sheet, row, column++, headers[0], shorts.Count());
+                WriteFieldColumn(sheet, row, column++, headers[1], shorts, "Ticker");
+                WriteFieldColumn(sheet, row, column++, headers[2], shorts, "PercentNAV");
+                WriteFieldColumn(sheet, row, column++, headers[3], shorts, "NetPosition");
+                WriteWatchListColumn(sheet, row, column++, headers[4], shorts, watchList, WatchList.Upside);
+                WriteWatchListColumn(sheet, row, column++, headers[5], shorts, watchList, WatchList.AverageVolume);
+                WriteWatchListColumn(sheet, row, column++, headers[6], shorts, watchList, WatchList.Conviction);
+
+                row += manager.Value + 2;
+            }
+        }
+
+        private void WriteIndexColumn(Worksheet sheet, int row, int column, ColumnDef col, int max)
+        {
+            Excel.Range header = sheet.Cells[row, column];
+            header.Value = col.Name;
+            header.ColumnWidth = col.Width;
+
+            for (var y = 1; y <= max; ++y)
+            {
+                sheet.Cells[row + y, column] = y;
+            }
+        }
+
+        private void WriteFieldColumn<T>(Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<T> data, string field)
+        {
+            Excel.Range header = sheet.Cells[row, column];
+            header.Value = col.Name;
+            header.ColumnWidth = col.Width;
+            
+            var y = 1;
+            var pi = typeof(T).GetProperty(field);
+            foreach (var item in data)
+            {
+                Excel.Range cell = sheet.Cells[row + y, column];
+                cell.Value = pi.GetValue(item);
+                if (col.NumberFormat != null)
                 {
-                    var tName = $"Exposure_{fundId}_{manager.Key}_Long";
-                    var longTable = sheet.GetListObject(tName);
-                    if (longTable == null)
-                    {
-                        longTable = sheet.CreateListObject(tName, row, column);
-                        longTable.ShowTableStyleRowStripes = false;
-                    }
-                    longTable.AutoSetDataBoundColumnHeaders = true;
-                    longTable.SetDataBinding(longs);
-                    longTable.ListColumns["Long"].Range.ColumnWidth = 22;
-                    longTable.ListColumns["PercentNAV"].Range.ColumnWidth = 14;
-                    longTable.ListColumns["PercentNAV"].Range.NumberFormat = "0.00%";
-                    longTable.ListColumns["NetPosition"].Range.NumberFormat = "#,###";
-                    longTable.ListColumns["NetPosition"].Range.ColumnWidth = 15;
-                    longTable.Disconnect();
-                    column += longTable.ListColumns.Count + 1;
+                    cell.NumberFormat = col.NumberFormat;
                 }
-
-                if (shorts.Any())
-                {
-                    var tName = $"Exposure_{fundId}_{manager.Key}_Short";
-                    var shortTable = sheet.GetListObject(tName);
-                    if (shortTable == null)
-                    {
-                        shortTable = sheet.CreateListObject(tName, row, column);
-                        shortTable.ShowTableStyleRowStripes = false;
-                    }
-                    shortTable.AutoSetDataBoundColumnHeaders = true;
-                    shortTable.SetDataBinding(shorts);
-                    shortTable.ListColumns["Short"].DataBodyRange.ColumnWidth = 22;
-                    shortTable.ListColumns["PercentNAV"].DataBodyRange.ColumnWidth = 14;
-                    shortTable.ListColumns["PercentNAV"].DataBodyRange.NumberFormat = "0.00%";
-                    shortTable.ListColumns["NetPosition"].DataBodyRange.NumberFormat = "#,###";
-                    shortTable.ListColumns["NetPosition"].Range.EntireColumn.Hidden = true;
-                    shortTable.Disconnect();
-
-                    // Daily Vol
-                    var col = shortTable.ListColumns.Add();
-                    col.Name = "% Daily Volume";
-                    var AverageVolumeAllExchanges3M = "BDP([Short], \"INTERVAL_AVG\", \"MARKET_DATA_OVERRIDE=pq718\", \"CALC_INTERVAL=3m\")";
-                    col.DataBodyRange.Formula = $"=[NetPosition]/{AverageVolumeAllExchanges3M}";
-                    col.DataBodyRange.NumberFormat = "0.00%";
-                    col.Range.ColumnWidth = 15;
-
-                    // Conviction
-                    var col2 = shortTable.ListColumns.Add();
-                    col2.Name = "Conviction";
-                    var convictionColumn = 51;
-                    col2.DataBodyRange.Formula = $"=VLOOKUP([Short], Watch_List_Table, {convictionColumn}, FALSE) & \"\"";
-
-                    column += shortTable.ListColumns.Count;
-                }
-
-                if (column > 1)
-                {
-                    Excel.Range header = sheet.Range[sheet.Cells[row - 1, 1], sheet.Cells[row - 1, column - 1]];
-                    //header.Merge();
-                }
-
-                row += manager.Value + 5;
+                ++y;
             }
         }
         
+        private void WriteWatchListColumn(Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<dynamic> data, Dictionary<string, WatchListItem> watchList, ColumnDef watchListColumn)
+        {
+            Excel.Range header = sheet.Cells[row, column];
+            header.Value = col.Name;
+            header.ColumnWidth = col.Width;
+
+            var y = 1;
+            foreach (var item in data)
+            {
+                string ticker = item.Ticker;
+                var watchListItem = watchList[ticker];
+
+                Excel.Range cell = sheet.Cells[row + y, column];
+                cell.Formula = $"='Watch List'!{watchListColumn.AlphabeticalIndex}{watchListItem.RowIndex}";
+                ++y;
+            }
+        }
+
         private void WritePortfolioSheet(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
         {
             app.StatusBar = $"Writing {fundId} portfolio sheet...";
@@ -668,19 +689,19 @@ namespace Odey.ExcelAddin
             // Read existing tickers
             var watchList = new Dictionary<string, WatchListItem>();
             var row = headerRow + 1;
-            var ticker = sheet.Cells[row, WatchListColumns.Ticker.Index.Value].Value2 as string;
+            var ticker = sheet.Cells[row, WatchList.Ticker.Index.Value].Value2 as string;
             while (ticker != null)
             {
                 watchList.Add(ticker, new WatchListItem
                 {
                     RowIndex = row,
                     Ticker = ticker,
-                    Quality = sheet.Cells[row, WatchListColumns.Quality.Index.Value].Value2 as string,
-                    JHManagerOverride = sheet.Cells[row, WatchListColumns.Manager.Index.Value].Value2 as string,
-                    Conviction = sheet.Cells[row, WatchListColumns.Conviction.Index.Value].Value2 as string,
-                    Upside = sheet.Cells[row, WatchListColumns.Upside.Index.Value].Value2 as double?,
+                    Quality = sheet.Cells[row, WatchList.Quality.Index.Value].Value2 as string,
+                    JHManagerOverride = sheet.Cells[row, WatchList.Manager.Index.Value].Value2 as string,
+                    Conviction = sheet.Cells[row, WatchList.Conviction.Index.Value].Value2 as string,
+                    Upside = sheet.Cells[row, WatchList.Upside.Index.Value].Value2 as double?,
                 });
-                ticker = sheet.Cells[++row, WatchListColumns.Ticker.Index.Value].Value2 as string;
+                ticker = sheet.Cells[++row, WatchList.Ticker.Index.Value].Value2 as string;
             }
             
             // Add new tickers
@@ -692,7 +713,7 @@ namespace Odey.ExcelAddin
                     RowIndex = row,
                     Ticker = newTicker,
                 });
-                sheet.Cells[row, WatchListColumns.Ticker.Index.Value] = newTicker;
+                sheet.Cells[row, WatchList.Ticker.Index.Value] = newTicker;
                 ++row;
             }
 
