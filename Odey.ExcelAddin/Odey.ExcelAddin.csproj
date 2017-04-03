@@ -31,13 +31,13 @@
     <DefineConstants>VSTO40</DefineConstants>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin2\</PublishUrl>
-    <InstallUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin2\</InstallUrl>
+    <PublishUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</PublishUrl>
+    <InstallUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.9</ApplicationVersion>
+    <ApplicationVersion>1.0.0.14</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
-    <UpdateInterval>7</UpdateInterval>
+    <UpdateInterval>0</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>Odey.ExcelAddin</ProductName>
     <PublisherName />
