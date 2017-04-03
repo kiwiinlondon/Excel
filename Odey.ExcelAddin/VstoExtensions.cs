@@ -1,6 +1,8 @@
 ﻿using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
 using Microsoft.Office.Tools.Excel;
+using System.Diagnostics;
+using System;
 
 namespace Odey.ExcelAddin
 {
@@ -36,7 +38,15 @@ namespace Odey.ExcelAddin
 
         public static ListObject CreateListObject(this Worksheet sheet, string name, int row = 1, int column = 1)
         {
-            return sheet.Controls.AddListObject(sheet.Cells[row, column], name);
+            Excel.Range position = sheet.Cells[row, column];
+            try
+            {
+                return sheet.Controls.AddListObject(position, name);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Could not create table '{name}' at {position.AddressLocal[false, false]} in sheet '{sheet.Name}'", e);
+            }
         }
 
         public static void SetColumnWidth(this Excel.Worksheet sheet, int column, int width)

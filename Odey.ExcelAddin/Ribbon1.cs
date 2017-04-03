@@ -11,14 +11,27 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Office.Tools.Excel;
+using System.Windows.Forms;
 
 namespace Odey.ExcelAddin
 {
     public class WatchListItem
     {
+        public int RowIndex { get; set; }
         public string Ticker { get; set; }
+        public string Quality { get; set; }
         public string JHManagerOverride { get; set; }
         public string Conviction { get; set; }
+        public double? Upside { get; set; }
+    }
+
+    public static class WatchListColumns
+    {
+        public static ColumnDef Ticker = new ColumnDef { Index = 1, Name = "TICKER" };
+        public static ColumnDef Upside = new ColumnDef { Index = 20, Name = "TICKER" };
+        public static ColumnDef Quality = new ColumnDef { Index = 49, Name = "TICKER" };
+        public static ColumnDef Manager = new ColumnDef { Index = 50, Name = "TICKER" };
+        public static ColumnDef Conviction = new ColumnDef { Index = 51, Name = "TICKER" };
     }
 
     public class ExposureItem
@@ -34,6 +47,7 @@ namespace Odey.ExcelAddin
 
     public class ColumnDef
     {
+        public int? Index { get; set; }
         public string Name { get; set; }
         public string Formula { get; set; }
         public string NumberFormat { get; set; }
@@ -319,18 +333,46 @@ namespace Odey.ExcelAddin
             app.EnableEvents = false;
             app.Calculation = Excel.XlCalculation.xlCalculationManual;
 
-            app.StatusBar = "Loading portfolio weightings...";
-            //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
-            var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
+            try
             {
-                FundIds = funds.Cast<int>().ToArray(),
-                ReferenceDates = new[] { DateTime.Today },
-            });
+                app.StatusBar = "Loading portfolio weightings...";
+                var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
+                {
+                    FundIds = funds.Cast<int>().ToArray(),
+                    ReferenceDates = new[] { DateTime.Today },
+                });
+                //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
 
-            app.StatusBar = "Reading watch list...";
-            var watchList = GetWatchList(app, data);
+                var watchList = GetWatchList(app, data);
+                ApplyManagerOverrides(data, watchList);
+                WriteWatchList(app, watchList, "Watch List Top", true);
+                WriteWatchList(app, watchList, "Watch List Bottom", false);
+                WriteWatchList(app, watchList, "Watch List High Quality", true, "H");
+                WriteWatchList(app, watchList, "Watch List Low Quality", false, "L");
+                foreach (var fund in funds)
+                {
+                    //WriteExposureSheet(app, fund, data, watchList);
+                }
+                foreach (var fund in funds)
+                {
+                    WritePortfolioSheet(app, fund, data, watchList);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, e.GetType().Name);
+            }
+            finally
+            {
+                app.StatusBar = null;
+                app.EnableEvents = prevEvents;
+                app.ScreenUpdating = prevScreenUpdating;
+                app.Calculation = prevCalculation;
+            }
+        }
 
-            // Apply watch list
+        private void ApplyManagerOverrides(List<PortfolioDTO> data, Dictionary<string, WatchListItem> watchList)
+        {
             foreach (var row in data)
             {
                 if (row.StrategyName == "None")
@@ -364,30 +406,64 @@ namespace Odey.ExcelAddin
                     }
                 }
             }
+        }
 
-            // Write exposure sheets
-            foreach (var fund in funds)
+        private void WriteWatchList(Excel.Application app, Dictionary<string, WatchListItem> watchList, string sheetName, bool descending, string onlyQuality = null)
+        {
+            const int topX = 30;
+
+            var rows = watchList.Values.Where(w => w.Upside.HasValue);
+            if (onlyQuality != null)
             {
-                app.StatusBar = $"Writing {fund} exposure sheet...";
-                WriteExposureSheet(app, fund, data, watchList);
+                rows = rows.Where(w => w.Quality == onlyQuality);
             }
-
-            // Write portfolio sheets
-            foreach (var fund in funds)
+            if (descending)
             {
-                app.StatusBar = $"Writing {fund} portfolio sheet...";
-                WritePortfolioSheet(app, fund, data, watchList);
+                rows = rows.OrderByDescending(w => w.Upside);
             }
+            else
+            {
+                rows = rows.OrderBy(w => w.Upside);
+            }
+            rows = rows.Take(topX);
 
-            app.StatusBar = null;
+            var sheet = app.GetOrCreateVstoWorksheet(sheetName);
 
-            app.EnableEvents = prevEvents;
-            app.ScreenUpdating = prevScreenUpdating;
-            app.Calculation = prevCalculation;
+            // Clear data
+            var columnList = new[] { "B", "E", "F", "S", "T", "U", "W", "Z", "AD", "AI", "AM", "AQ", "AS", "AT", "AW", "BK" };
+            var y = 14;
+            Excel.Range r = sheet.Range[sheet.Cells[y, 1], sheet.Cells[y + topX, 1 + columnList.Length]];
+            Debug.WriteLine(r.Address);
+            r.ClearContents();
+
+            // Write header
+            sheet.Cells[y, 1] = "Ticker";
+            var x = 2;
+            foreach (var columnIndex in columnList)
+            {
+                sheet.Cells[y, x].Formula = $"='Watch List'!{columnIndex}{5}";
+                ++x;
+            }
+            ++y;
+
+            // Write content
+            foreach (var row in rows)
+            {
+                sheet.Cells[y, 1] = row.Ticker;
+                x = 2;
+                foreach (var columnIndex in columnList)
+                {
+                    sheet.Cells[y, x].Formula = $"='Watch List'!{columnIndex}{row.RowIndex}";
+                    ++x;
+                }
+                ++y;
+            }
         }
 
         private void WriteExposureSheet(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
         {
+            app.StatusBar = $"Writing {fundId} exposure sheet...";
+
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null)
                 .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName, p.FundId })
@@ -404,9 +480,9 @@ namespace Odey.ExcelAddin
 
             var managers = new Dictionary<string, int>
             {
-                { "JH", 28 },
-                { "AC", 12 },
-                { "JG", 10 },
+                { "JH", 34 },
+                { "AC", 10 },
+                { "JG", 12 },
             };
 
             var row = 1;
@@ -501,6 +577,8 @@ namespace Odey.ExcelAddin
         
         private void WritePortfolioSheet(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
         {
+            app.StatusBar = $"Writing {fundId} portfolio sheet...";
+
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
                 .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName })
@@ -550,15 +628,8 @@ namespace Odey.ExcelAddin
 
         private Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, List<PortfolioDTO> data)
         {
+            app.StatusBar = "Reading watch list...";
             const string sheetName = "Watch List";
-
-            const int tickerColumn = 1;
-            const string tickerColumnName = "TICKER";
-            const int managerColumn = 50;
-            const string managerColumnName = "Portfolio Manager";
-            const int convictionColumn = 51;
-            const string convictionColName = "Conviction Level";
-
             const int headerRow = 5;
 
             Excel.Worksheet sheet;
@@ -567,10 +638,11 @@ namespace Odey.ExcelAddin
                 // Get exisiting sheet
                 sheet = app.Sheets[sheetName];
 
-                // Make sure the header is in the right format
-                EnsureText(sheet, headerRow, tickerColumn, tickerColumnName);
-                EnsureText(sheet, headerRow, managerColumn, managerColumnName);
-                EnsureText(sheet, headerRow, convictionColumn, convictionColName);
+                //// Make sure the header is in the right format
+                //EnsureText(sheet, headerRow, WatchListColumns["Ticker"].Index, tickerColumnName);
+                //EnsureText(sheet, headerRow, managerColumn, managerColumnName);
+                //EnsureText(sheet, headerRow, convictionColumn, convictionColName);
+                //EnsureText(sheet, headerRow, upsideColumn, upsideColName);
             }
             catch
             {
@@ -578,52 +650,45 @@ namespace Odey.ExcelAddin
                 sheet = app.Sheets.Add(Before: app.Sheets[1]);
                 sheet.Name = sheetName;
 
-                // Set header
-                sheet.Cells[headerRow, tickerColumn] = tickerColumnName;
-                sheet.Cells[headerRow, managerColumn] = managerColumnName;
-                sheet.Cells[headerRow, convictionColumn] = convictionColName;
+                //// Set header
+                //sheet.Cells[headerRow, WatchListColumns["Ticker"].Index] = tickerColumnName;
+                //sheet.Cells[headerRow, managerColumn] = managerColumnName;
+                //sheet.Cells[headerRow, convictionColumn] = convictionColName;
+                //sheet.Cells[headerRow, upsideColumn] = upsideColName;
             }
 
             // Read existing tickers
             var watchList = new Dictionary<string, WatchListItem>();
             var row = headerRow + 1;
-            var ticker = ReadText(sheet, row, tickerColumn);
+            var ticker = sheet.Cells[row, WatchListColumns.Ticker.Index.Value].Value2 as string;
             while (ticker != null)
             {
                 watchList.Add(ticker, new WatchListItem
                 {
+                    RowIndex = row,
                     Ticker = ticker,
-                    JHManagerOverride = ReadText(sheet, row, managerColumn),
-                    Conviction = ReadText(sheet, row, convictionColumn),
+                    Quality = sheet.Cells[row, WatchListColumns.Quality.Index.Value].Value2 as string,
+                    JHManagerOverride = sheet.Cells[row, WatchListColumns.Manager.Index.Value].Value2 as string,
+                    Conviction = sheet.Cells[row, WatchListColumns.Conviction.Index.Value].Value2 as string,
+                    Upside = sheet.Cells[row, WatchListColumns.Upside.Index.Value].Value2 as double?,
                 });
-                ticker = ReadText(sheet, ++row, tickerColumn);
+                ticker = sheet.Cells[++row, WatchListColumns.Ticker.Index.Value].Value2 as string;
             }
-
-
-
+            
             // Add new tickers
             var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(watchList.Keys).OrderBy(t => t).ToList();
             foreach (var newTicker in newTickers)
             {
                 watchList.Add(newTicker, new WatchListItem
                 {
+                    RowIndex = row,
                     Ticker = newTicker,
                 });
-                sheet.Cells[row, tickerColumn] = newTicker;
+                sheet.Cells[row, WatchListColumns.Ticker.Index.Value] = newTicker;
                 ++row;
             }
 
             return watchList;
-        }
-
-        private string ReadText(Excel.Worksheet sheet, int row, int column)
-        {
-            var ret = sheet.Cells[row, column].Text;
-            if (string.IsNullOrWhiteSpace(ret))
-            {
-                return null;
-            }
-            return ret;
         }
 
         private void EnsureText(Excel.Worksheet sheet, int row, int column, string text)
