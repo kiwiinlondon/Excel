@@ -20,6 +20,7 @@ namespace Odey.ExcelAddin
         public static string Name = "Watch List";
         public static int HeaderRow = 5;
         public static int FirstColumn = 1;
+        public static int NumItems = 30;
 
         public static ColumnDef Ticker = new ColumnDef { Index = 1, AlphabeticalIndex = "A", Name = "Ticker" };
         public static ColumnDef Upside = new ColumnDef { Index = 20, AlphabeticalIndex = "T", Name = "Upside" };
@@ -80,8 +81,9 @@ namespace Odey.ExcelAddin
 
         public static void Write(Excel.Application app, Dictionary<string, WatchListItem> watchList, string sheetName, bool descending, string onlyQuality = null)
         {
-            const int topX = 30;
+            var columnList = new[] { "B", "E", "F", "S", "T", "U", "W", "Z", "AD", "AI", "AM", "AQ", "AS", "AT", "AW", "BK" };
 
+            // Query the data
             var rows = watchList.Values.Where(w => w.Upside.HasValue);
             if (onlyQuality != null)
             {
@@ -95,22 +97,41 @@ namespace Odey.ExcelAddin
             {
                 rows = rows.OrderBy(w => w.Upside);
             }
-            rows = rows.Take(topX);
+            rows = rows.Take(NumItems);
 
-            var sheet = app.GetOrCreateVstoWorksheet(sheetName);
+            // Get the worksheet
+            var isNewSheet = false;
+            Excel.Worksheet sheet;
+            try
+            {
+                sheet = app.Sheets[sheetName];
+            }
+            catch
+            {
+                isNewSheet = true;
+                sheet = app.Sheets.Add(After: app.Sheets[Name]);
+                sheet.Name = sheetName;
+            }
 
-            // Clear data
-            var columnList = new[] { "B", "E", "F", "S", "T", "U", "W", "Z", "AD", "AI", "AM", "AQ", "AS", "AT", "AW", "BK" };
-            var y = 14;
-            Excel.Range r = sheet.Range[sheet.Cells[y, 1], sheet.Cells[y + topX, 1 + columnList.Length]];
-            r.ClearContents();
-
+            // Start
+            var y = HeaderRow;
+            if (isNewSheet)
+            {
+                // Format header
+                Excel.Range headerRange = sheet.Range[sheet.Cells[y, 1], sheet.Cells[y, 1 + columnList.Length]];
+                headerRange.WrapText = true;
+                headerRange.RowHeight = 75;
+                headerRange.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+                headerRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            }
+            else
+            {
+                // Clear data
+                Excel.Range r = sheet.Range[sheet.Cells[y, 1], sheet.Cells[y + NumItems, 1 + columnList.Length]];
+                r.ClearContents();
+            }
+            
             // Write header
-            Excel.Range headerRange = sheet.Range[sheet.Cells[y, 1], sheet.Cells[y, 1 + columnList.Length]];
-            headerRange.WrapText = true;
-            headerRange.RowHeight = 75;
-            headerRange.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
-            headerRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
             Excel.Range cell = sheet.Cells[y, 1];
             cell.Value = "Ticker";
             cell.ColumnWidth = 14;
