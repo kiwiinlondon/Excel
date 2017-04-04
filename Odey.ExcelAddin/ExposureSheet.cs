@@ -74,14 +74,33 @@ namespace Odey.ExcelAddin
                 range.ClearContents();
 
                 // Write shorts
-                var shorts = fund.Where(x => x.PercentNAV < 0).OrderBy(x => x.PercentNAV).Take(numItems).ToList();
+                var shortQuery = fund.Where(x => x.PercentNAV < 0);
+                if (manager == "AC")
+                {
+                    shortQuery = shortQuery.GroupBy(p => p.Strategy).Select(g => new {
+                        Ticker = g.Key,
+                        Manager = (string)null,
+                        PercentNAV = g.Sum(p => p.PercentNAV),
+                        NetPosition = (decimal?)null,
+                        Strategy = (string)null
+                    });
+                }
+                shortQuery = shortQuery.OrderBy(x => x.PercentNAV).Take(numItems);
+                var shorts = shortQuery.ToList();
                 sheet.WriteIndexColumn(row, column++, headers[0], shorts.Count());
                 sheet.WriteFieldColumn(row, column++, headers[1], shorts, "Ticker");
                 sheet.WriteFieldColumn(row, column++, headers[2], shorts, "PercentNAV");
-                sheet.WriteFieldColumn(row, column++, headers[3], shorts, "NetPosition");
-                sheet.WriteWatchListColumn(row, column++, headers[5], shorts, watchList, WatchListSheet.AverageVolume);
-                sheet.WriteWatchListColumn(row, column++, headers[4], shorts, watchList, WatchListSheet.Upside);
-                sheet.WriteWatchListColumn(row, column++, headers[6], shorts, watchList, WatchListSheet.Conviction);
+                if (manager == "AC")
+                {
+                    column += 4;
+                }
+                else
+                {
+                    sheet.WriteFieldColumn(row, column++, headers[3], shorts, "NetPosition");
+                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, watchList, WatchListSheet.AverageVolume);
+                    sheet.WriteWatchListColumn(row, column++, headers[4], shorts, watchList, WatchListSheet.Upside);
+                    sheet.WriteWatchListColumn(row, column++, headers[6], shorts, watchList, WatchListSheet.Conviction);
+                }
                 column += 5;
 
                 if (manager == "JH")
