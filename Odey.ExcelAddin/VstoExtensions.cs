@@ -3,6 +3,7 @@ using Office = Microsoft.Office.Core;
 using Microsoft.Office.Tools.Excel;
 using System.Diagnostics;
 using System;
+using System.Collections.Generic;
 
 namespace Odey.ExcelAddin
 {
@@ -49,15 +50,53 @@ namespace Odey.ExcelAddin
             }
         }
 
-        public static void SetColumnWidth(this Excel.Worksheet sheet, int column, int width)
+        private static void WriteColumnHeader(Worksheet sheet, int row, int column, ColumnDef col)
         {
-            Excel.Range cell = sheet.Cells[1, column];
-            cell.ColumnWidth = width;
+            Excel.Range header = sheet.Cells[row, column];
+            header.Value = col.Name;
+            header.ColumnWidth = col.Width;
         }
 
-        public static Excel.Range GetCell(this Worksheet sheet, int row, int column)
+        public static void WriteIndexColumn(this Worksheet sheet, int row, int column, ColumnDef col, int max)
         {
-            return sheet.Cells[row, column];
+            WriteColumnHeader(sheet, row, column, col);
+
+            for (var y = 1; y <= max; ++y)
+            {
+                sheet.Cells[row + y, column] = y;
+            }
+        }
+
+        public static void WriteFieldColumn<T>(this Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<T> data, string field)
+        {
+            WriteColumnHeader(sheet, row, column, col);
+
+            var y = 1;
+            var pi = typeof(T).GetProperty(field);
+            foreach (var item in data)
+            {
+                Excel.Range cell = sheet.Cells[row + y, column];
+                cell.Value = pi.GetValue(item);
+                if (col.NumberFormat != null)
+                {
+                    cell.NumberFormat = col.NumberFormat;
+                }
+                ++y;
+            }
+        }
+
+        public static void WriteWatchListColumn(this Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<dynamic> data, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn)
+        {
+            WriteColumnHeader(sheet, row, column, col);
+
+            var y = 1;
+            foreach (var item in data)
+            {
+                Excel.Range cell = sheet.Cells[row + y, column];
+                var watchListItem = watchList[item.Ticker];
+                cell.Formula = $"='{WatchListSheet.Name}'!{sourceColumn.AlphabeticalIndex}{watchListItem.RowIndex}";
+                ++y;
+            }
         }
     }
 }

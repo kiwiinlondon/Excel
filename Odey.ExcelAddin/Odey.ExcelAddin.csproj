@@ -188,10 +188,13 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="ExposureSheet.cs" />
+    <Compile Include="PortfolioSheet.cs" />
     <Compile Include="VstoExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="WatchListSheet.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
