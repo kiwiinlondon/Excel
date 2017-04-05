@@ -103,6 +103,7 @@ namespace Odey.ExcelAddin
                 // Write column headers
                 if (isNewSheet)
                 {
+                    row--;
                     sheet.WriteColumnHeader(row, column + 0, headers[0]);
                     sheet.WriteColumnHeader(row, column + 1, headers[1]);
                     sheet.WriteColumnHeader(row, column + 2, headers[2]);
@@ -110,8 +111,8 @@ namespace Odey.ExcelAddin
                     sheet.WriteColumnHeader(row, column + 4, headers[4]);
                     sheet.WriteColumnHeader(row, column + 5, headers[5]);
                     sheet.WriteColumnHeader(row, column + 6, headers[6]);
+                    row++;
                 }
-                row += 1;
 
                 // Clear shorts
                 range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + numItems - 1, column + headers.Length - 1]];
