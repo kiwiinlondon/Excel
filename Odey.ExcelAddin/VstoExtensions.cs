@@ -50,28 +50,24 @@ namespace Odey.ExcelAddin
             }
         }
 
-        private static void WriteColumnHeader(Worksheet sheet, int row, int column, ColumnDef col)
+        public static void WriteColumnHeader(this Excel.Worksheet sheet, int row, int column, ColumnDef col)
         {
             Excel.Range header = sheet.Cells[row, column];
             header.Value = col.Name;
             header.ColumnWidth = col.Width;
         }
 
-        public static void WriteIndexColumn(this Worksheet sheet, int row, int column, ColumnDef col, int max)
+        public static void WriteIndexColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, int max)
         {
-            WriteColumnHeader(sheet, row, column, col);
-
-            for (var y = 1; y <= max; ++y)
+            for (var y = 0; y < max; ++y)
             {
-                sheet.Cells[row + y, column] = y;
+                sheet.Cells[row + y, column] = y + 1;
             }
         }
 
-        public static void WriteFieldColumn<T>(this Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<T> data, string field)
+        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<T> data, string field)
         {
-            WriteColumnHeader(sheet, row, column, col);
-
-            var y = 1;
+            var y = 0;
             var pi = typeof(T).GetProperty(field);
             foreach (var item in data)
             {
@@ -85,11 +81,9 @@ namespace Odey.ExcelAddin
             }
         }
 
-        public static void WriteWatchListColumn(this Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<dynamic> data, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn)
+        public static void WriteWatchListColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<dynamic> data, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn)
         {
-            WriteColumnHeader(sheet, row, column, col);
-
-            var y = 1;
+            var y = 0;
             foreach (var item in data)
             {
                 Excel.Range cell = sheet.Cells[row + y, column];

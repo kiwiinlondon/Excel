@@ -101,6 +101,10 @@ namespace Odey.ExcelAddin
                 {
                     PortfolioSheet.Write(app, fund, data, watchList);
                 }
+                foreach (var fund in funds)
+                {
+                    ScenarioSheet.Write(app, fund, data, watchList);
+                }
             }
             //catch (Exception e)
             //{

@@ -34,7 +34,7 @@
     <PublishUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</PublishUrl>
     <InstallUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.17</ApplicationVersion>
+    <ApplicationVersion>1.0.0.18</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
@@ -190,6 +190,7 @@
   <ItemGroup>
     <Compile Include="ExposureSheet.cs" />
     <Compile Include="PortfolioSheet.cs" />
+    <Compile Include="ScenarioSheet.cs" />
     <Compile Include="VstoExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

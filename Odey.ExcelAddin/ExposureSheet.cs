@@ -31,15 +31,29 @@ namespace Odey.ExcelAddin
                     Strategy = g.Key.StrategyName
                 })
                 .ToList();
-            var sheet = app.GetOrCreateVstoWorksheet($"Exposure {fundId}");
+
+            // Get the worksheet
+            var isNewSheet = false;
+            var sheetName = $"Exposure {fundId}";
+            Excel.Worksheet sheet;
+            try
+            {
+                sheet = app.Sheets[sheetName];
+            }
+            catch
+            {
+                isNewSheet = true;
+                sheet = app.Sheets.Add();
+                sheet.Name = sheetName;
+            }
 
             var headers = new[] {
                 new ColumnDef { Name = "#", Width = 3.4 },
                 new ColumnDef { Name = "Ticker", Width = 22 },
                 new ColumnDef { Name = "% NAV", Width = 7, NumberFormat = "0.00%" },
                 new ColumnDef { Name = "Net Position", Width = 0, NumberFormat = "#,###" },
-                new ColumnDef { Name = "Upside", Width = 7 },
                 new ColumnDef { Name = "Daily Volume", Width = 0 },
+                new ColumnDef { Name = "Upside", Width = 7 },
                 new ColumnDef { Name = "Conviction", Width = 9.7 }
             };
 
@@ -51,11 +65,27 @@ namespace Odey.ExcelAddin
                 var numItems = ItemsPerManager[manager];
 
                 // Write PM initials
-                sheet.Cells[row, column] = manager;
+                if (isNewSheet)
+                {
+                    sheet.Cells[row, column] = manager;
+                }
                 row += 2;
 
+                // Write column headers
+                if (isNewSheet)
+                {
+                    sheet.WriteColumnHeader(row, column + 0, headers[0]);
+                    sheet.WriteColumnHeader(row, column + 1, headers[1]);
+                    sheet.WriteColumnHeader(row, column + 2, headers[2]);
+                    sheet.WriteColumnHeader(row, column + 3, headers[3]);
+                    sheet.WriteColumnHeader(row, column + 4, headers[4]);
+                    sheet.WriteColumnHeader(row, column + 5, headers[5]);
+                    sheet.WriteColumnHeader(row, column + 6, headers[6]);
+                }
+                row += 1;
+
                 // Clear longs
-                Excel.Range range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + numItems, column + headers.Length - 1]];
+                Excel.Range range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + numItems - 1, column + headers.Length - 1]];
                 range.ClearContents();
 
                 // Write longs
@@ -64,13 +94,27 @@ namespace Odey.ExcelAddin
                 sheet.WriteFieldColumn(row, column++, headers[1], longs, "Ticker");
                 sheet.WriteFieldColumn(row, column++, headers[2], longs, "PercentNAV");
                 sheet.WriteFieldColumn(row, column++, headers[3], longs, "NetPosition");
-                sheet.WriteWatchListColumn(row, column++, headers[5], longs, watchList, WatchListSheet.AverageVolume);
-                sheet.WriteWatchListColumn(row, column++, headers[4], longs, watchList, WatchListSheet.Upside);
+                sheet.WriteWatchListColumn(row, column++, headers[4], longs, watchList, WatchListSheet.AverageVolume);
+                sheet.WriteWatchListColumn(row, column++, headers[5], longs, watchList, WatchListSheet.Upside);
                 sheet.WriteWatchListColumn(row, column++, headers[6], longs, watchList, WatchListSheet.Conviction);
+                
                 column += 5;
 
+                // Write column headers
+                if (isNewSheet)
+                {
+                    sheet.WriteColumnHeader(row, column + 0, headers[0]);
+                    sheet.WriteColumnHeader(row, column + 1, headers[1]);
+                    sheet.WriteColumnHeader(row, column + 2, headers[2]);
+                    sheet.WriteColumnHeader(row, column + 3, headers[3]);
+                    sheet.WriteColumnHeader(row, column + 4, headers[4]);
+                    sheet.WriteColumnHeader(row, column + 5, headers[5]);
+                    sheet.WriteColumnHeader(row, column + 6, headers[6]);
+                }
+                row += 1;
+
                 // Clear shorts
-                range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + numItems, column + headers.Length - 1]];
+                range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + numItems - 1, column + headers.Length - 1]];
                 range.ClearContents();
 
                 // Write shorts
@@ -97,8 +141,8 @@ namespace Odey.ExcelAddin
                 else
                 {
                     sheet.WriteFieldColumn(row, column++, headers[3], shorts, "NetPosition");
-                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, watchList, WatchListSheet.AverageVolume);
-                    sheet.WriteWatchListColumn(row, column++, headers[4], shorts, watchList, WatchListSheet.Upside);
+                    sheet.WriteWatchListColumn(row, column++, headers[4], shorts, watchList, WatchListSheet.AverageVolume);
+                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, watchList, WatchListSheet.Upside);
                     sheet.WriteWatchListColumn(row, column++, headers[6], shorts, watchList, WatchListSheet.Conviction);
                 }
                 column += 5;
