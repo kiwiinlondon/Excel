@@ -17,7 +17,8 @@ namespace Odey.ExcelAddin
 
         public static void Write(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
         {
-            app.StatusBar = $"Writing {fundId} exposure sheet...";
+            var fundName = Ribbon1.GetFundName(fundId, weightings);
+            app.StatusBar = $"Writing {fundName} exposure sheet...";
 
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
@@ -34,7 +35,7 @@ namespace Odey.ExcelAddin
 
             // Get the worksheet
             var isNewSheet = false;
-            var sheetName = $"Exposure {fundId}";
+            var sheetName = $"Exposure {fundName}";
             Excel.Worksheet sheet;
             try
             {

@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
 using Odey.PortfolioCache.Entities;
-using System.Diagnostics;
 
 namespace Odey.ExcelAddin
 {
     class ScenarioSheet
     {
+        private static int HeaderRow = 14;
+
         private static string[] ScenarioInputColumns = new[] { "AZ", "BA", "BB", "BC", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BK", "BL" };
 
         public static void Write(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
         {
-            app.StatusBar = $"Writing {fundId} scenario sheet...";
+            var fundName = Ribbon1.GetFundName(fundId, weightings);
+            app.StatusBar = $"Writing {fundName} scenario sheet...";
 
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
@@ -26,13 +28,13 @@ namespace Odey.ExcelAddin
                 })
                 .ToList();
 
-            var sheet = app.GetOrCreateVstoWorksheet($"Scenarios {fundId}");
+            var sheet = app.GetOrCreateVstoWorksheet($"Scenarios {fundName}");
 
-            var tName = $"Scenarios_{fundId}";
+            var tName = $"Scenarios_{fundName}";
             var table = sheet.GetListObject(tName);
             if (table == null)
             {
-                table = sheet.CreateListObject(tName, 14, 1);
+                table = sheet.CreateListObject(tName, HeaderRow, 1);
                 table.ShowTableStyleRowStripes = false;
                 table.ShowTableStyleFirstColumn = true;
                 table.AutoSetDataBoundColumnHeaders = true;
@@ -49,14 +51,14 @@ namespace Odey.ExcelAddin
             table.Disconnect();
 
             app.AutoCorrect.AutoFillFormulasInLists = false;
-            var headerX = 4;
+            var headerColumn = 4;
             foreach (var columnLetter in ScenarioInputColumns)
             {
-                Excel.Range topHeaderCell = sheet.Cells[13, headerX];
+                Excel.Range topHeaderCell = sheet.Cells[HeaderRow - 1, headerColumn];
                 topHeaderCell.Formula = $"='{WatchListSheet.Name}'!{columnLetter}{WatchListSheet.HeaderRow}";
                 topHeaderCell.Resize[1, 2].Merge();
                 topHeaderCell.RowHeight = 75;
-                headerX += 2;
+                headerColumn += 2;
 
                 var col = table.ListColumns.Add();
                 col.Name = $"{columnLetter} Factor";

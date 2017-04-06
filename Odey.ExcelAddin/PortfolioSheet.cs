@@ -3,11 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
 using Odey.PortfolioCache.Entities;
+using System.Diagnostics;
 
 namespace Odey.ExcelAddin
 {
     class PortfolioSheet
     {
+        private static int HeaderRow = 14;
+
+        private static Dictionary<string, string> ColumnLocations = new Dictionary<string, string>
+            {
+                { "[Ticker]", "A" },
+                { "[Target Price]", "I" },
+                { "[Price]", "J" },
+                { "[Upside]", "G" },
+                { "[PercentNAV]", "C" },
+                { "[Enterprise Value]", "N" },
+                { "[EBIT]", "R" },
+                { "[Sales]", "V" },
+                { "[Sales EST]", "W" },
+            };
+
         private static List<ColumnDef> Columns = new List<ColumnDef>
         {
             new ColumnDef
@@ -28,26 +44,26 @@ namespace Odey.ExcelAddin
                 Formula = "=BDP([Ticker],\"COUNTRY_FULL_NAME\",\"Fill=B\")",
                 Width = 16.14,
             },
-            //new ColumnDef
-            //{
-            //    Name = "UPSIDE",
-            //    Formula = "=(H15-I15)/I15",
-            //    Width = 12.29,
-            //    NumberFormat = "0%",
-            //},
-            //new ColumnDef
-            //{
-            //    Name = "BASIS for TARGET PRICE",
-            //    Formula = "",
-            //    Width = 15.43,
-            //},
-            //new ColumnDef
-            //{
-            //    Name = "TARGET PRICE",
-            //    Formula = "=VLOOKUP([Ticker], Watch_List_Table, 5, FALSE) & \"\"",
-            //    Width = 12.29,
-            //    NumberFormat = "#,##0.00",
-            //},
+            new ColumnDef
+            {
+                Name = "UPSIDE",
+                Formula = "=IFERROR(([Target Price]-[Price])/[Price], \"\")",
+                Width = 12.29,
+                NumberFormat = "0%",
+            },
+            new ColumnDef
+            {
+                Name = "BASIS for TARGET PRICE",
+                Formula = "=VLOOKUP([Ticker], Watch_List_Table, 6, FALSE) & \"\"",
+                Width = 15.43,
+            },
+            new ColumnDef
+            {
+                Name = "TARGET PRICE",
+                Formula = "=VLOOKUP([Ticker], Watch_List_Table, 5, FALSE) & \"\"",
+                Width = 12.29,
+                NumberFormat = "#,##0.00",
+            },
             new ColumnDef
             {
                 Name = "PRICE",
@@ -55,13 +71,13 @@ namespace Odey.ExcelAddin
                 Width = 12.29,
                 NumberFormat = "#,##0.00",
             },
-            //new ColumnDef
-            //{
-            //    Name = "UPSIDE/Weight(%)",
-            //    Formula = "=IFERROR([UPSIDE]/[PercentNAV], \"\")",
-            //    Width = 12.29,
-            //    NumberFormat = "0.00",
-            //},
+            new ColumnDef
+            {
+                Name = "UPSIDE/Weight(%)",
+                Formula = "=IFERROR([Upside]/[PercentNAV], \"\")",
+                Width = 12.29,
+                NumberFormat = "0.00",
+            },
             new ColumnDef
             {
                 Name = "MARKET CAP $ (Mln)",
@@ -118,13 +134,13 @@ namespace Odey.ExcelAddin
                 Width = 12.29,
                 NumberFormat = "0",
             },
-            //new ColumnDef
-            //{
-            //    Name = "EV/EBIT",
-            //    Formula = "=IFERROR(M15/Q15,\"\")",
-            //    Width = 12.29,
-            //    NumberFormat = "#,##0.00",
-            //},
+            new ColumnDef
+            {
+                Name = "EV/EBIT",
+                Formula = "=IFERROR([Enterprise Value]/[EBIT],\"\")",
+                Width = 12.29,
+                NumberFormat = "#,##0.00",
+            },
             new ColumnDef
             {
                 Name = "EV/EBIT EST",
@@ -146,20 +162,20 @@ namespace Odey.ExcelAddin
                 Width = 12.29,
                 NumberFormat = "0",
             },
-            //new ColumnDef
-            //{
-            //    Name = "EV/Sales",
-            //    Formula = "=IFERROR(M15/U15,\"\")",
-            //    Width = 12.29,
-            //    NumberFormat = "#,##0.00",
-            //},
-            //new ColumnDef
-            //{
-            //    Name = "EV/Sales EST",
-            //    Formula = "=IFERROR(N15/V15,\"\")",
-            //    Width = 12.29,
-            //    NumberFormat = "#,##0.00",
-            //},
+            new ColumnDef
+            {
+                Name = "EV/Sales",
+                Formula = "=IFERROR([Enterprise Value]/[Sales],\"\")",
+                Width = 12.29,
+                NumberFormat = "#,##0.00",
+            },
+            new ColumnDef
+            {
+                Name = "EV/Sales EST",
+                Formula = "=IFERROR([Enterprise Value]/[Sales EST],\"\")",
+                Width = 12.29,
+                NumberFormat = "#,##0.00",
+            },
             new ColumnDef
             {
                 Name = "TRAIL 12M EPS",
@@ -230,17 +246,17 @@ namespace Odey.ExcelAddin
                 Width = 12.29,
                 NumberFormat = "0.0",
             },
-            //new ColumnDef
-            //{
-            //    Name = "EV/EBITDA",
-            //    Formula = "",
-            //    Width = 9.43,
-            //    NumberFormat = "General",
-            //},
+            new ColumnDef
+            {
+                Name = "EV/EBITDA",
+                //Formula = "=IFERROR([Enterprise Value]/[],\"\")",
+                Width = 9.43,
+                NumberFormat = "#,##0.00",
+            },
             new ColumnDef
             {
                 Name = "60-day beta (MSCI world TR relevant currency for fund)",
-                Formula = "=BDP([Ticker],\"BETA_ADJ_OVERRIDABLE\",\"BETA_OVERRIDE_REL_INDEX=gdduwi index\",\"BETA_OVERRIDE_START_DT\",TEXT('Watch List'!BO6,\"YYYYMMDD\"),\"BETA_OVERRIDE_PERIOD=d\",\"Fill=B\")",
+                //Formula = "=BDP([Ticker],\"BETA_ADJ_OVERRIDABLE\",\"BETA_OVERRIDE_REL_INDEX=gdduwi index\",\"BETA_OVERRIDE_START_DT\",TEXT('Watch List'!BO6,\"YYYYMMDD\"),\"BETA_OVERRIDE_PERIOD=d\",\"Fill=B\")",
                 Width = 10.71,
                 NumberFormat = "#,##0",
             },
@@ -248,7 +264,8 @@ namespace Odey.ExcelAddin
 
         public static void Write(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
         {
-            app.StatusBar = $"Writing {fundId} portfolio sheet...";
+            var fundName = Ribbon1.GetFundName(fundId, weightings);
+            app.StatusBar = $"Writing {fundName} portfolio sheet...";
 
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
@@ -261,13 +278,13 @@ namespace Odey.ExcelAddin
                 })
                 .ToList();
 
-            var sheet = app.GetOrCreateVstoWorksheet($"Portfolio {fundId}");
+            var sheet = app.GetOrCreateVstoWorksheet($"Portfolio {fundName}");
 
-            var tName = $"Portfolio_{fundId}";
+            var tName = $"Portfolio_{fundName}";
             var table = sheet.GetListObject(tName);
             if (table == null)
             {
-                table = sheet.CreateListObject(tName, 14, 1);
+                table = sheet.CreateListObject(tName, HeaderRow, 1);
                 table.ShowTableStyleRowStripes = false;
                 table.ShowTableStyleFirstColumn = true;
                 table.AutoSetDataBoundColumnHeaders = true;
@@ -283,6 +300,8 @@ namespace Odey.ExcelAddin
             table.ListColumns["PercentNAV"].DataBodyRange.NumberFormat = "0.00%";
             table.Disconnect();
 
+            // Add additional columns to the table
+            var allColumns = new Dictionary<string, Excel.ListColumn>();
             foreach (var column in Columns)
             {
                 var col = table.ListColumns.Add();
@@ -292,10 +311,29 @@ namespace Odey.ExcelAddin
                 {
                     col.Range.NumberFormat = column.NumberFormat;
                 }
-                col.DataBodyRange.Formula = column.Formula.Replace("[Ticker]", "$A15");
+                allColumns.Add(col.Name, col);
             }
 
+            // Write formulas when the table is done
+            foreach (var column in Columns)
+            {
+                if (column.Formula != null)
+                {
+                    var col = allColumns[column.Name];
+                    col.DataBodyRange.Formula = GetFormula(column.Formula, watchList.Count);
+                    Debug.WriteLine(GetFormula(column.Formula, watchList.Count));
+                }
+            }
         }
 
+        private static string GetFormula(string formula, int watchListCount)
+        {
+            var row = (HeaderRow + 1).ToString();
+            foreach (var placeholder in ColumnLocations)
+            {
+                formula = formula.Replace(placeholder.Key, "$" + placeholder.Value + row);
+            }
+            return formula.Replace("Watch_List_Table", $"'{WatchListSheet.Name}'!$A${WatchListSheet.HeaderRow + 1}:$BO${WatchListSheet.HeaderRow + watchListCount}");
+        }
     }
 }

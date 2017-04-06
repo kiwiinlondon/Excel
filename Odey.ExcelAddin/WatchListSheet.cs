@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
 using Odey.PortfolioCache.Entities;
+using System;
 
 namespace Odey.ExcelAddin
 {
@@ -45,11 +46,15 @@ namespace Odey.ExcelAddin
             }
 
             // Read existing tickers
-            var watchList = new Dictionary<string, WatchListItem>();
+            var watchList = new Dictionary<string, WatchListItem>(StringComparer.OrdinalIgnoreCase);
             var row = HeaderRow + 1;
             var ticker = sheet.Cells[row, Ticker.Index.Value].Value2 as string;
             while (ticker != null)
             {
+                if (watchList.ContainsKey(ticker))
+                {
+                    throw new Exception($"Duplicate watch list entry: \"{ticker}\".\n\nPlease remove all but one.");
+                }
                 watchList.Add(ticker, new WatchListItem
                 {
                     RowIndex = row,
@@ -64,7 +69,7 @@ namespace Odey.ExcelAddin
             }
 
             // Add new tickers
-            var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(watchList.Keys).OrderBy(t => t).ToList();
+            var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(watchList.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
             foreach (var newTicker in newTickers)
             {
                 watchList.Add(newTicker, new WatchListItem

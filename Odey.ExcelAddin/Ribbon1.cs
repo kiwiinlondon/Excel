@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace Odey.ExcelAddin
 {
@@ -37,6 +38,20 @@ namespace Odey.ExcelAddin
             { "Jamie Grimston", "JG" },
             { "James Hanbury", "JH" },
         };
+
+        public static string GetFundName(FundIds fund, List<PortfolioDTO> data)
+        {
+            foreach (var item in data)
+            {
+                if (item.FundId == (int)fund)
+                {
+                    return item.FundName;
+                }
+            }
+
+            // Not found
+            throw new Exception($"Received no data for '{fund}'");
+        }
 
         public static string GetManagerInitials(string fullName)
         {
@@ -106,10 +121,10 @@ namespace Odey.ExcelAddin
                     ScenarioSheet.Write(app, fund, data, watchList);
                 }
             }
-            //catch (Exception e)
-            //{
-            //    MessageBox.Show(e.Message, e.GetType().Name);
-            //}
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, e.GetType().Name);
+            }
             finally
             {
                 app.StatusBar = null;
