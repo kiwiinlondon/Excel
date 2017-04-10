@@ -4,6 +4,7 @@ using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
 using Odey.PortfolioCache.Entities;
 using System;
+using System.Diagnostics;
 
 namespace Odey.ExcelAddin
 {
@@ -164,5 +165,27 @@ namespace Odey.ExcelAddin
             }
         }
 
+        public static void ReadColumns(Excel.Application app, List<ColumnDef> columns)
+        {
+            Excel.Worksheet sheet = app.Sheets[Name];
+            Excel.Range tickerCell = sheet.Cells[HeaderRow + 1, 1];
+            var tickerAddress = tickerCell.Address[false, true];
+
+            foreach (var column in columns)
+            {
+                if (column.AlphabeticalIndex != null)
+                {
+                    column.Name = sheet.Cells[HeaderRow, column.AlphabeticalIndex].Value2;
+                    Excel.Range data = sheet.Cells[HeaderRow + 1, column.AlphabeticalIndex];
+                    column.NumberFormat = data.NumberFormat;
+                    column.Width = data.ColumnWidth;
+                }
+                if (column.CopyFormula)
+                {
+                    Excel.Range data = sheet.Cells[HeaderRow + 1, column.AlphabeticalIndex];
+                    column.Formula = (data.Formula as string).Replace(tickerAddress, "[Ticker]");
+                }
+            }
+        }
     }
 }

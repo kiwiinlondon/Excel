@@ -23,6 +23,9 @@ namespace Odey.ExcelAddin
         public string Formula { get; set; }
         public string NumberFormat { get; set; }
         public double Width { get; set; }
+        public bool CopyFormula { get; set; }
+        public bool RefAsNumber { get; set; }
+        public bool RefAsString { get; set; }
     }
 
     [ComVisible(true)]
@@ -88,9 +91,16 @@ namespace Odey.ExcelAddin
             var prevScreenUpdating = app.ScreenUpdating;
             var prevEvents = app.EnableEvents;
             var prevCalculation = app.Calculation;
-            app.ScreenUpdating = false;
-            app.EnableEvents = false;
-            app.Calculation = Excel.XlCalculation.xlCalculationManual;
+            try
+            {
+                app.ScreenUpdating = false;
+                app.EnableEvents = false;
+                app.Calculation = Excel.XlCalculation.xlCalculationManual;
+            }
+            catch
+            {
+                MessageBox.Show("Please stop editing");
+            }
 
             try
             {
@@ -103,11 +113,13 @@ namespace Odey.ExcelAddin
                 //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
 
                 var watchList = WatchListSheet.GetWatchList(app, data);
+                WatchListSheet.ReadColumns(app, PortfolioSheet.Columns);
                 ApplyManagerOverrides(data, watchList);
-                WatchListSheet.Write(app, watchList, "Watch List Top", true);
-                WatchListSheet.Write(app, watchList, "Watch List Bottom", false);
-                WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
-                WatchListSheet.Write(app, watchList, "Watch List Low Quality", false, "L");
+
+                foreach (var fund in funds)
+                {
+                    ScenarioSheet.Write(app, fund, data, watchList);
+                }
                 foreach (var fund in funds)
                 {
                     ExposureSheet.Write(app, fund, data, watchList);
@@ -116,10 +128,10 @@ namespace Odey.ExcelAddin
                 {
                     PortfolioSheet.Write(app, fund, data, watchList);
                 }
-                foreach (var fund in funds)
-                {
-                    ScenarioSheet.Write(app, fund, data, watchList);
-                }
+                WatchListSheet.Write(app, watchList, "Watch List Top", true);
+                WatchListSheet.Write(app, watchList, "Watch List Bottom", false);
+                WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
+                WatchListSheet.Write(app, watchList, "Watch List Low Quality", false, "L");
             }
             catch (Exception e)
             {
