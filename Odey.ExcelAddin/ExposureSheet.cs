@@ -74,10 +74,7 @@ namespace Odey.ExcelAddin
                 var fund = rows.Where(x => x.Manager == manager);
 
                 // Write PM initials
-                if (isNewSheet)
-                {
-                    sheet.Cells[row, column] = manager;
-                }
+                sheet.Cells[row, column] = manager;
                 row += 2;
 
                 // Write column headers
@@ -97,7 +94,7 @@ namespace Odey.ExcelAddin
                 sheet.WriteFieldColumn(row, column++, headers[2], longs, "PercentNAV", rowStyle);
                 sheet.WriteFieldColumn(row, column++, headers[3], longs, "NetPosition", rowStyle);
                 sheet.WriteWatchListColumn(row, column++, headers[4], longs, rowStyle, watchList, WatchListSheet.AverageVolume);
-                sheet.WriteWatchListColumn(row, column++, headers[5], longs, rowStyle, watchList, WatchListSheet.Upside);
+                sheet.WriteWatchListColumn(row, column++, headers[5], longs, rowStyle, watchList, WatchListSheet.Upside, "=IF(ISNUMBER([Address]), [Address], \"\")");
                 sheet.WriteWatchListColumn(row, column++, headers[6], longs, rowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"");
 
                 column += 5;
@@ -139,7 +136,7 @@ namespace Odey.ExcelAddin
                 {
                     sheet.WriteFieldColumn(row, column++, headers[3], shorts, "NetPosition", rowStyle);
                     sheet.WriteWatchListColumn(row, column++, headers[4], shorts, rowStyle, watchList, WatchListSheet.AverageVolume);
-                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, rowStyle, watchList, WatchListSheet.Upside);
+                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, rowStyle, watchList, WatchListSheet.Upside, "=IF(ISNUMBER([Address]), [Address], \"\")");
                     sheet.WriteWatchListColumn(row, column++, headers[6], shorts, rowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"");
                 }
                 column += 5;
