@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
 using Odey.PortfolioCache.Entities;
+using System;
+using System.Drawing;
 
 namespace Odey.ExcelAddin
 {
     class ExposureSheet
     {
-        private static Dictionary<string, int> ItemsPerManager = new Dictionary<string, int>
+        private static Dictionary<string, int> TargetItemCountByManager = new Dictionary<string, int>
         {
-            { "JH", 34 },
-            { "AC", 10 },
-            { "JG", 12 },
+            { "JH", 25 },
+            { "AC", 8 },
+            { "JG", 10 },
         };
 
         public static void Write(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
@@ -22,14 +24,15 @@ namespace Odey.ExcelAddin
 
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
-                .ToLookup(p => new { p.BloombergTicker, p.ManagerName, p.StrategyName })
+                .ToLookup(p => new { p.BloombergTicker, p.ManagerName, p.StrategyName, p.InstrumentClassId })
                 .Select(g => new
                 {
                     Ticker = g.Key.BloombergTicker,
                     Manager = Ribbon1.GetManagerInitials(g.Key.ManagerName),
                     PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
                     NetPosition = g.Sum(p => p.NetPosition),
-                    Strategy = g.Key.StrategyName
+                    Strategy = g.Key.StrategyName,
+                    InstrumentClassId = g.Key.InstrumentClassId,
                 })
                 .ToList();
 
@@ -58,12 +61,17 @@ namespace Odey.ExcelAddin
                 new ColumnDef { Name = "Conviction", Width = 9.7 }
             };
 
+            sheet.Cells.ClearContents();
+            sheet.Cells.ClearFormats();
+
+            var headerStyle = app.ActiveWorkbook.GetHeaderStyle();
+            var rowStyle = app.ActiveWorkbook.GetNormalRowStyle();
+
             var row = 1;
             var column = 1;
-            foreach (var manager in ItemsPerManager.Keys)
+            foreach (var manager in TargetItemCountByManager.Keys)
             {
                 var fund = rows.Where(x => x.Manager == manager);
-                var numItems = ItemsPerManager[manager];
 
                 // Write PM initials
                 if (isNewSheet)
@@ -73,51 +81,37 @@ namespace Odey.ExcelAddin
                 row += 2;
 
                 // Write column headers
-                if (isNewSheet)
-                {
-                    sheet.WriteColumnHeader(row, column + 0, headers[0]);
-                    sheet.WriteColumnHeader(row, column + 1, headers[1]);
-                    sheet.WriteColumnHeader(row, column + 2, headers[2]);
-                    sheet.WriteColumnHeader(row, column + 3, headers[3]);
-                    sheet.WriteColumnHeader(row, column + 4, headers[4]);
-                    sheet.WriteColumnHeader(row, column + 5, headers[5]);
-                    sheet.WriteColumnHeader(row, column + 6, headers[6]);
-                }
-                row += 1;
-
-                // Clear longs
-                Excel.Range range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + numItems - 1, column + headers.Length - 1]];
-                range.ClearContents();
+                sheet.WriteColumnHeader(row, column + 0, headers[0], headerStyle);
+                sheet.WriteColumnHeader(row, column + 1, headers[1], headerStyle);
+                sheet.WriteColumnHeader(row, column + 2, headers[2], headerStyle);
+                sheet.WriteColumnHeader(row, column + 3, headers[3], headerStyle);
+                sheet.WriteColumnHeader(row, column + 4, headers[4], headerStyle);
+                sheet.WriteColumnHeader(row, column + 5, headers[5], headerStyle);
+                sheet.WriteColumnHeader(row, column + 6, headers[6], headerStyle);
+                row++;
 
                 // Write longs
-                var longs = fund.Where(x => x.PercentNAV > 0).OrderByDescending(x => x.PercentNAV).Take(numItems).ToList();
-                sheet.WriteIndexColumn(row, column++, headers[0], longs.Count());
-                sheet.WriteFieldColumn(row, column++, headers[1], longs, "Ticker");
-                sheet.WriteFieldColumn(row, column++, headers[2], longs, "PercentNAV");
-                sheet.WriteFieldColumn(row, column++, headers[3], longs, "NetPosition");
-                sheet.WriteWatchListColumn(row, column++, headers[4], longs, watchList, WatchListSheet.AverageVolume);
-                sheet.WriteWatchListColumn(row, column++, headers[5], longs, watchList, WatchListSheet.Upside);
-                sheet.WriteWatchListColumn(row, column++, headers[6], longs, watchList, WatchListSheet.Conviction);
-                
+                var longs = fund.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture ? 1 : 0)).ThenByDescending(x => x.PercentNAV).ToList();
+                sheet.WriteIndexColumn(row, column++, headers[0], longs.Count(), rowStyle);
+                sheet.WriteFieldColumn(row, column++, headers[1], longs, "Ticker", rowStyle);
+                sheet.WriteFieldColumn(row, column++, headers[2], longs, "PercentNAV", rowStyle);
+                sheet.WriteFieldColumn(row, column++, headers[3], longs, "NetPosition", rowStyle);
+                sheet.WriteWatchListColumn(row, column++, headers[4], longs, rowStyle, watchList, WatchListSheet.AverageVolume);
+                sheet.WriteWatchListColumn(row, column++, headers[5], longs, rowStyle, watchList, WatchListSheet.Upside);
+                sheet.WriteWatchListColumn(row, column++, headers[6], longs, rowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"");
+
                 column += 5;
 
                 // Write column headers
-                if (isNewSheet)
-                {
-                    row--;
-                    sheet.WriteColumnHeader(row, column + 0, headers[0]);
-                    sheet.WriteColumnHeader(row, column + 1, headers[1]);
-                    sheet.WriteColumnHeader(row, column + 2, headers[2]);
-                    sheet.WriteColumnHeader(row, column + 3, headers[3]);
-                    sheet.WriteColumnHeader(row, column + 4, headers[4]);
-                    sheet.WriteColumnHeader(row, column + 5, headers[5]);
-                    sheet.WriteColumnHeader(row, column + 6, headers[6]);
-                    row++;
-                }
-
-                // Clear shorts
-                range = sheet.Range[sheet.Cells[row, column], sheet.Cells[row + numItems - 1, column + headers.Length - 1]];
-                range.ClearContents();
+                row--;
+                sheet.WriteColumnHeader(row, column + 0, headers[0], headerStyle);
+                sheet.WriteColumnHeader(row, column + 1, headers[1], headerStyle);
+                sheet.WriteColumnHeader(row, column + 2, headers[2], headerStyle);
+                sheet.WriteColumnHeader(row, column + 3, headers[3], headerStyle);
+                sheet.WriteColumnHeader(row, column + 4, headers[4], headerStyle);
+                sheet.WriteColumnHeader(row, column + 5, headers[5], headerStyle);
+                sheet.WriteColumnHeader(row, column + 6, headers[6], headerStyle);
+                row++;
 
                 // Write shorts
                 var shortQuery = fund.Where(x => x.PercentNAV < 0);
@@ -128,24 +122,25 @@ namespace Odey.ExcelAddin
                         Manager = (string)null,
                         PercentNAV = g.Sum(p => p.PercentNAV),
                         NetPosition = (decimal?)null,
-                        Strategy = (string)null
+                        Strategy = (string)null,
+                        InstrumentClassId = 0,
                     });
                 }
-                shortQuery = shortQuery.OrderBy(x => x.PercentNAV).Take(numItems);
+                shortQuery = shortQuery.OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 var shorts = shortQuery.ToList();
-                sheet.WriteIndexColumn(row, column++, headers[0], shorts.Count());
-                sheet.WriteFieldColumn(row, column++, headers[1], shorts, "Ticker");
-                sheet.WriteFieldColumn(row, column++, headers[2], shorts, "PercentNAV");
+                sheet.WriteIndexColumn(row, column++, headers[0], shorts.Count(), rowStyle);
+                sheet.WriteFieldColumn(row, column++, headers[1], shorts, "Ticker", rowStyle);
+                sheet.WriteFieldColumn(row, column++, headers[2], shorts, "PercentNAV", rowStyle);
                 if (manager == "AC")
                 {
                     column += 4;
                 }
                 else
                 {
-                    sheet.WriteFieldColumn(row, column++, headers[3], shorts, "NetPosition");
-                    sheet.WriteWatchListColumn(row, column++, headers[4], shorts, watchList, WatchListSheet.AverageVolume);
-                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, watchList, WatchListSheet.Upside);
-                    sheet.WriteWatchListColumn(row, column++, headers[6], shorts, watchList, WatchListSheet.Conviction);
+                    sheet.WriteFieldColumn(row, column++, headers[3], shorts, "NetPosition", rowStyle);
+                    sheet.WriteWatchListColumn(row, column++, headers[4], shorts, rowStyle, watchList, WatchListSheet.AverageVolume);
+                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, rowStyle, watchList, WatchListSheet.Upside);
+                    sheet.WriteWatchListColumn(row, column++, headers[6], shorts, rowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"");
                 }
                 column += 5;
 
@@ -155,7 +150,7 @@ namespace Odey.ExcelAddin
                 }
                 else
                 {
-                    row += 1 + numItems + 2;
+                    row += 1 + Math.Max(shorts.Count, longs.Count) + 1;
                     column -= (headers.Length + 5) * 2;
                 }
             }

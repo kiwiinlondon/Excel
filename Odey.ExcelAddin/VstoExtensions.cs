@@ -4,6 +4,7 @@ using Microsoft.Office.Tools.Excel;
 using System.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace Odey.ExcelAddin
 {
@@ -50,29 +51,36 @@ namespace Odey.ExcelAddin
             }
         }
 
-        public static void WriteColumnHeader(this Excel.Worksheet sheet, int row, int column, ColumnDef col)
+        public static void WriteColumnHeader(this Excel.Worksheet sheet, int row, int column, ColumnDef col, Excel.Style style)
         {
             Excel.Range header = sheet.Cells[row, column];
             header.Value = col.Name;
             header.ColumnWidth = col.Width;
-        }
-
-        public static void WriteIndexColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, int max)
-        {
-            for (var y = 0; y < max; ++y)
+            if (style != null)
             {
-                sheet.Cells[row + y, column] = y + 1;
+                header.Style = style;
             }
         }
 
-        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<T> data, string field)
+        public static void WriteIndexColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, int max, Excel.Style rowStyle)
+        {
+            for (var y = 0; y < max; ++y)
+            {
+                Excel.Range cell = sheet.Cells[row + y, column];
+                cell.Value2 = y + 1;
+                cell.Style = rowStyle;
+            }
+        }
+
+        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<T> data, string field, Excel.Style rowStyle)
         {
             var y = 0;
             var pi = typeof(T).GetProperty(field);
             foreach (var item in data)
             {
                 Excel.Range cell = sheet.Cells[row + y, column];
-                cell.Value = pi.GetValue(item);
+                cell.Value2 = pi.GetValue(item);
+                cell.Style = rowStyle;
                 if (col.NumberFormat != null)
                 {
                     cell.NumberFormat = col.NumberFormat;
@@ -81,16 +89,89 @@ namespace Odey.ExcelAddin
             }
         }
 
-        public static void WriteWatchListColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<dynamic> data, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn)
+        public static void WriteWatchListColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<dynamic> data, Excel.Style rowStyle, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn, string formula = "=[Address]")
         {
             var y = 0;
             foreach (var item in data)
             {
+                var address = GetAddress(item.Ticker, sourceColumn.AlphabeticalIndex, watchList);
                 Excel.Range cell = sheet.Cells[row + y, column];
-                var watchListItem = watchList[item.Ticker];
-                cell.Formula = $"='{WatchListSheet.Name}'!{sourceColumn.AlphabeticalIndex}{watchListItem.RowIndex}";
+                cell.Formula = formula.Replace("[Address]", address);
+                cell.Style = rowStyle;
                 ++y;
             }
+        }
+
+        public static string GetAddress(string ticker, string columnLetter, Dictionary<string, WatchListItem> watchList)
+        {
+            return $"'{WatchListSheet.Name}'!{columnLetter}{watchList[ticker].RowIndex}";
+        }
+
+        public static Excel.Style GetHeaderStyle(this Excel.Workbook wb)
+        {
+            foreach (Excel.Style style in wb.Styles)
+            {
+                if (style.Name == "Header")
+                {
+                    return style;
+                }
+            }
+
+            var headerStyle = wb.Styles.Add("Header");
+            headerStyle.WrapText = true;
+            headerStyle.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+            headerStyle.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            headerStyle.Interior.ThemeColor = Excel.XlThemeColor.xlThemeColorAccent1;
+            headerStyle.Font.Bold = true;
+            headerStyle.Font.ThemeColor = Excel.XlThemeColor.xlThemeColorDark1;
+
+            foreach (var index in new[] { Excel.Constants.xlTop, Excel.Constants.xlLeft, Excel.Constants.xlBottom, Excel.Constants.xlRight })
+            {
+                var border = headerStyle.Borders[(Excel.XlBordersIndex)index];
+                border.LineStyle = Excel.XlLineStyle.xlContinuous;
+                border.Weight = Excel.XlBorderWeight.xlThin;
+                border.ThemeColor = Excel.XlThemeColor.xlThemeColorDark1;
+            }
+
+            headerStyle.IncludeAlignment = true;
+            headerStyle.IncludeBorder = true;
+            headerStyle.IncludeFont = true;
+            headerStyle.IncludeNumber = false;
+            headerStyle.IncludePatterns = true;
+            headerStyle.IncludeProtection = false;
+
+            return headerStyle;
+        }
+
+        public static Excel.Style GetNormalRowStyle(this Excel.Workbook wb)
+        {
+            foreach (Excel.Style style in wb.Styles)
+            {
+                if (style.Name == "Normal Row")
+                {
+                    return style;
+                }
+            }
+
+            var rowStyle = wb.Styles.Add("Normal Row");
+            rowStyle.Interior.Color = ColorTranslator.ToOle(Color.FromArgb(0xDDD9C4));   //0xEEECE1
+
+            foreach (var index in new[] { Excel.Constants.xlTop, Excel.Constants.xlLeft, Excel.Constants.xlBottom, Excel.Constants.xlRight })
+            {
+                var border = rowStyle.Borders[(Excel.XlBordersIndex)index];
+                border.LineStyle = Excel.XlLineStyle.xlContinuous;
+                border.Weight = Excel.XlBorderWeight.xlThin;
+                border.ThemeColor = Excel.XlThemeColor.xlThemeColorDark1;
+            }
+
+            rowStyle.IncludeAlignment = false;
+            rowStyle.IncludeBorder = true;
+            rowStyle.IncludeFont = false;
+            rowStyle.IncludeNumber = false;
+            rowStyle.IncludePatterns = true;
+            rowStyle.IncludeProtection = false;
+
+            return rowStyle;
         }
     }
 }
