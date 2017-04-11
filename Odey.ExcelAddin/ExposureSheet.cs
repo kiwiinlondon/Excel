@@ -54,8 +54,8 @@ namespace Odey.ExcelAddin
             var headers = new[] {
                 new ColumnDef { Name = "#", Width = 3.4 },
                 new ColumnDef { Name = "Ticker", Width = 22 },
-                new ColumnDef { Name = "% NAV", Width = 7, NumberFormat = "0.00%" },
-                new ColumnDef { Name = "Net Position", Width = 0, NumberFormat = "#,###" },
+                new ColumnDef { Name = "% NAV", Width = 7 },
+                new ColumnDef { Name = "Net Position", Width = 0 },
                 new ColumnDef { Name = "Daily Volume", Width = 0 },
                 new ColumnDef { Name = "Upside", Width = 7 },
                 new ColumnDef { Name = "Conviction", Width = 9.7 }
@@ -66,48 +66,58 @@ namespace Odey.ExcelAddin
 
             var headerStyle = app.ActiveWorkbook.GetHeaderStyle();
             var rowStyle = app.ActiveWorkbook.GetNormalRowStyle();
+            var excessRowStyle = app.ActiveWorkbook.GetExcessRowStyle();
 
             var row = 1;
             var column = 1;
             foreach (var manager in TargetItemCountByManager.Keys)
             {
                 var fund = rows.Where(x => x.Manager == manager);
+                var excessBelow = TargetItemCountByManager[manager];
 
                 // Write PM initials
                 sheet.Cells[row, column] = manager;
                 row += 2;
 
                 // Write column headers
-                sheet.WriteColumnHeader(row, column + 0, headers[0], headerStyle);
-                sheet.WriteColumnHeader(row, column + 1, headers[1], headerStyle);
-                sheet.WriteColumnHeader(row, column + 2, headers[2], headerStyle);
-                sheet.WriteColumnHeader(row, column + 3, headers[3], headerStyle);
-                sheet.WriteColumnHeader(row, column + 4, headers[4], headerStyle);
-                sheet.WriteColumnHeader(row, column + 5, headers[5], headerStyle);
-                sheet.WriteColumnHeader(row, column + 6, headers[6], headerStyle);
+                var y = 0;
+                foreach (var col in headers)
+                {
+                    Excel.Range cell = sheet.Cells[row, column + y];
+                    cell.Value = col.Name;
+                    cell.ColumnWidth = col.Width;
+                    cell.Style = headerStyle;
+                    ++y;
+                }
                 row++;
 
                 // Write longs
-                var longs = fund.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture ? 1 : 0)).ThenByDescending(x => x.PercentNAV).ToList();
-                sheet.WriteIndexColumn(row, column++, headers[0], longs.Count(), rowStyle);
-                sheet.WriteFieldColumn(row, column++, headers[1], longs, "Ticker", rowStyle);
-                sheet.WriteFieldColumn(row, column++, headers[2], longs, "PercentNAV", rowStyle);
-                sheet.WriteFieldColumn(row, column++, headers[3], longs, "NetPosition", rowStyle);
-                sheet.WriteWatchListColumn(row, column++, headers[4], longs, rowStyle, watchList, WatchListSheet.AverageVolume);
-                sheet.WriteWatchListColumn(row, column++, headers[5], longs, rowStyle, watchList, WatchListSheet.Upside, "=IF(ISNUMBER([Address]), [Address], \"\")");
-                sheet.WriteWatchListColumn(row, column++, headers[6], longs, rowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"");
+                var longs = fund.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture || x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexOption ? 1 : 0)).ThenByDescending(x => x.PercentNAV).ToList();
+                sheet.WriteIndexColumn(row, column++, longs.Count(), excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteFieldColumn(row, column++, null, longs, "Ticker", excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteFieldColumn(row, column++, "0.0%", longs, "PercentNAV", excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteFieldColumn(row, column++, "#,##0", longs, "NetPosition", excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteWatchListColumn(row, column++, null, longs, excessBelow, rowStyle, excessRowStyle, watchList, WatchListSheet.AverageVolume);
+                sheet.WriteWatchListColumn(row, column++, "0%", longs, excessBelow, rowStyle, excessRowStyle, watchList, WatchListSheet.Upside, "=IF(ISNUMBER([Address]), [Address], \"\")");
+                sheet.WriteWatchListColumn(row, column++, null, longs, excessBelow, rowStyle, excessRowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"", Excel.XlHAlign.xlHAlignCenter);
 
                 column += 5;
 
                 // Write column headers
                 row--;
-                sheet.WriteColumnHeader(row, column + 0, headers[0], headerStyle);
-                sheet.WriteColumnHeader(row, column + 1, headers[1], headerStyle);
-                sheet.WriteColumnHeader(row, column + 2, headers[2], headerStyle);
-                sheet.WriteColumnHeader(row, column + 3, headers[3], headerStyle);
-                sheet.WriteColumnHeader(row, column + 4, headers[4], headerStyle);
-                sheet.WriteColumnHeader(row, column + 5, headers[5], headerStyle);
-                sheet.WriteColumnHeader(row, column + 6, headers[6], headerStyle);
+                y = 0;
+                foreach (var col in headers)
+                {
+                    Excel.Range cell = sheet.Cells[row, column + y];
+                    cell.Value = col.Name;
+                    cell.ColumnWidth = col.Width;
+                    cell.Style = headerStyle;
+                    ++y;
+                    if (manager == "AC" && y > 2)
+                    {
+                        break;
+                    }
+                }
                 row++;
 
                 // Write shorts
@@ -123,21 +133,21 @@ namespace Odey.ExcelAddin
                         InstrumentClassId = 0,
                     });
                 }
-                shortQuery = shortQuery.OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture ? 1 : 0)).ThenBy(x => x.PercentNAV);
+                shortQuery = shortQuery.OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture || x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexOption ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 var shorts = shortQuery.ToList();
-                sheet.WriteIndexColumn(row, column++, headers[0], shorts.Count(), rowStyle);
-                sheet.WriteFieldColumn(row, column++, headers[1], shorts, "Ticker", rowStyle);
-                sheet.WriteFieldColumn(row, column++, headers[2], shorts, "PercentNAV", rowStyle);
+                sheet.WriteIndexColumn(row, column++, shorts.Count(), excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteFieldColumn(row, column++, null, shorts, "Ticker", excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteFieldColumn(row, column++, "0.0%", shorts, "PercentNAV", excessBelow, rowStyle, excessRowStyle);
                 if (manager == "AC")
                 {
                     column += 4;
                 }
                 else
                 {
-                    sheet.WriteFieldColumn(row, column++, headers[3], shorts, "NetPosition", rowStyle);
-                    sheet.WriteWatchListColumn(row, column++, headers[4], shorts, rowStyle, watchList, WatchListSheet.AverageVolume);
-                    sheet.WriteWatchListColumn(row, column++, headers[5], shorts, rowStyle, watchList, WatchListSheet.Upside, "=IF(ISNUMBER([Address]), [Address], \"\")");
-                    sheet.WriteWatchListColumn(row, column++, headers[6], shorts, rowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"");
+                    sheet.WriteFieldColumn(row, column++, "#,##0", shorts, "NetPosition", excessBelow, rowStyle, excessRowStyle);
+                    sheet.WriteWatchListColumn(row, column++, null, shorts, excessBelow, rowStyle, excessRowStyle, watchList, WatchListSheet.AverageVolume);
+                    sheet.WriteWatchListColumn(row, column++, "0%", shorts, excessBelow, rowStyle, excessRowStyle, watchList, WatchListSheet.Upside, "=IF(ISNUMBER([Address]), [Address], \"\")");
+                    sheet.WriteWatchListColumn(row, column++, null, shorts, excessBelow, rowStyle, excessRowStyle, watchList, WatchListSheet.Conviction, "=[Address] & \"\"", Excel.XlHAlign.xlHAlignCenter);
                 }
                 column += 5;
 

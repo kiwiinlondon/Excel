@@ -51,28 +51,17 @@ namespace Odey.ExcelAddin
             }
         }
 
-        public static void WriteColumnHeader(this Excel.Worksheet sheet, int row, int column, ColumnDef col, Excel.Style style)
+        public static void WriteIndexColumn(this Excel.Worksheet sheet, int row, int column, int num, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle)
         {
-            Excel.Range header = sheet.Cells[row, column];
-            header.Value = col.Name;
-            header.ColumnWidth = col.Width;
-            if (style != null)
-            {
-                header.Style = style;
-            }
-        }
-
-        public static void WriteIndexColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, int max, Excel.Style rowStyle)
-        {
-            for (var y = 0; y < max; ++y)
+            for (var y = 0; y < num; ++y)
             {
                 Excel.Range cell = sheet.Cells[row + y, column];
                 cell.Value2 = y + 1;
-                cell.Style = rowStyle;
+                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
             }
         }
 
-        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<T> data, string field, Excel.Style rowStyle)
+        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, string numberFormat, IEnumerable<T> data, string field, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle)
         {
             var y = 0;
             var pi = typeof(T).GetProperty(field);
@@ -80,16 +69,16 @@ namespace Odey.ExcelAddin
             {
                 Excel.Range cell = sheet.Cells[row + y, column];
                 cell.Value2 = pi.GetValue(item);
-                cell.Style = rowStyle;
-                if (col.NumberFormat != null)
+                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                if (numberFormat != null)
                 {
-                    cell.NumberFormat = col.NumberFormat;
+                    cell.NumberFormat = numberFormat;
                 }
                 ++y;
             }
         }
 
-        public static void WriteWatchListColumn(this Excel.Worksheet sheet, int row, int column, ColumnDef col, IEnumerable<dynamic> data, Excel.Style rowStyle, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn, string formula = "=[Address]")
+        public static void WriteWatchListColumn(this Excel.Worksheet sheet, int row, int column, string numberFormat, IEnumerable<dynamic> data, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn, string formula = "=[Address]", Excel.XlHAlign align = Excel.XlHAlign.xlHAlignGeneral)
         {
             var y = 0;
             foreach (var item in data)
@@ -97,7 +86,12 @@ namespace Odey.ExcelAddin
                 var address = GetAddress(item.Ticker, sourceColumn.AlphabeticalIndex, watchList);
                 Excel.Range cell = sheet.Cells[row + y, column];
                 cell.Formula = formula.Replace("[Address]", address);
-                cell.Style = rowStyle;
+                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                cell.HorizontalAlignment = align;
+                if (numberFormat != null)
+                {
+                    cell.NumberFormat = numberFormat;
+                }
                 ++y;
             }
         }
@@ -154,7 +148,38 @@ namespace Odey.ExcelAddin
             }
 
             var rowStyle = wb.Styles.Add("Normal Row");
-            rowStyle.Interior.Color = ColorTranslator.ToOle(Color.FromArgb(0xDDD9C4));   //0xEEECE1
+            rowStyle.Interior.Color = ColorTranslator.ToOle(Color.FromArgb(0xDDD9C4));
+
+            foreach (var index in new[] { Excel.Constants.xlTop, Excel.Constants.xlLeft, Excel.Constants.xlBottom, Excel.Constants.xlRight })
+            {
+                var border = rowStyle.Borders[(Excel.XlBordersIndex)index];
+                border.LineStyle = Excel.XlLineStyle.xlContinuous;
+                border.Weight = Excel.XlBorderWeight.xlThin;
+                border.ThemeColor = Excel.XlThemeColor.xlThemeColorDark1;
+            }
+
+            rowStyle.IncludeAlignment = false;
+            rowStyle.IncludeBorder = true;
+            rowStyle.IncludeFont = false;
+            rowStyle.IncludeNumber = false;
+            rowStyle.IncludePatterns = true;
+            rowStyle.IncludeProtection = false;
+
+            return rowStyle;
+        }
+
+        public static Excel.Style GetExcessRowStyle(this Excel.Workbook wb)
+        {
+            foreach (Excel.Style style in wb.Styles)
+            {
+                if (style.Name == "Excess Row")
+                {
+                    return style;
+                }
+            }
+
+            var rowStyle = wb.Styles.Add("Excess Row");
+            rowStyle.Interior.Color = ColorTranslator.ToOle(Color.FromArgb(0xFCAC80));
 
             foreach (var index in new[] { Excel.Constants.xlTop, Excel.Constants.xlLeft, Excel.Constants.xlBottom, Excel.Constants.xlRight })
             {
