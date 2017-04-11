@@ -34,7 +34,7 @@
     <PublishUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</PublishUrl>
     <InstallUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.25</ApplicationVersion>
+    <ApplicationVersion>1.0.0.26</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
