@@ -128,10 +128,6 @@ namespace Odey.ExcelAddin
                     cell.ColumnWidth = col.Width;
                     cell.Style = headerStyle;
                     ++y;
-                    if (manager == "AC" && y > 2)
-                    {
-                        break;
-                    }
                 }
                 row++;
 
@@ -150,12 +146,15 @@ namespace Odey.ExcelAddin
                 }
                 shortQuery = shortQuery.OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture || x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexOption ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 var shorts = shortQuery.ToList();
-                sheet.WriteIndexColumn(row, column++, shorts.Count(), excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteIndexColumn(row, column++, shorts.Count, excessBelow, rowStyle, excessRowStyle);
                 sheet.WriteFieldColumn(row, column++, null, shorts, "Ticker", excessBelow, rowStyle, excessRowStyle, "=BDP(\"[StringValue]\",\"SHORT_NAME\")");
                 sheet.WriteFieldColumn(row, column++, "0.0%", shorts, "PercentNAV", excessBelow, rowStyle, excessRowStyle);
                 if (manager == "AC")
                 {
-                    column += 4;
+                    sheet.WriteEmptyColumn(row, column++, shorts.Count, excessBelow, rowStyle, excessRowStyle);
+                    sheet.WriteEmptyColumn(row, column++, shorts.Count, excessBelow, rowStyle, excessRowStyle);
+                    sheet.WriteEmptyColumn(row, column++, shorts.Count, excessBelow, rowStyle, excessRowStyle);
+                    sheet.WriteEmptyColumn(row, column++, shorts.Count, excessBelow, rowStyle, excessRowStyle);
                 }
                 else
                 {

@@ -61,6 +61,15 @@ namespace Odey.ExcelAddin
             }
         }
 
+        public static void WriteEmptyColumn(this Excel.Worksheet sheet, int row, int column, int length, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle)
+        {
+            for (var y = 0; y < length; ++y)
+            {
+                Excel.Range cell = sheet.Cells[row + y, column];
+                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+            }
+        }
+
         public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, string numberFormat, IEnumerable<T> data, string field, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle, string formula = null)
         {
             var y = 0;
