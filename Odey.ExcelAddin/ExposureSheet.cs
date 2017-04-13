@@ -29,12 +29,13 @@ namespace Odey.ExcelAddin
                 {
                     Ticker = g.Key.BloombergTicker,
                     Manager = Ribbon1.GetManagerInitials(g.Key.ManagerName),
-                    PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
+                    PercentNAV = g.Sum(p => p.Exposure).Value / g.Select(p => p.FundNAV.Value).Distinct().Single(),
                     NetPosition = g.Sum(p => p.NetPosition),
                     Strategy = g.Key.StrategyName,
                     InstrumentClassId = g.Key.InstrumentClassId,
                 })
                 .ToList();
+            var totalGrossExposure = rows.Sum(p => Math.Abs(p.PercentNAV));
 
             // Get the worksheet
             var sheetName = $"Exposure {fundName}";
@@ -51,7 +52,7 @@ namespace Odey.ExcelAddin
 
             var headers = new[] {
                 new ColumnDef { Name = "#", Width = 3.4 },
-                new ColumnDef { Name = "Name", Width = 22 },
+                new ColumnDef { Name = "Name", Width = 23 },
                 new ColumnDef { Name = "% NAV", Width = 7 },
                 new ColumnDef { Name = "Net Position", Width = 0 },
                 new ColumnDef { Name = "Daily Volume", Width = 0 },
@@ -66,15 +67,31 @@ namespace Odey.ExcelAddin
             var rowStyle = app.ActiveWorkbook.GetNormalRowStyle();
             var excessRowStyle = app.ActiveWorkbook.GetExcessRowStyle();
 
-            var row = 1;
+            sheet.Cells[1, 1] = "Total Gross Exposure";
+            Excel.Range totalExposureCell = sheet.Cells[1, 3];
+            totalExposureCell.Value2 = totalGrossExposure;
+            totalExposureCell.NumberFormat = "0.0%";
+
+            var row = 3;
             var column = 1;
             foreach (var manager in TargetItemCountByManager.Keys)
             {
-                var fund = rows.Where(x => x.Manager == manager);
+                var managerPositions = rows.Where(x => x.Manager == manager);
+                var managerGrossExposure = managerPositions.Sum(p => Math.Abs(p.PercentNAV));
                 var excessBelow = TargetItemCountByManager[manager];
 
                 // Write PM initials
                 sheet.Cells[row, column] = manager;
+
+                sheet.Cells[row + 1, column + 1] = "Gross Exposure";
+                Excel.Range managerExposureCell = sheet.Cells[row + 1, column + 2];
+                managerExposureCell.Value2 = managerGrossExposure;
+                managerExposureCell.NumberFormat = "0.0%";
+
+                sheet.Cells[row, column + 1] = "Percent of Total Exposure";
+                Excel.Range fundPercentageCell = sheet.Cells[row, column + 2];
+                fundPercentageCell.Formula = $"={managerExposureCell.Address}/{totalExposureCell.Address}";
+                fundPercentageCell.NumberFormat = "0.0%";
                 row += 2;
 
                 // Write column headers
@@ -90,7 +107,7 @@ namespace Odey.ExcelAddin
                 row++;
 
                 // Write longs
-                var longs = fund.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture || x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexOption ? 1 : 0)).ThenByDescending(x => x.PercentNAV).ToList();
+                var longs = managerPositions.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture || x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexOption ? 1 : 0)).ThenByDescending(x => x.PercentNAV).ToList();
                 sheet.WriteIndexColumn(row, column++, longs.Count(), excessBelow, rowStyle, excessRowStyle);
                 sheet.WriteFieldColumn(row, column++, null, longs, "Ticker", excessBelow, rowStyle, excessRowStyle, "=BDP(\"[StringValue]\",\"SHORT_NAME\")");
                 sheet.WriteFieldColumn(row, column++, "0.0%", longs, "PercentNAV", excessBelow, rowStyle, excessRowStyle);
@@ -119,7 +136,7 @@ namespace Odey.ExcelAddin
                 row++;
 
                 // Write shorts
-                var shortQuery = fund.Where(x => x.PercentNAV < 0);
+                var shortQuery = managerPositions.Where(x => x.PercentNAV < 0);
                 if (manager == "AC")
                 {
                     shortQuery = shortQuery.GroupBy(p => p.Strategy).Select(g => new {
