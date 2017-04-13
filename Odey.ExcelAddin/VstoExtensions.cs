@@ -61,14 +61,21 @@ namespace Odey.ExcelAddin
             }
         }
 
-        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, string numberFormat, IEnumerable<T> data, string field, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle)
+        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, string numberFormat, IEnumerable<T> data, string field, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle, string formula = null)
         {
             var y = 0;
             var pi = typeof(T).GetProperty(field);
             foreach (var item in data)
             {
                 Excel.Range cell = sheet.Cells[row + y, column];
-                cell.Value2 = pi.GetValue(item);
+                if (formula != null)
+                {
+                    cell.Formula = formula.Replace("[StringValue]", (string)pi.GetValue(item));
+                }
+                else
+                {
+                    cell.Value2 = pi.GetValue(item);
+                }
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
                 if (numberFormat != null)
                 {

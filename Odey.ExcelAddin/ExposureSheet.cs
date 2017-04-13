@@ -37,7 +37,6 @@ namespace Odey.ExcelAddin
                 .ToList();
 
             // Get the worksheet
-            var isNewSheet = false;
             var sheetName = $"Exposure {fundName}";
             Excel.Worksheet sheet;
             try
@@ -46,14 +45,13 @@ namespace Odey.ExcelAddin
             }
             catch
             {
-                isNewSheet = true;
                 sheet = app.Sheets.Add();
                 sheet.Name = sheetName;
             }
 
             var headers = new[] {
                 new ColumnDef { Name = "#", Width = 3.4 },
-                new ColumnDef { Name = "Ticker", Width = 22 },
+                new ColumnDef { Name = "Name", Width = 22 },
                 new ColumnDef { Name = "% NAV", Width = 7 },
                 new ColumnDef { Name = "Net Position", Width = 0 },
                 new ColumnDef { Name = "Daily Volume", Width = 0 },
@@ -94,7 +92,7 @@ namespace Odey.ExcelAddin
                 // Write longs
                 var longs = fund.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture || x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexOption ? 1 : 0)).ThenByDescending(x => x.PercentNAV).ToList();
                 sheet.WriteIndexColumn(row, column++, longs.Count(), excessBelow, rowStyle, excessRowStyle);
-                sheet.WriteFieldColumn(row, column++, null, longs, "Ticker", excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteFieldColumn(row, column++, null, longs, "Ticker", excessBelow, rowStyle, excessRowStyle, "=BDP(\"[StringValue]\",\"SHORT_NAME\")");
                 sheet.WriteFieldColumn(row, column++, "0.0%", longs, "PercentNAV", excessBelow, rowStyle, excessRowStyle);
                 sheet.WriteFieldColumn(row, column++, "#,##0", longs, "NetPosition", excessBelow, rowStyle, excessRowStyle);
                 sheet.WriteWatchListColumn(row, column++, null, longs, excessBelow, rowStyle, excessRowStyle, watchList, WatchListSheet.AverageVolume);
@@ -136,7 +134,7 @@ namespace Odey.ExcelAddin
                 shortQuery = shortQuery.OrderBy(x => (x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexFuture || x.InstrumentClassId == (int)InstrumentClassIds.EquityIndexOption ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 var shorts = shortQuery.ToList();
                 sheet.WriteIndexColumn(row, column++, shorts.Count(), excessBelow, rowStyle, excessRowStyle);
-                sheet.WriteFieldColumn(row, column++, null, shorts, "Ticker", excessBelow, rowStyle, excessRowStyle);
+                sheet.WriteFieldColumn(row, column++, null, shorts, "Ticker", excessBelow, rowStyle, excessRowStyle, "=BDP(\"[StringValue]\",\"SHORT_NAME\")");
                 sheet.WriteFieldColumn(row, column++, "0.0%", shorts, "PercentNAV", excessBelow, rowStyle, excessRowStyle);
                 if (manager == "AC")
                 {
