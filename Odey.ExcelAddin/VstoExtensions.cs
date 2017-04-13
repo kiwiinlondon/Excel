@@ -51,70 +51,9 @@ namespace Odey.ExcelAddin
             }
         }
 
-        public static void WriteIndexColumn(this Excel.Worksheet sheet, int row, int column, int num, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle)
+        public static string GetAddress(string worksheet, string columnLetter, int rowIndex)
         {
-            for (var y = 0; y < num; ++y)
-            {
-                Excel.Range cell = sheet.Cells[row + y, column];
-                cell.Value2 = y + 1;
-                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
-            }
-        }
-
-        public static void WriteEmptyColumn(this Excel.Worksheet sheet, int row, int column, int length, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle)
-        {
-            for (var y = 0; y < length; ++y)
-            {
-                Excel.Range cell = sheet.Cells[row + y, column];
-                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
-            }
-        }
-
-        public static void WriteFieldColumn<T>(this Excel.Worksheet sheet, int row, int column, string numberFormat, IEnumerable<T> data, string field, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle, string formula = null)
-        {
-            var y = 0;
-            var pi = typeof(T).GetProperty(field);
-            foreach (var item in data)
-            {
-                Excel.Range cell = sheet.Cells[row + y, column];
-                if (formula != null)
-                {
-                    cell.Formula = formula.Replace("[StringValue]", (string)pi.GetValue(item));
-                }
-                else
-                {
-                    cell.Value2 = pi.GetValue(item);
-                }
-                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
-                if (numberFormat != null)
-                {
-                    cell.NumberFormat = numberFormat;
-                }
-                ++y;
-            }
-        }
-
-        public static void WriteWatchListColumn(this Excel.Worksheet sheet, int row, int column, string numberFormat, IEnumerable<dynamic> data, int excessBelow, Excel.Style rowStyle, Excel.Style excessRowStyle, Dictionary<string, WatchListItem> watchList, ColumnDef sourceColumn, string formula = "=[Address]", Excel.XlHAlign align = Excel.XlHAlign.xlHAlignGeneral)
-        {
-            var y = 0;
-            foreach (var item in data)
-            {
-                var address = GetAddress(item.Ticker, sourceColumn.AlphabeticalIndex, watchList);
-                Excel.Range cell = sheet.Cells[row + y, column];
-                cell.Formula = formula.Replace("[Address]", address);
-                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
-                cell.HorizontalAlignment = align;
-                if (numberFormat != null)
-                {
-                    cell.NumberFormat = numberFormat;
-                }
-                ++y;
-            }
-        }
-
-        public static string GetAddress(string ticker, string columnLetter, Dictionary<string, WatchListItem> watchList)
-        {
-            return $"'{WatchListSheet.Name}'!{columnLetter}{watchList[ticker].RowIndex}";
+            return $"'{worksheet}'!{columnLetter}{rowIndex}";
         }
 
         public static Excel.Style GetHeaderStyle(this Excel.Workbook wb)
