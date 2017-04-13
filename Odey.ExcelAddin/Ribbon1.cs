@@ -133,10 +133,10 @@ namespace Odey.ExcelAddin
                 WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
                 WatchListSheet.Write(app, watchList, "Watch List Low Quality", false, "L");
             }
-            //catch (Exception e)
-            //{
-            //    MessageBox.Show(e.Message, e.GetType().Name);
-            //}
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, e.GetType().Name);
+            }
             finally
             {
                 app.StatusBar = null;
