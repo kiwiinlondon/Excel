@@ -91,7 +91,7 @@ namespace Odey.ExcelAddin
 
                 // Write longs
                 var longs = managerPositions.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
-                var longHeight = WriteExposureTable(sheet, row + 3, column, longs.ToList(), watchList, excessBelow, "Long"), "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+                var longHeight = WriteExposureTable(sheet, row + 3, column, longs.ToList(), watchList, excessBelow, "Long", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
                 column += 7 + 5;
 
                 // Write shorts
