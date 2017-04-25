@@ -61,13 +61,28 @@ namespace Odey.ExcelAddin
             sheet.Cells.ClearContents();
             sheet.Cells.ClearFormats();
 
-            // Total Gross Exposure
-            sheet.Cells[1, 1] = "Total Gross Exposure";
-            Excel.Range totalExposureCell = sheet.Cells[1, 3];
-            totalExposureCell.Value2 = rows.Sum(p => Math.Abs(p.PercentNAV));
-            totalExposureCell.NumberFormat = "0.0%";
+            var row = 1;
 
-            var row = 3;
+            // Total Gross Exposure
+            sheet.Cells[row, 1] = "Total Gross Exposure";
+            Excel.Range totalGrossExposureCell = sheet.Cells[row, 3];
+            totalGrossExposureCell.Value2 = rows.Sum(p => Math.Abs(p.PercentNAV));
+            totalGrossExposureCell.NumberFormat = "0.0%";
+
+            // Date
+            sheet.Cells[row, 7] = weightings.Select(p => p.ReferenceDate).Distinct().Single().ToString("dd/MM/yyyy");
+
+            ++row;
+
+            // Total Net Exposure
+            sheet.Cells[row, 1] = "Total Net Exposure";
+            Excel.Range totalNetExposureCell = sheet.Cells[row, 3];
+            totalNetExposureCell.Value2 = rows.Sum(p => p.PercentNAV);
+            totalNetExposureCell.NumberFormat = "0.0%";
+            
+            ++row;
+            ++row;
+
             var column = 1;
             foreach (var manager in TargetItemCountByManager.Keys)
             {
@@ -86,7 +101,7 @@ namespace Odey.ExcelAddin
                 // Percent of Total Exposure
                 sheet.Cells[row, column + 1] = "Percent of Total Exposure";
                 Excel.Range fundPercentageCell = sheet.Cells[row, column + 2];
-                fundPercentageCell.Formula = $"={managerExposureCell.Address}/{totalExposureCell.Address}";
+                fundPercentageCell.Formula = $"={managerExposureCell.Address}/{totalGrossExposureCell.Address}";
                 fundPercentageCell.NumberFormat = "0.0%";
 
                 // Write longs
