@@ -113,7 +113,7 @@ namespace Odey.ExcelAddin
                 // Write longs
                 var longs = managerPositions.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
                 var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
-                column += 7 + 5;
+                column += 8 + 5;
 
                 // Write shorts
                 var shorts = managerPositions.Where(x => x.PercentNAV < 0);
@@ -126,7 +126,7 @@ namespace Odey.ExcelAddin
                     shorts = shorts.OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 }
                 var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", (manager != "AC" ? "=BDP(\"[Ticker]\",\"SHORT_NAME\")" : null));
-                column += 7 + 5;
+                column += 8 + 5;
 
                 if (manager == "JH")
                 {
@@ -135,7 +135,7 @@ namespace Odey.ExcelAddin
                 else
                 {
                     row += 4 + Math.Max(shortHeight, longHeight) + 2;
-                    column -= (7 + 5) * 2;
+                    column -= (8 + 5) * 2;
                 }
             }
         }
@@ -149,7 +149,8 @@ namespace Odey.ExcelAddin
                 new ColumnDef { Name = "Net Position", Width = 0 },
                 new ColumnDef { Name = "Daily Volume", Width = 0 },
                 new ColumnDef { Name = "Upside", Width = 7 },
-                new ColumnDef { Name = "Conviction", Width = 9.7 }
+                new ColumnDef { Name = "Conviction", Width = 9.7 },
+                new ColumnDef { Name = "% Daily Volume", Width = 15 },
             };
             var wb = sheet.Application.ActiveWorkbook;
             var headerStyle = wb.GetHeaderStyle();
@@ -242,6 +243,16 @@ namespace Odey.ExcelAddin
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.Conviction.AlphabeticalIndex, watchListItem.RowIndex);
                     cell.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
                     cell.Formula = $"={address} & \"\"";
+                }
+
+                // % Daily Volume
+                cell = sheet.Cells[row + y, column + 7];
+                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                if (watchListItem != null)
+                {
+                    var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.AverageVolume.AlphabeticalIndex, watchListItem.RowIndex);
+                    cell.NumberFormat = "0%";
+                    cell.Formula = $"={Math.Abs(item.NetPosition)}/{address}";
                 }
             }
 
