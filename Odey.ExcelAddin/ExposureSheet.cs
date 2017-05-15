@@ -150,7 +150,7 @@ namespace Odey.ExcelAddin
                 new ColumnDef { Name = "Daily Volume", Width = 0 },
                 new ColumnDef { Name = "Upside", Width = 7 },
                 new ColumnDef { Name = "Conviction", Width = 9.7 },
-                new ColumnDef { Name = "% Daily Volume", Width = 15 },
+                new ColumnDef { Name = "% Annual Volume", Width = 15 },
             };
             var wb = sheet.Application.ActiveWorkbook;
             var headerStyle = wb.GetHeaderStyle();
@@ -245,14 +245,14 @@ namespace Odey.ExcelAddin
                     cell.Formula = $"={address} & \"\"";
                 }
 
-                // % Daily Volume
+                // % Annual Volume
                 cell = sheet.Cells[row + y, column + 7];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
                 if (watchListItem != null)
                 {
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.AverageVolume.AlphabeticalIndex, watchListItem.RowIndex);
-                    cell.NumberFormat = "0%";
-                    cell.Formula = $"={Math.Abs(item.NetPosition)}/{address}";
+                    cell.NumberFormat = "0.0%";
+                    cell.Formula = $"={Math.Abs(item.NetPosition)}/{address}/250";
                 }
             }
 
