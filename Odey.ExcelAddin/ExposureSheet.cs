@@ -9,7 +9,7 @@ namespace Odey.ExcelAddin
 {
     class ExposureItem
     {
-        public string Ticker { get; set; }
+        public List<string> Tickers { get; set; }
         public string Manager { get; set; }
         public decimal PercentNAV { get; set; }
         public decimal NetPosition { get; set; }
@@ -33,10 +33,10 @@ namespace Odey.ExcelAddin
 
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
-                .ToLookup(p => new { p.BloombergTicker, p.ManagerName, p.StrategyName })
+                .ToLookup(p => new { p.IssuerId, p.ManagerName, p.StrategyName })
                 .Select(g => new ExposureItem
                 {
-                    Ticker = g.Key.BloombergTicker,
+                    Tickers = g.Select(p => p.BloombergTicker).Distinct().ToList(),
                     Manager = Ribbon1.GetManagerInitials(g.Key.ManagerName),
                     PercentNAV = (g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single()) ?? 0,
                     NetPosition = g.Sum(p => p.NetPosition) ?? 0,
@@ -113,20 +113,20 @@ namespace Odey.ExcelAddin
                 // Write longs
                 var longs = managerPositions.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
                 var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
-                column += 8 + 5;
+                column += headers.Length + 5;
 
                 // Write shorts
                 var shorts = managerPositions.Where(x => x.PercentNAV < 0);
                 if (manager == "AC")
                 {
-                    shorts = shorts.GroupBy(p => p.Strategy).Select(g => new ExposureItem { Ticker = g.Key, PercentNAV = g.Sum(p => p.PercentNAV) }).OrderBy(x => x.PercentNAV);
+                    shorts = shorts.GroupBy(p => p.Strategy).Select(g => new ExposureItem { Tickers = new List<string> { g.Key }, PercentNAV = g.Sum(p => p.PercentNAV) }).OrderBy(x => x.PercentNAV);
                 }
                 else
                 {
                     shorts = shorts.OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 }
                 var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", (manager != "AC" ? "=BDP(\"[Ticker]\",\"SHORT_NAME\")" : null));
-                column += 8 + 5;
+                column += headers.Length + 5;
 
                 if (manager == "JH")
                 {
@@ -135,23 +135,26 @@ namespace Odey.ExcelAddin
                 else
                 {
                     row += 4 + Math.Max(shortHeight, longHeight) + 2;
-                    column -= (8 + 5) * 2;
+                    column -= (headers.Length + 5) * 2;
                 }
             }
         }
 
+        private static ColumnDef[] headers = new[] {
+            new ColumnDef { Name = "#", Width = 3.4 },
+            new ColumnDef { Name = "Name", Width = 23 },
+            new ColumnDef { Name = "% NAV", Width = 7 },
+            //new ColumnDef { Name = "Merged From", Width = 0 },
+            new ColumnDef { Name = "Net Position", Width = 0 },
+            new ColumnDef { Name = "Daily Volume", Width = 0 },
+            new ColumnDef { Name = "Upside", Width = 7 },
+            new ColumnDef { Name = "Conviction", Width = 9.7 },
+            new ColumnDef { Name = "% Annual Volume", Width = 15 },
+        };
+
         private static int WriteExposureTable(Excel.Worksheet sheet, int row, int column, List<ExposureItem> items, Dictionary<string, WatchListItem> watchList, int excessBelow, string nameHeader = "Name", string nameFormula = null)
         {
-            var headers = new[] {
-                new ColumnDef { Name = "#", Width = 3.4 },
-                new ColumnDef { Name = nameHeader, Width = 23 },
-                new ColumnDef { Name = "% NAV", Width = 7 },
-                new ColumnDef { Name = "Net Position", Width = 0 },
-                new ColumnDef { Name = "Daily Volume", Width = 0 },
-                new ColumnDef { Name = "Upside", Width = 7 },
-                new ColumnDef { Name = "Conviction", Width = 9.7 },
-                new ColumnDef { Name = "% Annual Volume", Width = 15 },
-            };
+
             var wb = sheet.Application.ActiveWorkbook;
             var headerStyle = wb.GetHeaderStyle();
             var rowStyle = wb.GetNormalRowStyle();
@@ -163,7 +166,7 @@ namespace Odey.ExcelAddin
             foreach (var col in headers)
             {
                 cell = sheet.Cells[row, column + y];
-                cell.Value = col.Name;
+                cell.Value = (col == headers[1] ? nameHeader : col.Name);
                 cell.ColumnWidth = col.Width;
                 cell.Style = headerStyle;
                 ++y;
@@ -174,42 +177,56 @@ namespace Odey.ExcelAddin
             var len = Math.Max(items.Count, excessBelow + 2);
             for (y = 0; y < len; ++y)
             {
+                var x = 0;
                 var item = items.ElementAtOrDefault(y);
-                var watchListItem = (item != null && watchList.ContainsKey(item.Ticker) ? watchList[item.Ticker] : null);
+                var ticker = item?.Tickers.FirstOrDefault();
+                var watchListItem = (item != null && watchList.ContainsKey(ticker) ? watchList[ticker] : null);
 
                 // Rank
-                cell = sheet.Cells[row + y, column + 0];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Value2 = y + 1;
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
 
                 // Name
-                cell = sheet.Cells[row + y, column + 1];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
                 if (item != null)
                 {
                     if (nameFormula != null)
                     {
-                        cell.Formula = nameFormula.Replace("[Ticker]", item.Ticker);
+                        cell.Formula = nameFormula.Replace("[Ticker]", ticker);
                     }
                     else
                     {
-                        cell.Value2 = item.Ticker;
+                        cell.Value2 = ticker;
                     }
-                    
                 }
 
                 // PercentNAV
-                cell = sheet.Cells[row + y, column + 2];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
                 if (item != null)
                 {
                     cell.NumberFormat = "0.0%";
                     cell.Value2 = item.PercentNAV;
                 }
 
+                //// Merged From
+                //cell = sheet.Cells[row + y, column + x];
+                //cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                //++x;
+                //if (item != null && item.Tickers.Count > 1)
+                //{
+                //    cell.Value2 = string.Join(", ", item.Tickers);
+                //}
+
                 // NetPosition
-                cell = sheet.Cells[row + y, column + 3];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
                 if (item != null)
                 {
                     cell.NumberFormat = "#,##0";
@@ -217,8 +234,9 @@ namespace Odey.ExcelAddin
                 }
 
                 // AverageVolume
-                cell = sheet.Cells[row + y, column + 4];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
                 if (watchListItem != null)
                 {
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.AverageVolume.AlphabeticalIndex, watchListItem.RowIndex);
@@ -226,8 +244,9 @@ namespace Odey.ExcelAddin
                 }
 
                 // Upside
-                cell = sheet.Cells[row + y, column + 5];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
                 if (watchListItem != null)
                 {
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.Upside.AlphabeticalIndex, watchListItem.RowIndex);
@@ -236,8 +255,9 @@ namespace Odey.ExcelAddin
                 }
 
                 // Conviction
-                cell = sheet.Cells[row + y, column + 6];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
                 if (watchListItem != null)
                 {
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.Conviction.AlphabeticalIndex, watchListItem.RowIndex);
@@ -246,8 +266,9 @@ namespace Odey.ExcelAddin
                 }
 
                 // % Annual Volume
-                cell = sheet.Cells[row + y, column + 7];
+                cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
                 if (watchListItem != null)
                 {
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.AverageVolume.AlphabeticalIndex, watchListItem.RowIndex);

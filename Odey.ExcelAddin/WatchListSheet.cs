@@ -31,6 +31,91 @@ namespace Odey.ExcelAddin
         public static ColumnDef Manager = new ColumnDef { Index = 50, AlphabeticalIndex = "AX", Name = "Portfolio Manager" };
         public static ColumnDef Conviction = new ColumnDef { Index = 51, AlphabeticalIndex = "AY", Name = "Conviction Level" };
 
+        
+        public static List<ColumnDef> Columns = new List<ColumnDef>
+        {
+            new ColumnDef
+            {
+                AlphabeticalIndex = "B",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "E",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "F",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "S",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "T",
+                RefAsNumber = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "U",
+                RefAsString = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "W",
+                RefAsNumber = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "Z",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "AD",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "AI",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "AM",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "AQ",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "AS",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "AT",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "AW",
+                CopyFormula = true,
+            },
+            new ColumnDef
+            {
+                AlphabeticalIndex = "BK",
+                CopyFormula = true,
+            },
+        };
+
         public static Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, List<PortfolioDTO> data)
         {
             app.StatusBar = "Reading watch list...";
@@ -146,7 +231,10 @@ namespace Odey.ExcelAddin
             {
                 cell = sheet.Cells[y, x];
                 cell.Formula = $"='{Name}'!{columnIndex}{5}";
-                cell.ColumnWidth = 14;
+                if (isNewSheet)
+                {
+                    cell.ColumnWidth = 14;
+                }
                 ++x;
             }
             ++y;
