@@ -116,16 +116,8 @@ namespace Odey.ExcelAddin
                 column += headers.Length + 5;
 
                 // Write shorts
-                var shorts = managerPositions.Where(x => x.PercentNAV < 0);
-                if (manager == "AC")
-                {
-                    shorts = shorts.GroupBy(p => p.Strategy).Select(g => new ExposureItem { Tickers = new List<string> { g.Key }, PercentNAV = g.Sum(p => p.PercentNAV) }).OrderBy(x => x.PercentNAV);
-                }
-                else
-                {
-                    shorts = shorts.OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
-                }
-                var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", (manager != "AC" ? "=BDP(\"[Ticker]\",\"SHORT_NAME\")" : null));
+                var shorts = managerPositions.Where(x => x.PercentNAV < 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
+                var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
                 column += headers.Length + 5;
 
                 if (manager == "JH")
