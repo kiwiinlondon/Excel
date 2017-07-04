@@ -13,7 +13,6 @@ namespace Odey.ExcelAddin
         public string Manager { get; set; }
         public decimal PercentNAV { get; set; }
         public decimal NetPosition { get; set; }
-        public string Strategy { get; set; }
         public List<int> InstrumentClassIds { get; set; }
     }
 
@@ -33,14 +32,13 @@ namespace Odey.ExcelAddin
 
             var rows = weightings
                 .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
-                .ToLookup(p => new { p.IssuerId, p.ManagerName, p.StrategyName })
+                .ToLookup(p => new { p.IssuerId, p.ManagerName })
                 .Select(g => new ExposureItem
                 {
                     Tickers = g.Select(p => p.BloombergTicker).Distinct().ToList(),
                     Manager = Ribbon1.GetManagerInitials(g.Key.ManagerName),
                     PercentNAV = (g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single()) ?? 0,
                     NetPosition = g.Sum(p => p.NetPosition) ?? 0,
-                    Strategy = g.Key.StrategyName,
                     InstrumentClassIds = g.Select(p => p.InstrumentClassId).Distinct().ToList(),
                 })
                 .ToList();
