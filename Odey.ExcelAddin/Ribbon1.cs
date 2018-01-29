@@ -100,6 +100,7 @@ namespace Odey.ExcelAddin
             catch
             {
                 MessageBox.Show("Please stop editing");
+                return;
             }
 
             try
@@ -110,6 +111,19 @@ namespace Odey.ExcelAddin
                     FundIds = funds.Cast<int>().ToArray(),
                     ReferenceDates = new[] { DateTime.Today },
                 });
+
+                // Override AC books manager to actually be Adrian (Geoff changed the manager of that book to James Hanbury, so that
+                // the trades appear on his trade sign off blotters)
+                var acBooks = new [] { BookIds.ArffAC, BookIds.BvffAC, BookIds.DevmAC, BookIds.FdxhAC, BookIds.OuarAC }.Cast<int>().ToList();
+                foreach (var row in data)
+                {
+                    if (acBooks.Contains(row.BookId))
+                    {
+                        row.ManagerId = (int)ApplicationUserIds.AdrianCourtenay;
+                        row.ManagerName = "Adrian Courtenay";
+                    }
+                }
+
                 //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
 
                 var watchList = WatchListSheet.GetWatchList(app, data);
