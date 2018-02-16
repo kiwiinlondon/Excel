@@ -8,13 +8,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Location
     {
-        public Location(int? row, string ticker, string name, decimal netPosition)
+        public Location(int? row, string ticker, string name, decimal netPosition, int? tickerTypeId, decimal? odeyPrice, string currency, decimal priceDivisor)
         {
             Row = row;
             Ticker = ticker;
             Name = name;
             _originalNetPosition = netPosition;
-            NetPosition = netPosition;
+            NetPosition = netPosition;     
+            OdeyPrice = odeyPrice;
+            TickerTypeId = tickerTypeId;
+            Currency = currency;
+            PriceDivisor = priceDivisor;
         }
 
         private decimal _originalNetPosition;
@@ -26,10 +30,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public string Name { get; set; }
 
-        private decimal _netPosition;
+        public string Currency { get; set; }
+
         public decimal NetPosition { get; set; }
 
+        public int? TickerTypeId { get; set; }
+
+        public decimal? OdeyPrice { get; set; }
+
         public bool QuantityHasChanged { get { return _originalNetPosition != NetPosition; } }
+
+        public decimal PriceDivisor { get; set; }
 
     }
 }

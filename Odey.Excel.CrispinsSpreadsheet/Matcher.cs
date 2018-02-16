@@ -19,7 +19,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public void Match(int fundId, DateTime referenceDate)
         {
             decimal nav;
-            var dTOs = _dataAccess.Get(fundId, referenceDate, out nav).Where(a => a.Ticker == "SKY LN Equity" || a.Ticker == "INTU LN Equity" || a.Ticker == "MTS AU Equity" || a.Ticker == "MON US Equity" || a.Ticker == "8591 JT Equity" || a.Ticker == "TALK LN Equity" || a.Ticker == "WFT US Equity").ToList();
+            var dTOs = _dataAccess.Get(fundId, referenceDate, out nav);//.Where(a => a.Ticker == "SKY LN Equity" || a.Ticker == "INTU LN Equity" || a.Ticker == "MTS AU Equity" || a.Ticker == "MON US Equity" || a.Ticker == "8591 JT Equity" || a.Ticker == "TALK LN Equity" || a.Ticker == "WFT US Equity").ToList();
 
             _sheetAccess.WriteNAV(nav);
             Dictionary<string, CountryLocation> countries = _sheetAccess.GetCountries();
@@ -32,11 +32,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
             foreach (PortfolioDTO dTO in dTOs)
             {
                 CountryLocation country;
-                if (!countries.TryGetValue(dTO.CountryIso, out country))
+                if (!countries.TryGetValue(dTO.CountryIsoCode, out country))
                 {
                     country = new CountryLocation()
                     {
-                        IsoCode = dTO.CountryIso,
+                        IsoCode = dTO.CountryIsoCode,
                         Name = dTO.CountryName
                     };
                     countries.Add(country.IsoCode,country);
@@ -68,15 +68,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 if (location.Row.HasValue)
                 {
-                    if (location.QuantityHasChanged)
-                    {
-                        _sheetAccess.UpdateTickerRow(location);
-                    }
+                    _sheetAccess.UpdateTickerRow(true,location);
+
                     currentRow = location.Row.Value;
                 }
                 else
                 {
-                    _sheetAccess.AddTickerRow(location,currentRow);
+                    _sheetAccess.AddTickerRow(location, currentRow);
                     country.TotalRow++;
                 }
             }
@@ -100,7 +98,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
                 else
                 {
-                    location = new Location(null, dto.Ticker, dto.Name, dto.NetPosition);
+                    location = new Location(null, dto.Ticker, dto.Name, dto.NetPosition, dto.TickerTypeId,dto.Price, dto.Currency, dto.PriceDivisor);
                     country.TickerRows.Add(location.Ticker, location);
                 }
             }

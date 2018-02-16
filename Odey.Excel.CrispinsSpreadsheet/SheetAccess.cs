@@ -13,7 +13,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
     {
         public SheetAccess(ThisWorkbook workBook)
         {
-             _worksheet = workBook.Sheets["Portfolio"];
+            _worksheet = workBook.Sheets["Portfolio"];
         }
         private XL.Worksheet _worksheet;
 
@@ -41,41 +41,50 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private static readonly string _pricePercentageChangeColumn = "H";
         private static readonly int _pricePercentageChangeColumnNumber = GetColumnNumber(_pricePercentageChangeColumn);
 
-        private static readonly string _netPositionChangeColumn = "I";
-        private static readonly int _netPositionChangeColumnNumber = GetColumnNumber(_netPositionChangeColumn);
+        private static readonly string _netPositionColumn = "I";
+        private static readonly int _netPositionColumnNumber = GetColumnNumber(_netPositionColumn);
 
         private static readonly string _currencyTickerColumn = "J";
         private static readonly int _currencyTickerColumnNumber = GetColumnNumber(_currencyTickerColumn);
 
-        private static readonly string _fxRateColumn = "K";
+        private static readonly string _quoteFactorColumn = "K";
+        private static readonly int _quoteFactorColumnNumber = GetColumnNumber(_quoteFactorColumn);
+
+        private static readonly string _fxRateColumn = "L";
         private static readonly int _fxRateColumnNumber = GetColumnNumber(_fxRateColumn);
 
-        private static readonly string _pnlColumn = "L";
+        private static readonly string _pnlColumn = "M";
         private static readonly int _pnlColumnNumber = GetColumnNumber(_pnlColumn);
 
-        private static readonly string _contributionColumn = "M";
+        private static readonly string _contributionColumn = "N";
         private static readonly int _contributionColumnNumber = GetColumnNumber(_contributionColumn);
 
-        private static readonly string _exposureColumn = "N";
+        private static readonly string _exposureColumn = "O";
         private static readonly int _exposureColumnNumber = GetColumnNumber(_exposureColumn);
 
-        private static readonly string _exposurePercentageColumn = "O";
+        private static readonly string _exposurePercentageColumn = "P";
         private static readonly int _exposurePercentageColumnNumber = GetColumnNumber(_exposurePercentageColumn);
 
-        private static readonly string _shortColumn = "P";
+        private static readonly string _shortColumn = "Q";
         private static readonly int _shortColumnNumber = GetColumnNumber(_shortColumn);
 
-        private static readonly string _longColumn = "Q";
+        private static readonly string _longColumn = "R";
         private static readonly int _longColumnNumber = GetColumnNumber(_longColumn);
 
-        private static readonly string _priceMultiplierColumn = "R";
+        private static readonly string _priceMultiplierColumn = "S";
         private static readonly int _priceMultiplierColumnNumber = GetColumnNumber(_priceMultiplierColumn);
 
-        private static readonly string _lastColumn = _priceMultiplierColumn;
+        private static readonly string _tickerTypeColumn = "T";
+        private static readonly int _tickerTypeColumnNumber = GetColumnNumber(_tickerTypeColumn);
+
+        private static readonly string _priceDivisorColumn = "U";
+        private static readonly int _priceDivisorColumnNumber = GetColumnNumber(_priceDivisorColumn);
+
+        private static readonly string _lastColumn = _tickerTypeColumn;
 
         private static readonly string _firstColumn = _controlColumn;
 
-        private int? FindRow(string toFind,string column)
+        private int? FindRow(string toFind, string column)
         {
             XL.Range tickers = _worksheet.get_Range($"${column}:${column}");
             var currentFind = tickers.Find(toFind, System.Reflection.Missing.Value,
@@ -87,7 +96,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 return null;
             }
             else
-            { 
+            {
                 return (int)currentFind.Row;
             }
         }
@@ -99,39 +108,87 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 throw new ApplicationException($"Dont know how to convert strings that are not one char long ({letter})");
             }
 
-            return char.ToUpper(letter[0]) - 'A' +1;
+            return char.ToUpper(letter[0]) - 'A' + 1;
 
         }
 
-        public void UpdateTickerRow(Location location)
+        public void UpdateTickerRow(bool forceRefresh, Location location)
         {
-            WriteValue(location.Row.Value, _netPositionChangeColumnNumber, location.NetPosition,null);
+            if (forceRefresh)
+            {
+                WriteRow(location);
+            }
+            else
+            {
+                if (location.TickerTypeId.HasValue)
+                {
+                    WritePrivatePlacement(location);
+                }
+                else
+                {
+                    if (location.QuantityHasChanged)
+                    {
+                        WriteValue(location.Row.Value, _netPositionColumnNumber, location.NetPosition, null);
+                    }
+                }
+            }
         }
 
         public void AddTickerRow(Location location, int rowNumber)
         {
             location.Row = rowNumber;
-            AddRow(location.Row.Value);           
-            WriteValue(location.Row.Value, _tickerColumnNumber, location.Ticker, null);
-            WriteFormula(location.Row.Value, _currencyColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _currencyColumn),null);
-            WriteFormula(location.Row.Value, _nameColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _nameColumn), null);
-            WriteFormula(location.Row.Value, _closePriceColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _closePriceColumn), null);
-            WriteFormula(location.Row.Value, _currentPriceColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _currentPriceColumn), null);
-            WriteFormula(location.Row.Value, _priceChangeColumnNumber, GetSubtractFormula(location.Row.Value, _currentPriceColumn, _closePriceColumn), null);
-            WriteFormula(location.Row.Value, _pricePercentageChangeColumnNumber, GetDivideFormula(location.Row.Value, _priceChangeColumn, _closePriceColumn,false), null);
-            WriteValue(location.Row.Value, _netPositionChangeColumnNumber, location.NetPosition,false);
-            WriteFormula(location.Row.Value, _currencyTickerColumnNumber, GetCurrencyTickerFormula(location.Row.Value), null);
-            WriteFormula(location.Row.Value, _fxRateColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _fxRateColumn,_currencyTickerColumn), null);
-            WriteFormula(location.Row.Value, _pnlColumnNumber, GetMultiplyFormula(location.Row.Value, new string[] { _priceChangeColumn, _netPositionChangeColumn, _fxRateColumn, _priceMultiplierColumn }), null);
-            WriteFormula(location.Row.Value, _contributionColumnNumber, GetDivideByNavFormula(location.Row.Value, _pnlColumn,true), null);
+            AddRow(location.Row.Value);
+            WriteRow(location);
+        }
 
-            WriteFormula(location.Row.Value, _exposureColumnNumber, GetMultiplyFormula(location.Row.Value, new string[] { _currentPriceColumn, _netPositionChangeColumn, _fxRateColumn, _priceMultiplierColumn }), null);
-            WriteFormula(location.Row.Value, _exposurePercentageColumnNumber, GetDivideByNavFormula(location.Row.Value, _exposureColumn,false), null);
+        private void WriteRow(Location location)
+        {
+            WriteValue(location.Row.Value, _tickerColumnNumber, location.Ticker, null);
+
+            if (location.TickerTypeId.HasValue)
+            {
+                WritePrivatePlacement(location);
+            }
+            else
+            {
+                WriteNormal(location);
+            }
+
+            WriteFormula(location.Row.Value, _priceChangeColumnNumber, GetSubtractFormula(location.Row.Value, _currentPriceColumn, _closePriceColumn), null);
+            WriteFormula(location.Row.Value, _pricePercentageChangeColumnNumber, GetDivideFormula(location.Row.Value, _priceChangeColumn, _closePriceColumn, false), null);
+            WriteValue(location.Row.Value, _netPositionColumnNumber, location.NetPosition, false);
+            WriteFormula(location.Row.Value, _currencyTickerColumnNumber, GetCurrencyTickerFormula(location.Row.Value), null);
+            WriteFormula(location.Row.Value, _quoteFactorColumnNumber, GetQuoteFactorFormula(location.Row.Value), null);
+            WriteFormula(location.Row.Value, _fxRateColumnNumber, GetFXRateFormula(location.Row.Value), null);
+            WriteFormula(location.Row.Value, _pnlColumnNumber, GetMultiplyFormula(location.Row.Value, new string[] { _priceChangeColumn, _netPositionColumn, _priceMultiplierColumn }, new string[] { _fxRateColumn }), null);
+            WriteFormula(location.Row.Value, _contributionColumnNumber, GetDivideByNavFormula(location.Row.Value, _pnlColumn, true), null);
+
+            WriteFormula(location.Row.Value, _exposureColumnNumber, GetMultiplyFormula(location.Row.Value, new string[] { _currentPriceColumn, _netPositionColumn, _priceMultiplierColumn },new string[] { _fxRateColumn}), null);
+            WriteFormula(location.Row.Value, _exposurePercentageColumnNumber, GetDivideByNavFormula(location.Row.Value, _exposureColumn, false), null);
 
             WriteFormula(location.Row.Value, _shortColumnNumber, GetWriteIfCorrectSignColumn(location.Row.Value, false, _exposurePercentageColumn), null);
             WriteFormula(location.Row.Value, _longColumnNumber, GetWriteIfCorrectSignColumn(location.Row.Value, true, _exposurePercentageColumn), null);
             WriteFormula(location.Row.Value, _priceMultiplierColumnNumber, GetPriceMultiplierFormula(location.Row.Value), null);
-          
+            WriteValue(location.Row.Value, _tickerTypeColumnNumber, location.TickerTypeId, false);
+            WriteValue(location.Row.Value, _priceDivisorColumnNumber, location.PriceDivisor, false);
+        }
+
+
+
+        private void WriteNormal(Location location)
+        {
+            WriteFormula(location.Row.Value, _currencyColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _currencyColumn), null);
+            WriteFormula(location.Row.Value, _nameColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _nameColumn), null);
+            WriteFormula(location.Row.Value, _closePriceColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _closePriceColumn), null);
+            WriteFormula(location.Row.Value, _currentPriceColumnNumber, GetBloombergMnemonicFormula(location.Row.Value, _currentPriceColumn), null);
+        }
+
+        private void WritePrivatePlacement(Location location)
+        {
+            WriteValue(location.Row.Value, _currencyColumnNumber, location.Currency, null);
+            WriteValue(location.Row.Value, _nameColumnNumber, location.Name, null);
+            WriteValue(location.Row.Value, _closePriceColumnNumber, location.OdeyPrice, null);
+            WriteValue(location.Row.Value, _currentPriceColumnNumber, location.OdeyPrice, null);
         }
 
         public void UpdateSums(CountryLocation country)
@@ -267,18 +324,35 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return null;
         }
 
-        private Location BuildLocation(XL.Range row, string ticker)
-        {            
+        private decimal? GetDecimalValue(XL.Range row, int columnNumber)
+        {
+            object value = row.Cells[1, columnNumber].Value;
 
-            object unitObject = row.Cells[1, _netPositionChangeColumnNumber].Value;
-
-            decimal units = 0;
-            if (unitObject is double)
+            if (value is double)
             {
-                units = (decimal)row.Cells[1, _netPositionChangeColumnNumber].Value;
+                return Convert.ToDecimal(value);
             }
+            return null;
+        }
+
+        private int? GetIntValue(XL.Range row, int columnNumber)
+        {
+            object value = row.Cells[1, columnNumber].Value;
+
+            if (value is int)
+            {
+                return (int)value;
+            }
+            return null;
+        }
+
+        private Location BuildLocation(XL.Range row, string ticker)
+        {
+            decimal? units = GetDecimalValue(row, _netPositionColumnNumber);
             string name = GetStringValue(row, _nameColumnNumber);
-            return new Location(row.Row, ticker, name, units);            
+            int? tickerTypeId = GetIntValue(row, _tickerTypeColumnNumber);
+            decimal? priceDivisor = GetDecimalValue(row, _priceDivisorColumnNumber);
+            return new Location(row.Row, ticker, name, units ?? 0, tickerTypeId, null, null, priceDivisor ?? 1);            
         }
 
         public void WriteNAV(decimal nav)
@@ -317,14 +391,24 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
+        private static readonly string _bloombergError = "\"#N/A N/A\"";
+
         private string GetSubtractFormula(int rowNumber, string column1, string column2)
         {
-            return $"={column1}{rowNumber} - {column2}{rowNumber}";
+            string column1AC = $"{ column1 }{ rowNumber}";
+            string column2AC = $"{ column2 }{ rowNumber}";
+            return $"=if(or({column1AC}={_bloombergError},{column2AC}={_bloombergError}),0,  {column1AC} - {column2AC})";
         }
 
-        private string GetMultiplyFormula(int rowNumber, string[] columns)
+
+        private string GetMultiplyFormula(int rowNumber, string[] columns, string[] divideColumn)
         {
-            return "="+string.Join("*",columns.Select(a=>a+rowNumber));
+            string divideColumns = "";
+            if (divideColumn != null && divideColumn.Length>0)
+            {
+                divideColumns = "/"+string.Join("/", divideColumn.Select(a => a + rowNumber));
+            }
+            return "="+string.Join("*",columns.Select(a=>a+rowNumber))+divideColumns;
         }
 
         private string GetDivideFormula(int rowNumber, string dividendColumn, string divisorColumn, bool displayedAsPercentage)
@@ -334,7 +418,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 multiplyBy100 = "*100";
             }
-            return $"={dividendColumn}{rowNumber} / {divisorColumn}{rowNumber}{multiplyBy100}";
+            string divisor = $"{ divisorColumn }{ rowNumber}";
+            return $"=if(or({divisor}=0,{divisor}={_bloombergError}),0,{dividendColumn}{rowNumber} / {divisor}{multiplyBy100})";
         }
 
         private string GetDivideByNavFormula(int rowNumber, string column, bool displayedAsPercentage)
@@ -352,6 +437,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return GetBloombergMnemonicFormula(rowNumber, column, _tickerColumn);
         }
 
+        private string GetQuoteFactorFormula(int rowNumber)
+        {
+            return $"=IF({_currencyColumn}{rowNumber} = {_fundCurrencyLabel},1,{GetBloombergMnemonicFormula(rowNumber, _quoteFactorColumn, _currencyTickerColumn).Replace("=", "")})";
+        }
+
+        private string GetFXRateFormula(int rowNumber)
+        {
+            return $"=IF({_currencyColumn}{rowNumber} = {_fundCurrencyLabel},1,{GetBloombergMnemonicFormula(rowNumber, _fxRateColumn, _currencyTickerColumn).Replace("=","")}*{_quoteFactorColumn}{rowNumber})";
+        }
+
         private string GetBloombergMnemonicFormula(int rowNumber, string mnemonicColumn,string tickerColumn)
         {
             return $"=BDP({tickerColumn}{rowNumber},${mnemonicColumn}${_bloombergMnemonicRow})";
@@ -359,12 +454,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private string GetCurrencyTickerFormula(int rowNumber)
         {
-            return $"=CONCATENATE({_currencyColumn}{rowNumber},{_fundCurrencyLabel}, \" Curncy\")";
+            return $"=CONCATENATE({_fundCurrencyLabel},{_currencyColumn}{rowNumber}, \" Curncy\")";
         }
 
         private string GetPriceMultiplierFormula(int rowNumber)
         {
-            return $"=IF(EXACT({_currencyColumn}{rowNumber},UPPER({_currencyColumn}{rowNumber})),1,0.01)";
+            return $"=IF(EXACT({_currencyColumn}{rowNumber},UPPER({_currencyColumn}{rowNumber})),1,0.01)/{_priceDivisorColumn}{rowNumber}";
         }
 
         private string GetWriteIfCorrectSignColumn(int rowNumber,bool isPositive, string columnToCheck)

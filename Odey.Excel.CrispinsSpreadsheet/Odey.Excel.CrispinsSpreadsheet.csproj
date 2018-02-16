@@ -121,18 +121,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActionsPaneControl1.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ActionsPaneControl1.Designer.cs">
-      <DependentUpon>ActionsPaneControl1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ActionsPaneControl2.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ActionsPaneControl2.Designer.cs">
-      <DependentUpon>ActionsPaneControl2.cs</DependentUpon>
-    </Compile>
     <Compile Include="CountryLocation.cs" />
     <Compile Include="CrispinRibbon.cs">
       <SubType>Component</SubType>
@@ -164,12 +152,6 @@
     <Compile Include="ThisWorkbook.Designer.cs">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="ActionsPaneControl1.resx">
-      <DependentUpon>ActionsPaneControl1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ActionsPaneControl2.resx">
-      <DependentUpon>ActionsPaneControl2.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="CrispinRibbon.resx">
       <DependentUpon>CrispinRibbon.cs</DependentUpon>
     </EmbeddedResource>

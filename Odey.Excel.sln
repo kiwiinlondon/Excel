@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdeyAddIn", "OdeyAddIn\Odey
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odey.ExcelAddin", "Odey.ExcelAddin\Odey.ExcelAddin.csproj", "{23AA40B2-34C3-4E84-95BE-36E656CE61F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odey.Excel.RealTimeData", "Odey.Excel.RealTimeData\Odey.Excel.RealTimeData.csproj", "{30EC82BF-0D98-4204-9948-A9432CF04FE8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odey.Excel.CrispinsSpreadsheet", "Odey.Excel.CrispinsSpreadsheet\Odey.Excel.CrispinsSpreadsheet.csproj", "{36E92E78-CF82-40A5-AC0E-A9114633E453}"
 EndProject
 Global
@@ -43,18 +41,6 @@ Global
 		{23AA40B2-34C3-4E84-95BE-36E656CE61F7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{23AA40B2-34C3-4E84-95BE-36E656CE61F7}.Release|x86.ActiveCfg = Release|Any CPU
 		{23AA40B2-34C3-4E84-95BE-36E656CE61F7}.Release|x86.Build.0 = Release|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Debug|x86.Build.0 = Debug|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Release|x86.ActiveCfg = Release|Any CPU
-		{30EC82BF-0D98-4204-9948-A9432CF04FE8}.Release|x86.Build.0 = Release|Any CPU
 		{36E92E78-CF82-40A5-AC0E-A9114633E453}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{36E92E78-CF82-40A5-AC0E-A9114633E453}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36E92E78-CF82-40A5-AC0E-A9114633E453}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -72,7 +58,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		VisualSVNWorkingCopyRoot = .
 		SolutionGuid = {C01D436C-D140-4C48-8E17-C7A8BC1394E9}
+		VisualSVNWorkingCopyRoot = .
 	EndGlobalSection
 EndGlobal
