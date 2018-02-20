@@ -15,16 +15,21 @@ namespace Odey.Excel.CrispinsSpreadsheet
             _dataAccess = dataAccess;
             _sheetAccess = sheetAccess;
         }
+
+
             
         public void Match(int fundId, DateTime referenceDate)
         {
+            _sheetAccess.DisableCalculations();
             decimal nav;
-            var dTOs = _dataAccess.Get(fundId, referenceDate, out nav);//.Where(a => a.Ticker == "SKY LN Equity" || a.Ticker == "INTU LN Equity" || a.Ticker == "MTS AU Equity" || a.Ticker == "MON US Equity" || a.Ticker == "8591 JT Equity" || a.Ticker == "TALK LN Equity" || a.Ticker == "WFT US Equity").ToList();
+            decimal previousNav;
+            var dTOs = _dataAccess.Get(fundId, referenceDate, out nav, out previousNav);
 
-            _sheetAccess.WriteNAV(nav);
+            _sheetAccess.WriteNAVs(previousNav,nav);
             Dictionary<string, CountryLocation> countries = _sheetAccess.GetCountries();
             AddDTOsToCountrys(dTOs, countries);
             WriteCountries(countries);
+            _sheetAccess.EnableCalculations();
         }
 
         private void AddDTOsToCountrys(List<PortfolioDTO> dTOs, Dictionary<string, CountryLocation> countries)
@@ -58,28 +63,28 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             MatchDTOToTickerRows(country);
             
-            if (!country.TotalRow.HasValue)
+            if (!country.TotalRowNumber.HasValue)
             {
                 _sheetAccess.AddCountryTotalRow(lastRow, country);
             }
 
-            int currentRow = country.TotalRow.Value;
+            int currentRow = country.TotalRowNumber.Value;
             foreach (var location in country.TickerRows.Values.OrderByDescending(a=>a.Name))
             {
-                if (location.Row.HasValue)
+                if (location.RowNumber.HasValue)
                 {
                     _sheetAccess.UpdateTickerRow(true,location);
 
-                    currentRow = location.Row.Value;
+                    currentRow = location.RowNumber.Value;
                 }
                 else
                 {
                     _sheetAccess.AddTickerRow(location, currentRow);
-                    country.TotalRow++;
+                    country.TotalRowNumber++;
                 }
             }
             _sheetAccess.UpdateSums(country);
-            return country.FirstRow.Value;
+            return country.FirstRowNumber.Value;
         }
 
         private void MatchDTOToTickerRows(CountryLocation country)
@@ -91,14 +96,20 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 if (country.TickerRows.TryGetValue(dto.Ticker, out location))
                 {
                     tickersToZeroOut.Remove(dto.Ticker);
-                    if (location.NetPosition != dto.NetPosition)
-                    {
-                        location.NetPosition = dto.NetPosition;
-                    }
+
+                    location.PreviousNetPosition = dto.PreviousNetPosition;
+                    location.NetPosition = dto.CurrentNetPosition;                    
+                    location.Currency = dto.Currency;
+                    location.Name = dto.Name;
+                    location.PriceDivisor = dto.PriceDivisor;
+                    location.TickerTypeId = dto.TickerTypeId;
+                    location.OdeyPreviousPreviousPrice = dto.PreviousPreviousPrice;
+                    location.OdeyPreviousPrice = dto.PreviousPrice;
+                    location.OdeyCurrentPrice = dto.CurrentPrice;
                 }
                 else
                 {
-                    location = new Location(null, dto.Ticker, dto.Name, dto.NetPosition, dto.TickerTypeId,dto.Price, dto.Currency, dto.PriceDivisor);
+                    location = new Location(null, dto.Ticker, dto.Name, dto.PreviousNetPosition, dto.CurrentNetPosition, dto.TickerTypeId, dto.PreviousPreviousPrice, dto.PreviousPrice, dto.CurrentPrice, dto.Currency, dto.PriceDivisor, null);
                     country.TickerRows.Add(location.Ticker, location);
                 }
             }

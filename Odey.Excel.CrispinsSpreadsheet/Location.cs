@@ -1,4 +1,5 @@
-﻿using System;
+﻿using XL = Microsoft.Office.Interop.Excel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,23 +9,28 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Location
     {
-        public Location(int? row, string ticker, string name, decimal netPosition, int? tickerTypeId, decimal? odeyPrice, string currency, decimal priceDivisor)
+        public Location(int? rowNumber, string ticker, string name, decimal previousNetPosition, decimal netPosition, int? tickerTypeId, 
+            decimal? odeyPreviousPreviousPrice, decimal? odeyPreviousPrice, decimal? odeyCurrentPrice, string currency, decimal priceDivisor,XL.Range row)
         {
             Row = row;
+            RowNumber = rowNumber;
             Ticker = ticker;
             Name = name;
             _originalNetPosition = netPosition;
             NetPosition = netPosition;     
-            OdeyPrice = odeyPrice;
+            OdeyPreviousPreviousPrice = odeyPreviousPreviousPrice;
+            OdeyPreviousPrice = odeyPreviousPrice;
+            OdeyCurrentPrice = odeyCurrentPrice;
             TickerTypeId = tickerTypeId;
             Currency = currency;
             PriceDivisor = priceDivisor;
+            PreviousNetPosition = previousNetPosition;
         }
 
         private decimal _originalNetPosition;
 
-
-        public int? Row { get; set; }
+        public XL.Range Row { get; set; }
+        public int? RowNumber { get; set; }
 
         public string Ticker { get; set; }
 
@@ -36,11 +42,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public int? TickerTypeId { get; set; }
 
-        public decimal? OdeyPrice { get; set; }
+        public decimal? OdeyCurrentPrice { get; set; }
+
+        public decimal? OdeyPreviousPrice { get; set; }
+
+        public decimal? OdeyPreviousPreviousPrice { get; set; }
 
         public bool QuantityHasChanged { get { return _originalNetPosition != NetPosition; } }
 
         public decimal PriceDivisor { get; set; }
+
+        public decimal PreviousNetPosition { get; set; }
 
     }
 }

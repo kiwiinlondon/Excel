@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odey.ExcelAddin", "Odey.Exc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odey.Excel.CrispinsSpreadsheet", "Odey.Excel.CrispinsSpreadsheet\Odey.Excel.CrispinsSpreadsheet.csproj", "{36E92E78-CF82-40A5-AC0E-A9114633E453}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoveCustomisation", "RemoveCustomisation\RemoveCustomisation.csproj", "{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,12 +55,24 @@ Global
 		{36E92E78-CF82-40A5-AC0E-A9114633E453}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{36E92E78-CF82-40A5-AC0E-A9114633E453}.Release|x86.ActiveCfg = Release|Any CPU
 		{36E92E78-CF82-40A5-AC0E-A9114633E453}.Release|x86.Build.0 = Release|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Debug|x86.Build.0 = Debug|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Release|x86.ActiveCfg = Release|Any CPU
+		{3F2E747B-22FF-4A13-8B78-1D4C9E4046B0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {C01D436C-D140-4C48-8E17-C7A8BC1394E9}
 		VisualSVNWorkingCopyRoot = .
+		SolutionGuid = {C01D436C-D140-4C48-8E17-C7A8BC1394E9}
 	EndGlobalSection
 EndGlobal

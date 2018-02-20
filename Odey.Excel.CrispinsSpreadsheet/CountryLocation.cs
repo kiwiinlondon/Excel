@@ -1,4 +1,5 @@
-﻿using System;
+﻿using XL=Microsoft.Office.Interop.Excel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,9 +13,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public string Name { get; set; }
 
-        public int? FirstRow { get; set; }
+        public int? FirstRowNumber { get; set; }
 
-        public int? TotalRow { get; set; }
+        public int? TotalRowNumber { get; set; }
+
+        public XL.Range TotalRow { get; set; }
 
         public Dictionary<string,Location> TickerRows { get; set; } = new Dictionary<string, Location>();
         

@@ -17,6 +17,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private void button1_Click(object sender, RibbonControlEventArgs e)
         {
+
             _matcher.Match(741, DateTime.Today);
         }        
 
