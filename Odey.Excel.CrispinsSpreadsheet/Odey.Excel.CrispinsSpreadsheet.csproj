@@ -121,7 +121,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CountryLocation.cs" />
+    <Compile Include="DTOGroup.cs" />
+    <Compile Include="DTOGroupBuilder.cs" />
+    <Compile Include="Entities\AssetClass.cs" />
+    <Compile Include="Entities\Book.cs" />
+    <Compile Include="Entities\Country.cs" />
     <Compile Include="CrispinRibbon.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -129,7 +133,11 @@
       <DependentUpon>CrispinRibbon.cs</DependentUpon>
     </Compile>
     <Compile Include="DataAccess.cs" />
-    <Compile Include="Location.cs" />
+    <Compile Include="Entities\Fund.cs" />
+    <Compile Include="Entities\GroupingEntity.cs" />
+    <Compile Include="Entities\GroupingEntityTypes.cs" />
+    <Compile Include="Entities\IChildEntity.cs" />
+    <Compile Include="Entities\Position.cs" />
     <Compile Include="Matcher.cs" />
     <Compile Include="PortfolioDTO.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -110,20 +110,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private int? FindRow(string toFind, string column)
         {
-            XL.Range tickers = _worksheet.get_Range($"${column}:${column}");
-            var currentFind = tickers.Find(toFind, System.Reflection.Missing.Value,
+            XL.Range controls = _worksheet.get_Range($"${column}:${column}");
+            var found =  controls.Find(toFind, System.Reflection.Missing.Value,
                 XL.XlFindLookIn.xlFormulas, XL.XlLookAt.xlPart,//use xl forulas as column is hidden
                 XL.XlSearchOrder.xlByRows, XL.XlSearchDirection.xlNext, false,
                 System.Reflection.Missing.Value, System.Reflection.Missing.Value);
-            tickers[1, 1] = "Geoff";
-            if (currentFind == null)
+            if (found!=null)
             {
-                return null;
+                return found.Row;
             }
-            else
-            {
-                return (int)currentFind.Row;
-            }
+            return null;
         }
 
         private static int GetColumnNumber(string letter)
@@ -146,227 +142,323 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-        public void UpdateTickerRow(bool forceRefresh, Location location)
+        public void UpdatePosition(bool forceRefresh, Position position)
         {
             if (forceRefresh)
             {
-                WriteRow(location);
+                WritePosition(position);
             }
             else
             {
-                if (location.TickerTypeId.HasValue)
+                if (position.TickerTypeId.HasValue)
                 {
-                    WritePrivatePlacement(location);
+                    WritePrivatePlacementPosition(position);
                 }
                 else
                 {
-                    if (location.QuantityHasChanged)
-                    {
-                        WriteValue(location.Row, _netPositionColumnNumber, location.NetPosition, null);
-                    }
-                    WriteValue(location.Row, _previousNetPositionColumnNumber, location.PreviousNetPosition, null);
+
+                    WriteValue(position.Row, _netPositionColumnNumber, position.NetPosition, null);
+                    WriteValue(position.Row, _previousNetPositionColumnNumber, position.PreviousNetPosition, null);
                 }
             }
         }
 
-        public void AddTickerRow(Location location, int rowNumber)
+        public void AddPosition(Position previousPosition, Position position, GroupingEntity parent)
         {
-            location.RowNumber = rowNumber;
-            location.Row = AddRow(location.RowNumber.Value);
-            WriteRow(location);
-        }
-
-        private void WriteRow(Location location)
-        {
-            WriteValue(location.Row, _tickerColumnNumber, location.Ticker, null);
-
-            if (location.TickerTypeId.HasValue)
+            XL.Range previous;
+            if (previousPosition == null)
             {
-                WritePrivatePlacement(location);
+                previous = parent.TotalRow;
             }
             else
             {
-                WriteNormal(location);
+                previous = previousPosition.Row;
+            }
+            position.Row = AddRow(previous);
+
+            WritePosition(position);
+        }
+
+        private void WritePosition(Position position)
+        {
+            WriteValue(position.Row, _tickerColumnNumber, position.Ticker, null);
+
+            if (position.TickerTypeId.HasValue)
+            {
+                WritePrivatePlacementPosition(position);
+            }
+            else
+            {
+                WriteNormalPosition(position);
             }
 
-            WriteFormula(location.Row, _priceChangeColumnNumber, GetSubtractFormula(location.RowNumber.Value, _currentPriceColumn, _closePriceColumn), null);
-            WriteFormula(location.Row, _pricePercentageChangeColumnNumber, GetDivideFormula(location.RowNumber.Value, _priceChangeColumn, _closePriceColumn, false), null);
-            WriteValue(location.Row, _netPositionColumnNumber, location.NetPosition, false);
-            WriteFormula(location.Row, _currencyTickerColumnNumber, GetCurrencyTickerFormula(location.RowNumber.Value), null);
-            WriteFormula(location.Row, _quoteFactorColumnNumber, GetQuoteFactorFormula(location.RowNumber.Value), null);
-            WriteFormula(location.Row, _fxRateColumnNumber, GetFXRateFormula(location.RowNumber.Value, _fxRateColumn), null);
-            WriteFormula(location.Row, _pnlColumnNumber, GetMultiplyFormula(location.RowNumber.Value, new string[] { _priceChangeColumn, _netPositionColumn, _priceMultiplierColumn }, new string[] { _fxRateColumn }), null);
-            WriteFormula(location.Row, _contributionColumnNumber, GetDivideByNavFormula(location.RowNumber.Value, _pnlColumn, true), null);
+            WriteFormula(position.Row, _priceChangeColumnNumber, GetSubtractFormula(position.RowNumber, _currentPriceColumn, _closePriceColumn), null);
+            WriteFormula(position.Row, _pricePercentageChangeColumnNumber, GetDivideFormula(position.RowNumber, _priceChangeColumn, _closePriceColumn, false), null);
+            WriteValue(position.Row, _netPositionColumnNumber, position.NetPosition, false);
+            WriteFormula(position.Row, _currencyTickerColumnNumber, GetCurrencyTickerFormula(position.RowNumber), null);
+            WriteFormula(position.Row, _quoteFactorColumnNumber, GetQuoteFactorFormula(position.RowNumber), null);
+            WriteFormula(position.Row, _fxRateColumnNumber, GetFXRateFormula(position.RowNumber, _fxRateColumn), null);
+            WriteFormula(position.Row, _pnlColumnNumber, GetMultiplyFormula(position.RowNumber, new string[] { _priceChangeColumn, _netPositionColumn, _priceMultiplierColumn }, new string[] { _fxRateColumn }), null);
+            WriteFormula(position.Row, _contributionColumnNumber, GetDivideByNavFormula(position.RowNumber, _pnlColumn, true), null);
 
-            WriteFormula(location.Row, _exposureColumnNumber, GetMultiplyFormula(location.RowNumber.Value, new string[] { _currentPriceColumn, _netPositionColumn, _priceMultiplierColumn },new string[] { _fxRateColumn}), null);
-            WriteFormula(location.Row, _exposurePercentageColumnNumber, GetDivideByNavFormula(location.RowNumber.Value, _exposureColumn, false), null);
+            WriteFormula(position.Row, _exposureColumnNumber, GetMultiplyFormula(position.RowNumber, new string[] { _currentPriceColumn, _netPositionColumn, _priceMultiplierColumn },new string[] { _fxRateColumn}), null);
+            WriteFormula(position.Row, _exposurePercentageColumnNumber, GetDivideByNavFormula(position.RowNumber, _exposureColumn, false), null);
 
-            WriteFormula(location.Row, _shortColumnNumber, GetWriteIfIsLongCorrectColumn(location.RowNumber.Value, false), null);
-            WriteFormula(location.Row, _longColumnNumber, GetWriteIfIsLongCorrectColumn(location.RowNumber.Value, true), null);
-            WriteFormula(location.Row, _priceMultiplierColumnNumber, GetPriceMultiplierFormula(location.RowNumber.Value), null);
-            WriteValue(location.Row, _tickerTypeColumnNumber, location.TickerTypeId, false);
-            WriteValue(location.Row, _priceDivisorColumnNumber, location.PriceDivisor, false);
-            WriteFormula(location.Row, _shortWinnersColumnNumber, GetWinnerColumn(location.RowNumber.Value, false), null);
-            WriteFormula(location.Row, _longWinnersColumnNumber, GetWinnerColumn(location.RowNumber.Value, true), null);
+            WriteFormula(position.Row, _shortColumnNumber, GetWriteIfIsLongCorrectColumn(position.RowNumber, false), null);
+            WriteFormula(position.Row, _longColumnNumber, GetWriteIfIsLongCorrectColumn(position.RowNumber, true), null);
+            WriteFormula(position.Row, _priceMultiplierColumnNumber, GetPriceMultiplierFormula(position.RowNumber), null);
+            WriteValue(position.Row, _tickerTypeColumnNumber, position.TickerTypeId, false);
+            WriteValue(position.Row, _priceDivisorColumnNumber, position.PriceDivisor, false);
+            WriteFormula(position.Row, _shortWinnersColumnNumber, GetWinnerColumn(position.RowNumber, false), null);
+            WriteFormula(position.Row, _longWinnersColumnNumber, GetWinnerColumn(position.RowNumber, true), null);
 
-            WriteFormula(location.Row, _previousPriceChangeColumnNumber, GetSubtractFormula(location.RowNumber.Value, _closePriceColumn, _previousClosePriceColumn), null);
-            WriteFormula(location.Row, _previousPricePercentageChangeColumnNumber, GetDivideFormula(location.RowNumber.Value, _previousPriceChangeColumn, _previousClosePriceColumn, false), null);
+            WriteFormula(position.Row, _previousPriceChangeColumnNumber, GetSubtractFormula(position.RowNumber, _closePriceColumn, _previousClosePriceColumn), null);
+            WriteFormula(position.Row, _previousPricePercentageChangeColumnNumber, GetDivideFormula(position.RowNumber, _previousPriceChangeColumn, _previousClosePriceColumn, false), null);
 
-            WriteValue(location.Row, _previousNetPositionColumnNumber, location.PreviousNetPosition, false);
-            WriteFormula(location.Row, _previousFXRateColumnNumber, GetFXRateFormula(location.RowNumber.Value, _previousFXRateColumn), null);
-            WriteFormula(location.Row, _previousContributionColumnNumber, GetPreviousContribution(location.RowNumber.Value), null);
+            WriteValue(position.Row, _previousNetPositionColumnNumber, position.PreviousNetPosition, false);
+            WriteFormula(position.Row, _previousFXRateColumnNumber, GetFXRateFormula(position.RowNumber, _previousFXRateColumn), null);
+            WriteFormula(position.Row, _previousContributionColumnNumber, GetPreviousContribution(position.RowNumber), null);
 
         }
 
 
 
-        private void WriteNormal(Location location)
+        private void WriteNormalPosition(Position position)
         {
-            WriteFormula(location.Row, _currencyColumnNumber, GetBloombergMnemonicFormula(location.RowNumber.Value, _currencyColumn), null);
-            WriteFormula(location.Row, _nameColumnNumber, GetBloombergMnemonicFormula(location.RowNumber.Value, _nameColumn), null);
-            WriteFormula(location.Row, _closePriceColumnNumber, GetBloombergMnemonicFormula(location.RowNumber.Value, _closePriceColumn), null);
-            WriteFormula(location.Row, _currentPriceColumnNumber, GetBloombergMnemonicFormula(location.RowNumber.Value, _currentPriceColumn), null);
-            WriteFormula(location.Row, _previousClosePriceColumnNumber, GetBloombergMnemonicHistoryFormula(location.RowNumber.Value, _tickerColumn, _previousClosePriceColumn),null);            
+            WriteFormula(position.Row, _currencyColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _currencyColumn), null);
+            WriteFormula(position.Row, _nameColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _nameColumn), null);
+            WriteFormula(position.Row, _closePriceColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _closePriceColumn), null);
+            WriteFormula(position.Row, _currentPriceColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _currentPriceColumn), null);
+            WriteFormula(position.Row, _previousClosePriceColumnNumber, GetBloombergMnemonicHistoryFormula(position.RowNumber, _tickerColumn, _previousClosePriceColumn),null);            
         }
 
-        private void WritePrivatePlacement(Location location)
+        private void WritePrivatePlacementPosition(Position position)
         {
-            WriteValue(location.Row, _currencyColumnNumber, location.Currency, null);
-            WriteValue(location.Row, _nameColumnNumber, location.Name, null);
-            WriteValue(location.Row, _closePriceColumnNumber, location.OdeyPreviousPrice, null);
-            WriteValue(location.Row, _currentPriceColumnNumber, location.OdeyCurrentPrice, null);
-            WriteValue(location.Row, _previousClosePriceColumnNumber, location.OdeyPreviousPreviousPrice, null);
+            WriteValue(position.Row, _currencyColumnNumber, position.Currency, null);
+            WriteValue(position.Row, _nameColumnNumber, position.Name, null);
+            WriteValue(position.Row, _closePriceColumnNumber, position.OdeyPreviousPrice, null);
+            WriteValue(position.Row, _currentPriceColumnNumber, position.OdeyCurrentPrice, null);
+            WriteValue(position.Row, _previousClosePriceColumnNumber, position.OdeyPreviousPreviousPrice, null);
   
         }
 
-        public void UpdateSums(CountryLocation country)
+        public void UpdateSums(GroupingEntity country,Position first)
         {
-            WriteFormula(country.TotalRow, _pnlColumnNumber, GetSumFormula(country.FirstRowNumber.Value,country.TotalRowNumber.Value-1,_pnlColumn),true);
-            WriteFormula(country.TotalRow, _contributionColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _contributionColumn),false);
-            WriteFormula(country.TotalRow, _exposureColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _exposureColumn),true);
-            WriteFormula(country.TotalRow, _exposurePercentageColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _exposurePercentageColumn), true);
-            WriteFormula(country.TotalRow, _shortColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _shortColumn), true);
-            WriteFormula(country.TotalRow, _longColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _longColumn), true);
-            WriteFormula(country.TotalRow, _shortWinnersColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _shortWinnersColumn), true);
-            WriteFormula(country.TotalRow, _longWinnersColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _longWinnersColumn), true);
-            WriteFormula(country.TotalRow, _previousContributionColumnNumber, GetSumFormula(country.FirstRowNumber.Value, country.TotalRowNumber.Value - 1, _previousContributionColumn), true);
+            country.FirstRow = first.Row;
+            WriteFormula(country.TotalRow, _pnlColumnNumber, GetSumFormula(country.FirstRow.Row,country.TotalRow.Row-1,_pnlColumn),true);
+            WriteFormula(country.TotalRow, _contributionColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _contributionColumn),false);
+            WriteFormula(country.TotalRow, _exposureColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _exposureColumn),true);
+            WriteFormula(country.TotalRow, _exposurePercentageColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _exposurePercentageColumn), true);
+            WriteFormula(country.TotalRow, _shortColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _shortColumn), true);
+            WriteFormula(country.TotalRow, _longColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _longColumn), true);
+            WriteFormula(country.TotalRow, _shortWinnersColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _shortWinnersColumn), true);
+            WriteFormula(country.TotalRow, _longWinnersColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _longWinnersColumn), true);
+            WriteFormula(country.TotalRow, _previousContributionColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _previousContributionColumn), true);
 
         }
               
-        private XL.Range AddRow(int row)
+        private XL.Range AddRow(XL.Range row)
         {
-            LastRow++;
-            _worksheet.Rows[row].Insert(XL.XlDirection.xlUp, XL.XlInsertFormatOrigin.xlFormatFromLeftOrAbove);
-            _worksheet.Rows[row].Font.Bold = false;
-            return _worksheet.get_Range($"{_firstColumn}{row}:{_lastColumn}{row}");
+            int rowNumber = row.Row;
+            _worksheet.Rows[rowNumber].Insert(XL.XlDirection.xlUp, XL.XlInsertFormatOrigin.xlFormatFromLeftOrAbove);
+            XL.Range insertedRow = GetRow(rowNumber);
+            insertedRow.Font.Bold = false;
+            return insertedRow;
         }
 
-        private string GetCountryTotalString(string isoCode)
+        private XL.Range GetRow(int rowNumber)
         {
-            return $"{isoCode}{_countryTotalSuffix}";
+            return _worksheet.get_Range($"{_firstColumn}{rowNumber}:{_lastColumn}{rowNumber}");
         }
 
 
-        private void UpdateTotalsOnTotalRow(int rowNumberToAdd)
+
+
+
+        public void UpdateTotalsOnTotalRow(GroupingEntity groupingEntity)
         {
-            UpdateTotalOnTotalRow(_pnlColumnNumber, _pnlColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_contributionColumnNumber, _contributionColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_exposureColumnNumber, _exposureColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_exposurePercentageColumnNumber, _exposurePercentageColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_shortColumnNumber, _shortColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_longColumnNumber, _longColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_shortWinnersColumnNumber, _shortWinnersColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_longWinnersColumnNumber, _longWinnersColumn, rowNumberToAdd);
-            UpdateTotalOnTotalRow(_previousContributionColumnNumber, _previousContributionColumn, rowNumberToAdd);
+            int[] rowNumbers = groupingEntity.Children.Select(a => a.Value.RowNumber).ToArray();
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _pnlColumnNumber, _pnlColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _contributionColumnNumber, _contributionColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _exposureColumnNumber, _exposureColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _exposurePercentageColumnNumber, _exposurePercentageColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _shortColumnNumber, _shortColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _longColumnNumber, _longColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _shortWinnersColumnNumber, _shortWinnersColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _longWinnersColumnNumber, _longWinnersColumn, rowNumbers);
+            UpdateTotalOnTotalRow(groupingEntity.TotalRow, _previousContributionColumnNumber, _previousContributionColumn, rowNumbers);
         }
 
-        private void UpdateTotalOnTotalRow(int columnNumber,string column,int rowNumberToAdd)
-        {
-            var cell = _worksheet.Cells[LastRow, columnNumber];
-            cell.Formula = $"{cell.Formula}+{column}{rowNumberToAdd}";
+        private void UpdateTotalOnTotalRow(XL.Range totalRow, int columnNumber,string column,int[] rowNumbers)
+        {            
+            var cell = totalRow.Cells[1, columnNumber];
+            cell.Formula = "="+string.Join("+", rowNumbers.Select(a=>column+a));
         }
 
-        public void AddCountryTotalRow(int lastTotalRow, CountryLocation country)
+        private string GetControlString(string parentControlString, string codeToAdd)
         {
-            AddRow(lastTotalRow);
-            country.TotalRow = AddRow(lastTotalRow);
-            WriteValue(country.TotalRow, _controlColumnNumber, GetCountryTotalString(country.IsoCode),false);
-            WriteValue(country.TotalRow, _nameColumnNumber, country.Name,true);
-            country.TotalRowNumber = lastTotalRow;
-            country.FirstRowNumber = lastTotalRow;
-            var range = _worksheet.Range[_worksheet.Cells[lastTotalRow, _firstColumn], _worksheet.Cells[lastTotalRow, _lastColumn]];
-            XL.Borders borders = range.Borders;
-            borders[XL.XlBordersIndex.xlEdgeBottom].LineStyle = XL.XlLineStyle.xlContinuous;
-            borders[XL.XlBordersIndex.xlEdgeTop].LineStyle = XL.XlLineStyle.xlContinuous;
-            UpdateTotalsOnTotalRow(lastTotalRow);
+            var values = parentControlString.Split('#');
+            for (int i = 0; i < values.Length; i++)
+            {
+                string value = values[i];
+                if (string.IsNullOrEmpty(value))
+                {
+                    values[i] = codeToAdd;
+                    break;
+                }
+            }
+            return string.Join("#", values);
         }
 
-        public int LastRow { get; private set; }
-
-        public Dictionary<string,CountryLocation> GetCountries()
+        public void AddTotalRow(GroupingEntity previousGroup, GroupingEntity group, GroupingEntity parentGroup)
         {
-            int? lastRow = FindRow(_finalTotalName, _controlColumn);
+            XL.Range rowToAddPriorTo;
+            if (previousGroup == null)
+            {
+                rowToAddPriorTo = parentGroup.TotalRow;
+            }
+            else
+            {
+                rowToAddPriorTo = previousGroup.FirstRow;
+            }
+
+            rowToAddPriorTo = AddRow(rowToAddPriorTo);
+            group.TotalRow = AddRow(rowToAddPriorTo);
+
+
+
+
+
+            group.ControlString = GetControlString(parentGroup.ControlString, group.Code);
+            WriteValue(group.TotalRow, _controlColumnNumber, group.ControlString, false);
+            WriteValue(group.TotalRow, _nameColumnNumber, group.Name,true);
+            group.TotalRow.Borders[XL.XlBordersIndex.xlEdgeBottom].LineStyle = XL.XlLineStyle.xlContinuous;
+            group.TotalRow.Borders[XL.XlBordersIndex.xlEdgeTop].LineStyle = XL.XlLineStyle.xlContinuous;
+            
+        }
+
+
+
+        private string CreateTotalLabel(string fund, string book, string assetClass, string country)
+        {
+            return string.Join("#", new[] { fund, book, assetClass, country }) + _totalSuffix;                
+        }
+
+        public Fund GetFund(string fundName)
+        {
+            string fundTotalLabel = CreateTotalLabel(fundName, null, null, null);
+            int? lastRow = FindRow(fundTotalLabel, _controlColumn);
 
             if (!lastRow.HasValue)
             {
                 throw new ApplicationException("No Total Row exists");
             }
-            LastRow = lastRow.Value;
 
-            Dictionary<string, CountryLocation> countryLocations = new Dictionary<string, CountryLocation>();
-            CountryLocation countryLocation = null;
-            for (int i = _firstRowOfData;i< lastRow;i++)
-            {               
-                XL.Range row = _worksheet.get_Range($"{_firstColumn}{i}:{_lastColumn}{i}");
-
+            XL.Range fundRange = _worksheet.get_Range($"{_firstColumn}{_firstRowOfData}:{_lastColumn}{lastRow.Value}");
+            
+            Dictionary<string, Country> countrypositions = new Dictionary<string, Country>();
+            Fund fund = new Fund(fundName);
+            List<Position> positions = null;
+            foreach (XL.Range row in fundRange.Rows)
+            {
                 string valueInTickerColumn = GetStringValue(row, _tickerColumnNumber);
-                string valueInControlColumn = GetStringValue(row, _controlColumnNumber);
+                string controlString = GetStringValue(row, _controlColumnNumber);
                 string valueInNameColumn = GetStringValue(row, _nameColumnNumber);
-                if (string.IsNullOrWhiteSpace(valueInTickerColumn) && string.IsNullOrWhiteSpace(valueInControlColumn) && string.IsNullOrWhiteSpace(valueInNameColumn))
+                if (string.IsNullOrWhiteSpace(valueInTickerColumn) && string.IsNullOrWhiteSpace(controlString) && string.IsNullOrWhiteSpace(valueInNameColumn))
                 {
                     continue;
                 }
 
-                if (countryLocation == null)
+                if (RowIsTotal(controlString))
                 {
-                    countryLocation = new CountryLocation();
-                    countryLocation.FirstRowNumber = i;
-                }
-
-                string isoCode;
-                if (RowIsCountryTotal(valueInControlColumn, out isoCode))
-                {
-                    countryLocation.IsoCode = isoCode;
-                    countryLocation.Name = valueInNameColumn; 
-                    countryLocation.TotalRowNumber = i;
-                    countryLocation.TotalRow = row;
-                    countryLocations.Add(isoCode, countryLocation);
-                    countryLocation = null;
+                    AddToParent(controlString, positions,valueInNameColumn, row, fund);
+                    positions = null;
                 }
                 else
                 {
-                    var location = BuildLocation(row, valueInTickerColumn,valueInNameColumn);
-                    if (location!= null)
+                    var position = BuildPosition(row, valueInTickerColumn, valueInNameColumn);
+                    if (positions == null)
                     {
-                        countryLocation.TickerRows.Add(location.Ticker,location);
+                        positions = new List<Position>();
                     }
-                }                                            
+                    positions.Add(position);
+                }                                         
             }
-            return countryLocations;
+            return fund;
         }
 
 
-        private bool RowIsCountryTotal(string valueInControlColumn, out string isoCode)
+        private void AddToParent(string controlString, List<Position> positions, string name, XL.Range row, Fund fund)
         {
-            isoCode = null;
+            var values = controlString.Split('#');
+            string fundCode = values[0];
+            string bookCode = values[1];
+            string assetClassCode = values[2];
+            string countryCode = values[3];
+                      
+            GroupingEntity entity = fund;
 
-            if (valueInControlColumn != null && valueInControlColumn.EndsWith(_countryTotalSuffix))
+            if (!string.IsNullOrWhiteSpace(bookCode))
             {
-                isoCode = valueInControlColumn.Replace(_countryTotalSuffix, "");
-                return true;
+                entity = GetEntity(entity, bookCode, GroupingEntityTypes.Book);
             }
 
-            return false;
+            if (!string.IsNullOrWhiteSpace(assetClassCode))
+            {
+                entity = GetEntity(entity, assetClassCode, GroupingEntityTypes.AssetClass);
+            }
+
+            if (!string.IsNullOrWhiteSpace(countryCode))
+            {
+                entity = GetEntity(entity, countryCode, GroupingEntityTypes.Country);
+            }
+
+            entity.TotalRow = row;
+            entity.Name = name;
+            entity.ControlString = controlString;
+            if (positions != null && positions.Count > 0)
+            {
+                entity.FirstRow = positions[0].Row;
+                entity.Children = positions.ToDictionary(a => a.Ticker, a => (IChildEntity)a);
+            }
+        }
+
+        private GroupingEntity GetEntity(GroupingEntity parent, string code,GroupingEntityTypes entityType)
+        {
+            GroupingEntity entity;
+            if (parent.Children.ContainsKey(code))
+            {
+                entity = (GroupingEntity)parent.Children[code];
+            }
+            else
+            {
+                switch (entityType)
+                {
+                    case GroupingEntityTypes.Book:
+                        entity = new Book(code);
+                        break;
+                    case GroupingEntityTypes.AssetClass:
+                        entity = new AssetClass(code);
+                        break;
+                    case GroupingEntityTypes.Country:
+                        entity = new Country(code);
+                        break;
+                    default:
+                        throw new ApplicationException($"Unknown Entity Type {entityType}");
+                }
+                parent.Children.Add(code,entity);
+
+            }
+            return entity;
+        }
+
+        
+
+
+
+        private bool RowIsTotal(string valueInControlColumn)
+        {
+            return valueInControlColumn != null && valueInControlColumn.EndsWith(_totalSuffix);
         }
 
         private string GetStringValue(XL.Range row,int columnNumber)
@@ -406,19 +498,23 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return null;
         }
 
-        private Location BuildLocation(XL.Range row, string ticker, string name)
+        private Position BuildPosition(XL.Range row, string ticker, string name)
         {
-            decimal? previousNetPosition = GetDecimalValue(row, _previousNetPositionColumnNumber);
-            decimal? netPosition = GetDecimalValue(row, _netPositionColumnNumber);
             int? tickerTypeId = GetIntValue(row, _tickerTypeColumnNumber);
             decimal? priceDivisor = GetDecimalValue(row, _priceDivisorColumnNumber);
-            return new Location(row.Row, ticker, name, previousNetPosition??0, netPosition ?? 0, tickerTypeId,null,null, null, null, priceDivisor ?? 1,row);            
+            return new Position( ticker, name, priceDivisor ?? 1, tickerTypeId, row);            
         }
 
         public void WriteNAVs(decimal previousNav,decimal nav)
         {
             _worksheet.Range[_previousFundNavLabel].Cells.Value = previousNav;
             _worksheet.Range[_fundNavLabel].Cells.Value = nav;            
+        }
+
+        public void WriteDates(DateTime previousReferenceDate, DateTime referenceDate)
+        {
+            _worksheet.Range[_previousReferenceDateLabel].Cells.Value = previousReferenceDate;
+            _worksheet.Range[_referenceDateLabel].Cells.Value = referenceDate;
         }
 
         public void DisableCalculations()
@@ -454,8 +550,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private static readonly string _fundNavLabel = "NAV";
         private static readonly string _previousFundNavLabel = "PreviousNAV";
         private static readonly string _previousReferenceDateLabel = "$C$1";
-        private static readonly string _finalTotalName = "Total_Total";
-        private static readonly string _countryTotalSuffix = "_Total";
+        private static readonly string _referenceDateLabel = "$D$1";
+        private static readonly string _totalSuffix = "#Total";
 
 
 
