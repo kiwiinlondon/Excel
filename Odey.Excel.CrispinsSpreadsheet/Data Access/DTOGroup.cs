@@ -8,13 +8,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class DTOGroup
     {
-        public DTOGroup (string book, string assetClass, string countryIso,string countryName, string name, int? tickerTypeId, string ticker,string currency, decimal priceDivisor)
+        public DTOGroup (string book, string assetClass, string countryIso,string countryName, TickerTypeIds tickerTypeId, string ticker,string currency, decimal priceDivisor)
         {
             Book = book;
             AssetClass = assetClass;
             CountryIso = countryIso;
             CountryName = countryName;
-            Name = name;
             TickerTypeId = tickerTypeId;
             Ticker = ticker;            
             Currency = currency;
@@ -24,18 +23,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public string AssetClass { get; set; }
         public string CountryIso { get; set; }
         public string CountryName { get; set; }
-        public string Name { get; set; }
         public string Ticker { get; set; }
         public string Currency { get; set; }
         public decimal PriceDivisor { get; set; }
-        public int? TickerTypeId { get; set; }
+        public TickerTypeIds TickerTypeId { get; set; }
         protected bool Equals(DTOGroup other)
         {
             return string.Equals(Book , other.Book) &&
                 string.Equals(AssetClass, other.AssetClass) &&
                 string.Equals(CountryIso, other.CountryIso) &&
                 string.Equals(CountryName, other.CountryName) &&
-                string.Equals(Name, other.Name) &&
                 string.Equals(Ticker, other.Ticker) &&
                 TickerTypeId == other.TickerTypeId &&
                 string.Equals(Currency, other.Currency) &&
@@ -64,7 +61,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             unchecked
             {
-                return Ticker.GetHashCode() ^ Book.GetHashCode();
+                return Ticker.GetHashCode() ^ (Book==null ? 1 : Book.GetHashCode());
             }
         }
 

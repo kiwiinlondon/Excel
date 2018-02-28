@@ -9,7 +9,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Position : IChildEntity
     {
-        public Position(string ticker, string name, decimal priceDivisor,int? tickerTypeId, XL.Range row)
+        public Position(string ticker, string name, decimal priceDivisor, TickerTypeIds tickerTypeId, XL.Range row)
         {
             Row = row;
             Ticker = ticker;
@@ -31,7 +31,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public decimal NetPosition { get; set; }
 
-        public int? TickerTypeId { get; set; }
+        public TickerTypeIds TickerTypeId { get; set; }
 
         public decimal? OdeyCurrentPrice { get; set; }
 

@@ -121,8 +121,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DTOGroup.cs" />
-    <Compile Include="DTOGroupBuilder.cs" />
+    <Compile Include="Data Access\BookDTO.cs" />
+    <Compile Include="Data Access\DTOGroup.cs" />
+    <Compile Include="Data Access\DTOGroupBuilder.cs" />
+    <Compile Include="Data Access\DTOGrouping.cs" />
+    <Compile Include="Data Access\FundDTO.cs" />
+    <Compile Include="Data Access\FundFXTreatmentIds.cs" />
     <Compile Include="Entities\AssetClass.cs" />
     <Compile Include="Entities\Book.cs" />
     <Compile Include="Entities\Country.cs" />
@@ -132,14 +136,16 @@
     <Compile Include="CrispinRibbon.Designer.cs">
       <DependentUpon>CrispinRibbon.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataAccess.cs" />
+    <Compile Include="Data Access\DataAccess.cs" />
     <Compile Include="Entities\Fund.cs" />
     <Compile Include="Entities\GroupingEntity.cs" />
     <Compile Include="Entities\GroupingEntityTypes.cs" />
     <Compile Include="Entities\IChildEntity.cs" />
     <Compile Include="Entities\Position.cs" />
+    <Compile Include="Data Access\FXRateDTO.cs" />
+    <Compile Include="Entities\TickerTypeIds.cs" />
     <Compile Include="Matcher.cs" />
-    <Compile Include="PortfolioDTO.cs" />
+    <Compile Include="Data Access\PortfolioDTO.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sheet1.cs">
       <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
@@ -201,6 +207,7 @@
       <DependentUpon>Sheet2.cs</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

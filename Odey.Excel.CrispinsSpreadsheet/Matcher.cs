@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Odey.Framework.Keeley.Entities.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,23 +18,49 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-            
-        public void Match(int fundId, DateTime referenceDate)
+
+        public void Match(int fundId)
         {
             _sheetAccess.DisableCalculations();
-            decimal nav;
-            decimal previousNav;
-            DateTime previousReferenceDate;
-            var dTOs = _dataAccess.Get(fundId, referenceDate, out nav, out previousNav, out previousReferenceDate);
 
-            _sheetAccess.WriteDates(previousReferenceDate, referenceDate);
-            _sheetAccess.WriteNAVs(previousNav,nav);
-            Fund fund = _sheetAccess.GetFund("OEI");
-            AddDTOsToFund(dTOs, fund);
-            WriteGroupingEntity(null, fund, null);
+
+            var rates = _dataAccess.GetFXRates();
+            _sheetAccess.WriteDates(_dataAccess.PreviousReferenceDate, _dataAccess.ReferenceDate);
+            Fund previousFund = MatchFund(null, FundIds.OEI,  rates);
+            previousFund = MatchFund(previousFund, FundIds.OEIMAC, rates);
+            previousFund = MatchFund(previousFund, FundIds.OEIMACGBPBSHARECLASS, rates);
+            previousFund = MatchFund(previousFund, FundIds.OEIMACGBPBMSHARECLASS, rates);
+
             _sheetAccess.EnableCalculations();
         }
 
+        private Fund MatchFund(Fund previousFund,FundIds fundId,List<FXRateDTO> rates)
+        {
+            FundDTO fundStructure = _dataAccess.GetFund(fundId);
+            var dTOs = _dataAccess.Get(fundStructure);
+            Fund fund = _sheetAccess.GetFund(previousFund, fundStructure);            
+            AddDTOsToFund(dTOs, fund);
+            AddNavsToGroupings(fundStructure, fund);
+            WriteGroupingEntity(null, fund, null,  rates, null, fund);
+            return fund;
+        }
+
+        private void AddNavsToGroupings(FundDTO fundStructure, Fund fund)
+        {
+            fund.Currency = fundStructure.Currency;
+            fund.Nav = fundStructure.CurrentNav;
+            fund.PreviousNav = fundStructure.PreviousNav;
+            foreach (var child in fund.Children.Values)
+            {
+                if (child is Book)
+                {
+                    Book book = (Book)child;
+                    var bookStructure = fundStructure.Books[book.Name];
+                    book.Nav = bookStructure.Nav;
+                    book.PreviousNav = bookStructure.PreviousNav;
+                }
+            }
+        }
 
         private GroupingEntity GetEntity(GroupingEntity parentEntity,string code, string name, GroupingEntityTypes groupingEntityType)
         {
@@ -81,7 +108,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WriteGroupingEntity(GroupingEntity previous, GroupingEntity entity, GroupingEntity parentEntity)
+        private void WriteGroupingEntity(GroupingEntity previous, GroupingEntity entity, GroupingEntity parentEntity,List<FXRateDTO> rates, Book book, Fund fund)
         {
             if (entity.TotalRow == null)
             {
@@ -92,11 +119,15 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 if (childEntity is GroupingEntity)
                 {
-                    WriteGroupingEntity((GroupingEntity)previousChildEntity, (GroupingEntity)childEntity, entity);
+                    if (childEntity is Book)
+                    {
+                        book = (Book)childEntity;
+                    }
+                    WriteGroupingEntity((GroupingEntity)previousChildEntity, (GroupingEntity)childEntity, entity, rates, book,fund);
                 }
                 else
                 {
-                    WritePosition((Position)previousChildEntity, (Position)childEntity, entity);
+                    WritePosition((Position)previousChildEntity, (Position)childEntity, entity, rates,book, fund);
                 }
                 previousChildEntity = childEntity;
             }
@@ -107,88 +138,56 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             if (previousChildEntity is Position)
             {
-                
-                _sheetAccess.UpdateSums(entity, (Position)previousChildEntity);
+                _sheetAccess.UpdateSums(entity);
             }
             else
             {
                 _sheetAccess.UpdateTotalsOnTotalRow(entity);
             }
+            _sheetAccess.UpdateNavs(entity);
         }
 
-        private void WritePosition(Position previousPosition,Position position,GroupingEntity parent)
+        private void WritePosition(Position previousPosition,Position position,GroupingEntity parent,List<FXRateDTO> rates,
+            Book book,Fund fund)
         {
             if (position.Row != null)
             {
-                _sheetAccess.UpdatePosition(true, position);
+                if (position.TickerTypeId == TickerTypeIds.FX)
+                {
+                    EnhanceFXPosition(position, rates);
+                }
+                _sheetAccess.UpdatePosition(true, position,book,fund);
             }
             else
             {
-                _sheetAccess.AddPosition(previousPosition, position, parent);
+                _sheetAccess.AddPosition(previousPosition, position, parent, book, fund);
             }
         }
 
 
-        //private void WriteBook(Book previousBook, Book book, Fund fund)
-        //{
-        //    if (book.TotalRow == null)
-        //    {
-        //        _sheetAccess.AddTotalRow(previousBook, book, fund);
-        //    }
-        //    AssetClass previousAssetClass = null;
-        //    foreach (AssetClass assetClass in book.Children.Values.OrderByDescending(a => a.Name))
-        //    {
-        //        WriteAssetClass(previousAssetClass,assetClass, book);
-        //        previousAssetClass = assetClass;
-        //    }
-        //    _sheetAccess.UpdateTotalsOnTotalRow(book);
-        //}
+        private void EnhanceFXPosition(Position position, List<FXRateDTO> rates)
+        {
+            string currency1 = position.Ticker.Substring(0, 3);
+            string currency2 = position.Ticker.Substring(3, 3);
 
-
-
-        //private void WriteAssetClass(AssetClass previousAssetClass, AssetClass assetClass,Book book)
-        //{
-        //    if (assetClass.TotalRow == null)
-        //    {
-        //        _sheetAccess.AddTotalRow(previousAssetClass, assetClass, book);
-        //    }
-
-        //    Country previousCountry = null;
-        //    foreach (var child in assetClass.Children.Values.OrderByDescending(a=>a.Name))
-        //    {
-        //        var country = (Country)child;
-        //        WriteCountry(previousCountry, country, assetClass);
-        //        previousCountry = country;
-        //    }
-        //    _sheetAccess.UpdateTotalsOnTotalRow(assetClass);
-
-        //}
-
-        //private void WriteCountry(Country previousCountry, Country country, AssetClass assetClass)
-        //{
-            
-        //    if (country.TotalRow==null)
-        //    {
-        //        _sheetAccess.AddTotalRow(previousCountry, country, assetClass);
-        //    }
-        //    Position previous = null;
-        //    foreach (var child in country.Children.Values.OrderByDescending(a=>a.Name))
-        //    {
-        //        Position position = (Position)child;
-        //        if (position.Row!=null)
-        //        {
-        //            _sheetAccess.UpdatePosition(true, position);
-        //        }
-        //        else
-        //        {
-        //            _sheetAccess.AddPosition(previous, position, country);
-        //        }
-        //        previous = position;
-        //    }
-            
-        //    _sheetAccess.UpdateSums(country, previous);
-        //}
-
+            var matchingRates = rates.Where(a => (a.FromCurrency == currency1 || a.FromCurrency == currency2) && (a.ToCurrency == currency1 || a.ToCurrency == currency2));
+            if (matchingRates.Count()!=1)
+            {
+                throw new ApplicationException($"Cannot find rate for ticker {position.Ticker}. Count = {matchingRates.Count()}");
+            }
+            var rate = matchingRates.First();
+            if (rate.FromCurrency == currency1)
+            {
+                position.OdeyPreviousPreviousPrice = rate.PreviousPreviousValue;
+                position.OdeyPreviousPrice = rate.PreviousValue;
+            }
+            else
+            {
+                position.OdeyPreviousPreviousPrice = 1 / rate.PreviousPreviousValue;
+                position.OdeyPreviousPrice = 1 / rate.PreviousValue;
+            }
+        }
+     
         private void MatchDTOToTickerRow(GroupingEntity parent, PortfolioDTO dto)
         {
 
@@ -205,7 +204,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             position.PreviousNetPosition = dto.PreviousNetPosition;
             position.NetPosition = dto.CurrentNetPosition;
             position.Currency = dto.Currency;
-            position.Name = dto.Name;
+            if (position.TickerTypeId != TickerTypeIds.FX)
+            {
+                position.Name = dto.Name;
+            }
+            else 
+            {
+                int i = 0;
+            }
             position.PriceDivisor = dto.PriceDivisor;
             position.TickerTypeId = dto.TickerTypeId;
             position.OdeyPreviousPreviousPrice = dto.PreviousPreviousPrice;

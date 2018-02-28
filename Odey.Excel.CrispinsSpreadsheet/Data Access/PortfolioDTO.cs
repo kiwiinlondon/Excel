@@ -10,7 +10,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
     {
 
         public PortfolioDTO (string book,string assetClass,string name, string ticker, string currency,string countryIsoCode, string countryName,
-             decimal previousNetPosition,decimal currentNetPosition, int? tickerTypeId, decimal? previousPreviousPrice, decimal? previousPrice, decimal? currentPrice, decimal priceDivisor)
+             decimal previousNetPosition,decimal currentNetPosition, TickerTypeIds tickerTypeId, decimal? previousPreviousPrice, decimal? previousPrice, decimal? currentPrice, decimal priceDivisor)
         {
             Book = book;
             AssetClass = assetClass;
@@ -45,7 +45,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public decimal CurrentNetPosition { get; set; }
         public decimal PreviousNetPosition { get; set; }
 
-        public int? TickerTypeId { get; set; }
+        public TickerTypeIds TickerTypeId { get; set; }
 
         public decimal? CurrentPrice { get; set; }
 

@@ -12,13 +12,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
         Matcher _matcher = null;
         private void CrispinRibbon_Load(object sender, RibbonUIEventArgs e)
         {
-            _matcher = new Matcher(new DataAccess(),new SheetAccess(Globals.ThisWorkbook));
+            _matcher = new Matcher(new DataAccess(DateTime.Today),new SheetAccess(Globals.ThisWorkbook));
         }
 
         private void button1_Click(object sender, RibbonControlEventArgs e)
         {
 
-            _matcher.Match(741, DateTime.Today);
+            _matcher.Match(741);
         }        
 
     }

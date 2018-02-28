@@ -9,11 +9,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Fund : GroupingEntity
     {
-        public Fund(string code) : base(code)
+        public Fund(string code,int firstRowOffset) : base(code, firstRowOffset)
         {
 
         }
-
+        public string Currency { get; set; }
 
     }
 }

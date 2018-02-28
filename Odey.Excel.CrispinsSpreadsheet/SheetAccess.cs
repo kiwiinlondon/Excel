@@ -86,25 +86,32 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private static readonly string _longWinnersColumn = "W";
         private static readonly int _longWinnersColumnNumber = GetColumnNumber(_longWinnersColumn);
 
-        private static readonly string _previousClosePriceColumn = "X";
+        private static readonly string _navColumn = "X";
+        private static readonly int _navColumnNumber = GetColumnNumber(_navColumn);
+
+        private static readonly string _previousClosePriceColumn = "Y";
         private static readonly int _previousClosePriceColumnNumber = GetColumnNumber(_previousClosePriceColumn);
 
-        private static readonly string _previousPriceChangeColumn = "Y";
+        private static readonly string _previousPriceChangeColumn = "Z";
         private static readonly int _previousPriceChangeColumnNumber = GetColumnNumber(_previousPriceChangeColumn);
 
 
-        private static readonly string _previousPricePercentageChangeColumn = "Z";
+        private static readonly string _previousPricePercentageChangeColumn = "AA";
         private static readonly int _previousPricePercentageChangeColumnNumber = GetColumnNumber(_previousPricePercentageChangeColumn);
-        private static readonly string _previousNetPositionColumn = "AA";
+
+        private static readonly string _previousNetPositionColumn = "AB";
         private static readonly int _previousNetPositionColumnNumber = GetColumnNumber(_previousNetPositionColumn);
 
-        private static readonly string _previousFXRateColumn = "AB";
+        private static readonly string _previousFXRateColumn = "AC";
         private static readonly int _previousFXRateColumnNumber = GetColumnNumber(_previousFXRateColumn);
 
-        private static readonly string _previousContributionColumn = "AC";
+        private static readonly string _previousContributionColumn = "AD";
         private static readonly int _previousContributionColumnNumber = GetColumnNumber(_previousContributionColumn);
 
-        private static readonly string _lastColumn = _previousContributionColumn;
+        private static readonly string _previousNavColumn = "AE";
+        private static readonly int _previousNavColumnNumber = GetColumnNumber(_previousNavColumn);
+
+        private static readonly string _lastColumn = _previousNavColumn;
 
         private static readonly string _firstColumn = _controlColumn;
 
@@ -142,28 +149,32 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-        public void UpdatePosition(bool forceRefresh, Position position)
+        public void UpdatePosition(bool forceRefresh, Position position, Book book, Fund fund)
         {
             if (forceRefresh)
             {
-                WritePosition(position);
+                WritePosition(position, book,fund);
             }
             else
-            {
-                if (position.TickerTypeId.HasValue)
+            {                
+                if (position.TickerTypeId == TickerTypeIds.PrivatePlacement)
                 {
                     WritePrivatePlacementPosition(position);
                 }
+                else if (position.TickerTypeId == TickerTypeIds.FX)
+                {
+                    WriteFXPosition(position);
+                }
                 else
                 {
-
+                    WriteValue(position.Row, _nameColumnNumber, position.Name, null);
                     WriteValue(position.Row, _netPositionColumnNumber, position.NetPosition, null);
                     WriteValue(position.Row, _previousNetPositionColumnNumber, position.PreviousNetPosition, null);
                 }
             }
         }
 
-        public void AddPosition(Position previousPosition, Position position, GroupingEntity parent)
+        public void AddPosition(Position previousPosition, Position position, GroupingEntity parent, Book book, Fund fund)
         {
             XL.Range previous;
             if (previousPosition == null)
@@ -174,16 +185,20 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 previous = previousPosition.Row;
             }
-            position.Row = AddRow(previous);
+            position.Row = AddRow(previous.Row,1);
 
-            WritePosition(position);
+            WritePosition(position, book, fund);
         }
 
-        private void WritePosition(Position position)
+        private void WritePosition(Position position, Book book, Fund fund)
         {
             WriteValue(position.Row, _tickerColumnNumber, position.Ticker, null);
-
-            if (position.TickerTypeId.HasValue)
+            WriteValue(position.Row, _nameColumnNumber, position.Name, null);
+            if (position.TickerTypeId == TickerTypeIds.FX)
+            {
+                WriteFXPosition(position);
+            }
+            else if (position.TickerTypeId== TickerTypeIds.PrivatePlacement)
             {
                 WritePrivatePlacementPosition(position);
             }
@@ -195,14 +210,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             WriteFormula(position.Row, _priceChangeColumnNumber, GetSubtractFormula(position.RowNumber, _currentPriceColumn, _closePriceColumn), null);
             WriteFormula(position.Row, _pricePercentageChangeColumnNumber, GetDivideFormula(position.RowNumber, _priceChangeColumn, _closePriceColumn, false), null);
             WriteValue(position.Row, _netPositionColumnNumber, position.NetPosition, false);
-            WriteFormula(position.Row, _currencyTickerColumnNumber, GetCurrencyTickerFormula(position.RowNumber), null);
-            WriteFormula(position.Row, _quoteFactorColumnNumber, GetQuoteFactorFormula(position.RowNumber), null);
-            WriteFormula(position.Row, _fxRateColumnNumber, GetFXRateFormula(position.RowNumber, _fxRateColumn), null);
-            WriteFormula(position.Row, _pnlColumnNumber, GetMultiplyFormula(position.RowNumber, new string[] { _priceChangeColumn, _netPositionColumn, _priceMultiplierColumn }, new string[] { _fxRateColumn }), null);
-            WriteFormula(position.Row, _contributionColumnNumber, GetDivideByNavFormula(position.RowNumber, _pnlColumn, true), null);
+            WriteFormula(position.Row, _currencyTickerColumnNumber, GetCurrencyTickerFormula(position.RowNumber,fund.TotalRow), null);
+            WriteFormula(position.Row, _quoteFactorColumnNumber, GetQuoteFactorFormula(position.RowNumber, fund.TotalRow), null);
+            WriteFormula(position.Row, _fxRateColumnNumber, GetFXRateFormula(position.RowNumber, _fxRateColumn, fund.TotalRow), null);
+            WriteFormula(position.Row, _pnlColumnNumber, GetPNLFormula(position.TickerTypeId, position.RowNumber), null);
+            WriteFormula(position.Row, _contributionColumnNumber, GetDivideByNavFormula(position.RowNumber, _pnlColumn, true,fund.TotalRow), null);
 
-            WriteFormula(position.Row, _exposureColumnNumber, GetMultiplyFormula(position.RowNumber, new string[] { _currentPriceColumn, _netPositionColumn, _priceMultiplierColumn },new string[] { _fxRateColumn}), null);
-            WriteFormula(position.Row, _exposurePercentageColumnNumber, GetDivideByNavFormula(position.RowNumber, _exposureColumn, false), null);
+            WriteFormula(position.Row, _exposureColumnNumber, GetExposureFormula(position.TickerTypeId, position.RowNumber), null);
+            WriteFormula(position.Row, _exposurePercentageColumnNumber, GetDivideByNavFormula(position.RowNumber, _exposureColumn, false, fund.TotalRow), null);
 
             WriteFormula(position.Row, _shortColumnNumber, GetWriteIfIsLongCorrectColumn(position.RowNumber, false), null);
             WriteFormula(position.Row, _longColumnNumber, GetWriteIfIsLongCorrectColumn(position.RowNumber, true), null);
@@ -216,17 +231,22 @@ namespace Odey.Excel.CrispinsSpreadsheet
             WriteFormula(position.Row, _previousPricePercentageChangeColumnNumber, GetDivideFormula(position.RowNumber, _previousPriceChangeColumn, _previousClosePriceColumn, false), null);
 
             WriteValue(position.Row, _previousNetPositionColumnNumber, position.PreviousNetPosition, false);
-            WriteFormula(position.Row, _previousFXRateColumnNumber, GetFXRateFormula(position.RowNumber, _previousFXRateColumn), null);
-            WriteFormula(position.Row, _previousContributionColumnNumber, GetPreviousContribution(position.RowNumber), null);
-
+            WriteFormula(position.Row, _previousFXRateColumnNumber, GetFXRateFormula(position.RowNumber, _previousFXRateColumn, fund.TotalRow), null);
+            WriteFormula(position.Row, _previousContributionColumnNumber, GetPreviousContribution(position.TickerTypeId,position.RowNumber,fund.TotalRow), null);
         }
 
-
+        private void WriteFXPosition(Position position)
+        {
+            WriteValue(position.Row, _currencyColumnNumber, position.Currency, null);
+            WriteValue(position.Row, _closePriceColumnNumber, position.OdeyPreviousPrice, null);
+            WriteFormula(position.Row, _currentPriceColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _currentPriceColumn), null);
+            WriteValue(position.Row, _previousClosePriceColumnNumber, position.OdeyPreviousPreviousPrice, null);
+        }
 
         private void WriteNormalPosition(Position position)
         {
             WriteFormula(position.Row, _currencyColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _currencyColumn), null);
-            WriteFormula(position.Row, _nameColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _nameColumn), null);
+            //WriteFormula(position.Row, _nameColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _nameColumn), null);
             WriteFormula(position.Row, _closePriceColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _closePriceColumn), null);
             WriteFormula(position.Row, _currentPriceColumnNumber, GetBloombergMnemonicFormula(position.RowNumber, _currentPriceColumn), null);
             WriteFormula(position.Row, _previousClosePriceColumnNumber, GetBloombergMnemonicHistoryFormula(position.RowNumber, _tickerColumn, _previousClosePriceColumn),null);            
@@ -235,33 +255,40 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void WritePrivatePlacementPosition(Position position)
         {
             WriteValue(position.Row, _currencyColumnNumber, position.Currency, null);
-            WriteValue(position.Row, _nameColumnNumber, position.Name, null);
+          //  WriteValue(position.Row, _nameColumnNumber, position.Name, null);
             WriteValue(position.Row, _closePriceColumnNumber, position.OdeyPreviousPrice, null);
             WriteValue(position.Row, _currentPriceColumnNumber, position.OdeyCurrentPrice, null);
-            WriteValue(position.Row, _previousClosePriceColumnNumber, position.OdeyPreviousPreviousPrice, null);
-  
+            WriteValue(position.Row, _previousClosePriceColumnNumber, position.OdeyPreviousPreviousPrice, null);  
         }
 
-        public void UpdateSums(GroupingEntity country,Position first)
+        public void UpdateSums(GroupingEntity entity)
         {
-            country.FirstRow = first.Row;
-            WriteFormula(country.TotalRow, _pnlColumnNumber, GetSumFormula(country.FirstRow.Row,country.TotalRow.Row-1,_pnlColumn),true);
-            WriteFormula(country.TotalRow, _contributionColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _contributionColumn),false);
-            WriteFormula(country.TotalRow, _exposureColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _exposureColumn),true);
-            WriteFormula(country.TotalRow, _exposurePercentageColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _exposurePercentageColumn), true);
-            WriteFormula(country.TotalRow, _shortColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _shortColumn), true);
-            WriteFormula(country.TotalRow, _longColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _longColumn), true);
-            WriteFormula(country.TotalRow, _shortWinnersColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _shortWinnersColumn), true);
-            WriteFormula(country.TotalRow, _longWinnersColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _longWinnersColumn), true);
-            WriteFormula(country.TotalRow, _previousContributionColumnNumber, GetSumFormula(country.FirstRow.Row, country.TotalRow.Row - 1, _previousContributionColumn), true);
+            int firstRowNumber = entity.FirstRowNumber;
+            int lastRowNumber = entity.TotalRow.Row - 1;
+            WriteFormula(entity.TotalRow, _pnlColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _pnlColumn),true);
+            WriteFormula(entity.TotalRow, _contributionColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _contributionColumn),false);
+            WriteFormula(entity.TotalRow, _exposureColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _exposureColumn),true);
+            WriteFormula(entity.TotalRow, _exposurePercentageColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _exposurePercentageColumn), true);
+            WriteFormula(entity.TotalRow, _shortColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _shortColumn), true);
+            WriteFormula(entity.TotalRow, _longColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _longColumn), true);
+            WriteFormula(entity.TotalRow, _shortWinnersColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _shortWinnersColumn), true);
+            WriteFormula(entity.TotalRow, _longWinnersColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _longWinnersColumn), true);
+            WriteFormula(entity.TotalRow, _previousContributionColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _previousContributionColumn), true);
 
         }
-              
-        private XL.Range AddRow(XL.Range row)
+
+
+
+        private XL.Range AddRow(int rowNumber,int numberOfRowsToAdd)
         {
-            int rowNumber = row.Row;
-            _worksheet.Rows[rowNumber].Insert(XL.XlDirection.xlUp, XL.XlInsertFormatOrigin.xlFormatFromLeftOrAbove);
-            XL.Range insertedRow = GetRow(rowNumber);
+            int lastRowNumberAdded = rowNumber-1;
+            for (int i = 0; i < numberOfRowsToAdd; i++)
+            {
+                lastRowNumberAdded++;
+                _worksheet.Rows[lastRowNumberAdded].Insert(XL.XlDirection.xlUp, XL.XlInsertFormatOrigin.xlFormatFromLeftOrAbove);
+                
+            }
+            XL.Range insertedRow = GetRow(lastRowNumberAdded);
             insertedRow.Font.Bold = false;
             return insertedRow;
         }
@@ -270,10 +297,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             return _worksheet.get_Range($"{_firstColumn}{rowNumber}:{_lastColumn}{rowNumber}");
         }
-
-
-
-
 
         public void UpdateTotalsOnTotalRow(GroupingEntity groupingEntity)
         {
@@ -287,6 +310,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
             UpdateTotalOnTotalRow(groupingEntity.TotalRow, _shortWinnersColumnNumber, _shortWinnersColumn, rowNumbers);
             UpdateTotalOnTotalRow(groupingEntity.TotalRow, _longWinnersColumnNumber, _longWinnersColumn, rowNumbers);
             UpdateTotalOnTotalRow(groupingEntity.TotalRow, _previousContributionColumnNumber, _previousContributionColumn, rowNumbers);
+        }
+
+        public void UpdateNavs(GroupingEntity groupingEntity)
+        {
+
+            WriteValue(groupingEntity.TotalRow, _navColumnNumber, groupingEntity.Nav,false);
+            WriteValue(groupingEntity.TotalRow, _previousNavColumnNumber, groupingEntity.PreviousNav, false);
+            if (groupingEntity is Fund)
+            {
+                WriteValue(groupingEntity.TotalRow, _tickerColumnNumber, ((Fund)groupingEntity).Currency, false);
+            }
         }
 
         private void UpdateTotalOnTotalRow(XL.Range totalRow, int columnNumber,string column,int[] rowNumbers)
@@ -312,22 +346,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void AddTotalRow(GroupingEntity previousGroup, GroupingEntity group, GroupingEntity parentGroup)
         {
-            XL.Range rowToAddPriorTo;
+            int addAtRowNumber;
             if (previousGroup == null)
             {
-                rowToAddPriorTo = parentGroup.TotalRow;
+                addAtRowNumber = parentGroup.RowNumber;
             }
             else
             {
-                rowToAddPriorTo = previousGroup.FirstRow;
+                addAtRowNumber = previousGroup.FirstRowNumber;
             }
 
-            rowToAddPriorTo = AddRow(rowToAddPriorTo);
-            group.TotalRow = AddRow(rowToAddPriorTo);
-
-
-
-
+            group.TotalRow = AddRow(addAtRowNumber,2);
 
             group.ControlString = GetControlString(parentGroup.ControlString, group.Code);
             WriteValue(group.TotalRow, _controlColumnNumber, group.ControlString, false);
@@ -344,20 +373,45 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return string.Join("#", new[] { fund, book, assetClass, country }) + _totalSuffix;                
         }
 
-        public Fund GetFund(string fundName)
+
+        public int GetRowNumberOffSet(FundDTO fund)
         {
-            string fundTotalLabel = CreateTotalLabel(fundName, null, null, null);
+
+            switch (fund.FundFXTreatmentId)
+            {
+                case FundFXTreatmentIds.Normal:
+                    return 0;
+                case FundFXTreatmentIds.FXOnly:
+                    return 1;
+                case FundFXTreatmentIds.ShareClass:
+                    return 2;
+                default:
+                    throw new ApplicationException($"Unknown FX Treatment");
+            }
+
+        }
+
+        public Fund GetFund(Fund previousFund, FundDTO currentFund)
+        {
+            int firstRowOffset = GetRowNumberOffSet(currentFund);
+            Fund fund = new Fund(currentFund.Name, firstRowOffset);
+            int firstRowOfData = _firstRowOfData;
+            if(previousFund!=null)
+            {
+                firstRowOfData = previousFund.RowNumber + 3 + firstRowOffset;               
+            }
+            string fundTotalLabel = CreateTotalLabel(currentFund.Name, null, null, null);
             int? lastRow = FindRow(fundTotalLabel, _controlColumn);
 
             if (!lastRow.HasValue)
             {
-                throw new ApplicationException("No Total Row exists");
+                throw new ApplicationException($"No Total Row exists for fund {currentFund.Name}");
             }
 
-            XL.Range fundRange = _worksheet.get_Range($"{_firstColumn}{_firstRowOfData}:{_lastColumn}{lastRow.Value}");
+            XL.Range fundRange = _worksheet.get_Range($"{_firstColumn}{firstRowOfData}:{_lastColumn}{lastRow.Value}");
             
             Dictionary<string, Country> countrypositions = new Dictionary<string, Country>();
-            Fund fund = new Fund(fundName);
+            
             List<Position> positions = null;
             foreach (XL.Range row in fundRange.Rows)
             {
@@ -418,7 +472,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
             entity.ControlString = controlString;
             if (positions != null && positions.Count > 0)
             {
-                entity.FirstRow = positions[0].Row;
                 entity.Children = positions.ToDictionary(a => a.Ticker, a => (IChildEntity)a);
             }
         }
@@ -500,16 +553,19 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private Position BuildPosition(XL.Range row, string ticker, string name)
         {
-            int? tickerTypeId = GetIntValue(row, _tickerTypeColumnNumber);
+            int? tickerTypeIdAsInt = GetIntValue(row, _tickerTypeColumnNumber);
+
+            TickerTypeIds tickerTypeId = (TickerTypeIds)(tickerTypeIdAsInt ?? 0);
+            string currency = null;
+            if (tickerTypeId == TickerTypeIds.FX)
+            {
+                currency = GetStringValue(row, _currencyColumnNumber);
+            }
             decimal? priceDivisor = GetDecimalValue(row, _priceDivisorColumnNumber);
-            return new Position( ticker, name, priceDivisor ?? 1, tickerTypeId, row);            
+            return new Position(ticker, name, priceDivisor ?? 1, tickerTypeId, row) { Currency = currency };            
         }
 
-        public void WriteNAVs(decimal previousNav,decimal nav)
-        {
-            _worksheet.Range[_previousFundNavLabel].Cells.Value = previousNav;
-            _worksheet.Range[_fundNavLabel].Cells.Value = nav;            
-        }
+        
 
         public void WriteDates(DateTime previousReferenceDate, DateTime referenceDate)
         {
@@ -546,9 +602,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private static readonly int _firstRowOfData = 10;
         private static readonly int _bloombergMnemonicRow = 7;
-        private static readonly string _fundCurrencyLabel = "FundCurrency";
-        private static readonly string _fundNavLabel = "NAV";
-        private static readonly string _previousFundNavLabel = "PreviousNAV";
         private static readonly string _previousReferenceDateLabel = "$C$1";
         private static readonly string _referenceDateLabel = "$D$1";
         private static readonly string _totalSuffix = "#Total";
@@ -575,6 +628,42 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"=if(or({column1AC}={_bloombergError},{column2AC}={_bloombergError}),0,  {column1AC} - {column2AC})";
         }
 
+        
+
+        private string GetExposureFormula(TickerTypeIds tickerTypeId, int rowNumber)
+        {
+            string[] columns;
+            string[] divideColumn = new string[] { _fxRateColumn };
+            if (tickerTypeId == TickerTypeIds.FX)
+            {
+                columns = new string[] { _netPositionColumn };
+            }
+            else
+            {
+                columns = new string[] { _currentPriceColumn, _netPositionColumn, _priceMultiplierColumn };
+            }
+            string formula = GetMultiplyFormula(rowNumber, columns, divideColumn);
+            if (tickerTypeId == TickerTypeIds.FX)
+            {
+                formula = formula.Replace("=", "=Abs(") + ")";
+            }
+            return formula;
+        }
+
+        private string GetPNLFormula(TickerTypeIds tickerTypeId, int rowNumber)
+        {
+            
+            if (tickerTypeId == TickerTypeIds.FX)
+            {
+                return GetMultiplyFormula(rowNumber, new string[] { _priceChangeColumn, _netPositionColumn }, new string[] { _fxRateColumn,_currentPriceColumn });
+            }
+            else
+            {
+                return GetMultiplyFormula(rowNumber, new string[] { _priceChangeColumn, _netPositionColumn, _priceMultiplierColumn }, new string[] { _fxRateColumn });
+            }
+            
+        }
+
 
         private string GetMultiplyFormula(int rowNumber, string[] columns, string[] divideColumn)
         {
@@ -597,20 +686,29 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"=if(or({divisor}=0,{divisor}={_bloombergError}),0,{dividendColumn}{rowNumber} / {divisor}{multiplyBy100})";
         }
 
-        private string GetPreviousContribution(int rowNumber)
-        {            
-            string pnlFormula = GetMultiplyFormula(rowNumber, new string[] { _previousPriceChangeColumn, _previousNetPositionColumn, _priceMultiplierColumn },new string[] { _previousFXRateColumn }).Replace("=", "");
-            return $"={pnlFormula} / {_previousFundNavLabel}";
+        private string GetPreviousContribution(TickerTypeIds tickerTypeId,int rowNumber, XL.Range navRow)
+        {
+            string pnlFormula;
+            if (tickerTypeId == TickerTypeIds.FX)
+            {
+                pnlFormula = GetMultiplyFormula(rowNumber, new string[] { _previousPriceChangeColumn, _previousNetPositionColumn}, new string[] { _previousFXRateColumn, _previousClosePriceColumn });
+            }
+            else
+            {
+                pnlFormula = GetMultiplyFormula(rowNumber, new string[] { _previousPriceChangeColumn, _previousNetPositionColumn, _priceMultiplierColumn }, new string[] { _previousFXRateColumn });
+            }
+            pnlFormula = pnlFormula.Replace("=", "");
+            return $"={pnlFormula} / {_previousNavColumn}{navRow.Row}";
         }
 
-        private string GetDivideByNavFormula(int rowNumber, string column, bool displayedAsPercentage)
+        private string GetDivideByNavFormula(int rowNumber, string column, bool displayedAsPercentage,XL.Range navRow)
         {
             string multiplyBy100 = null;
             if (!displayedAsPercentage)
             {
                 multiplyBy100 = "*100";
             }
-            return $"={column}{rowNumber} / {_fundNavLabel}{multiplyBy100}";
+            return $"={column}{rowNumber} / {_navColumn}{navRow.Row}{multiplyBy100}";
         }
 
         private string GetBloombergMnemonicFormula(int rowNumber,string column)
@@ -623,14 +721,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"=BDH({tickerColumn}{rowNumber},${column}${_bloombergMnemonicRow},{_previousReferenceDateLabel},{_previousReferenceDateLabel})";
         }
 
-        private string GetQuoteFactorFormula(int rowNumber)
+        private string GetQuoteFactorFormula(int rowNumber,XL.Range fundTotalRow)
         {
-            return $"=IF({_currencyColumn}{rowNumber} = {_fundCurrencyLabel},1,{GetBloombergMnemonicFormula(rowNumber, _quoteFactorColumn, _currencyTickerColumn).Replace("=", "")})";
+            return $"=IF({_currencyColumn}{rowNumber} = {_tickerColumn}{fundTotalRow.Row},1,{GetBloombergMnemonicFormula(rowNumber, _quoteFactorColumn, _currencyTickerColumn).Replace("=", "")})";
         }
 
-        private string GetFXRateFormula(int rowNumber,string fxRateColumn)
+        private string GetFXRateFormula(int rowNumber, string fxRateColumn, XL.Range fundTotalRow)
         {
-            return $"=IF({_currencyColumn}{rowNumber} = {_fundCurrencyLabel},1,{GetBloombergMnemonicFormula(rowNumber, fxRateColumn, _currencyTickerColumn).Replace("=","")}*{_quoteFactorColumn}{rowNumber})";
+            return $"=IF({_currencyColumn}{rowNumber} = {_tickerColumn}{fundTotalRow.Row},1,{GetBloombergMnemonicFormula(rowNumber, fxRateColumn, _currencyTickerColumn).Replace("=","")}*{_quoteFactorColumn}{rowNumber})";
         }
 
         private string GetBloombergMnemonicFormula(int rowNumber, string mnemonicColumn,string tickerColumn)
@@ -638,9 +736,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"=BDP({tickerColumn}{rowNumber},${mnemonicColumn}${_bloombergMnemonicRow})";
         }
 
-        private string GetCurrencyTickerFormula(int rowNumber)
+        private string GetCurrencyTickerFormula(int rowNumber,XL.Range fundTotalRow)
         {
-            return $"=CONCATENATE({_fundCurrencyLabel},{_currencyColumn}{rowNumber}, \" Curncy\")";
+            return $"=CONCATENATE({_tickerColumn}{fundTotalRow.Row},{_currencyColumn}{rowNumber}, \" Curncy\")";
         }
 
         private string GetPriceMultiplierFormula(int rowNumber)

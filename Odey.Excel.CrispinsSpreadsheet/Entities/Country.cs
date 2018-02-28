@@ -9,7 +9,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Country : GroupingEntity, IChildEntity
     {
-        public Country(string code) : base(code)
+        public Country(string code) : base(code,0)
         {
 
         }
