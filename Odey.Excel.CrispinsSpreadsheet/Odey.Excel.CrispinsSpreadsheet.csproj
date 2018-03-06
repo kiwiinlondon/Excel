@@ -48,6 +48,9 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
+    <Reference Include="Bloomberglp.Blpapi">
+      <HintPath>..\..\Binaries\Bloomberg\Bloomberglp.Blpapi.dll</HintPath>
+    </Reference>
     <Reference Include="EntityFramework, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
@@ -121,12 +124,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data Access\BookDTO.cs" />
-    <Compile Include="Data Access\DTOGroup.cs" />
-    <Compile Include="Data Access\DTOGroupBuilder.cs" />
+    <Compile Include="BloombergSecuritySetup.cs" />
+    <Compile Include="Data Access\InstrumentBuilder.cs" />
     <Compile Include="Data Access\DTOGrouping.cs" />
-    <Compile Include="Data Access\FundDTO.cs" />
-    <Compile Include="Data Access\FundFXTreatmentIds.cs" />
     <Compile Include="Entities\AssetClass.cs" />
     <Compile Include="Entities\Book.cs" />
     <Compile Include="Entities\Country.cs" />
@@ -137,13 +137,19 @@
       <DependentUpon>CrispinRibbon.cs</DependentUpon>
     </Compile>
     <Compile Include="Data Access\DataAccess.cs" />
+    <Compile Include="Entities\EntityBuilder.cs" />
+    <Compile Include="Sheet Access\ExistingGroup.cs" />
+    <Compile Include="Sheet Access\ExistingPosition.cs" />
     <Compile Include="Entities\Fund.cs" />
     <Compile Include="Entities\GroupingEntity.cs" />
     <Compile Include="Entities\GroupingEntityTypes.cs" />
     <Compile Include="Entities\IChildEntity.cs" />
+    <Compile Include="Entities\Identifier.cs" />
+    <Compile Include="Entities\InstrumentDTO.cs" />
     <Compile Include="Entities\Position.cs" />
     <Compile Include="Data Access\FXRateDTO.cs" />
-    <Compile Include="Entities\TickerTypeIds.cs" />
+    <Compile Include="Entities\InstrumentTypeIds.cs" />
+    <Compile Include="InstrumentRetriever.cs" />
     <Compile Include="Matcher.cs" />
     <Compile Include="Data Access\PortfolioDTO.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -159,7 +165,7 @@
     <Compile Include="Sheet2.Designer.cs">
       <DependentUpon>Sheet2.Designer.xml</DependentUpon>
     </Compile>
-    <Compile Include="SheetAccess.cs" />
+    <Compile Include="Sheet Access\SheetAccess.cs" />
     <Compile Include="ThisWorkbook.cs">
       <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
     </Compile>
@@ -207,7 +213,6 @@
       <DependentUpon>Sheet2.cs</DependentUpon>
     </None>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

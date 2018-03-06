@@ -9,29 +9,31 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Position : IChildEntity
     {
-        public Position(string ticker, string name, decimal priceDivisor, TickerTypeIds tickerTypeId, XL.Range row)
+        public Position(Identifier identifier, string name, decimal priceDivisor, InstrumentTypeIds instrumentTypeId, XL.Range row)
         {
+            Identifier = identifier;
             Row = row;
-            Ticker = ticker;
             Name = name;
-            TickerTypeId = tickerTypeId;
+            InstrumentTypeId = instrumentTypeId;
             PriceDivisor = priceDivisor;
         }
 
+        public Identifier Identifier { get; private set; }
 
         public XL.Range Row { get; set; }
 
         public int RowNumber => Row.Row;
 
-        public string Ticker { get; set; }
 
         public string Name { get; set; }
+
+        public object Ordering => Name;
 
         public string Currency { get; set; }
 
         public decimal NetPosition { get; set; }
 
-        public TickerTypeIds TickerTypeId { get; set; }
+        public InstrumentTypeIds InstrumentTypeId { get; set; }
 
         public decimal? OdeyCurrentPrice { get; set; }
 

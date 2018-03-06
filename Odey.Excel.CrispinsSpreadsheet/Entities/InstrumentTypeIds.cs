@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Odey.Excel.CrispinsSpreadsheet
 {
-    public enum FundFXTreatmentIds
+    public enum InstrumentTypeIds
     {
-        Normal,
-        FXOnly,
-        ShareClass
+        Normal = 0,
+        PrivatePlacement=1,
+        FX=2,
     }
 }

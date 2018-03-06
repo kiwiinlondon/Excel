@@ -22,9 +22,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public DateTime PreviousReferenceDate { get; private set; }
         public DateTime ReferenceDate { get; private set; }
 
-        public static readonly int[] AssetClassIdsToExclude = new int[] { (int)DerivedAssetClassIds.Cash };
+       
 
-        private decimal? GetPrice(IEnumerable<Portfolio> positions, TickerTypeIds tickerTypeId)
+        private decimal? GetPrice(IEnumerable<Portfolio> positions, InstrumentTypeIds tickerTypeId)
         {
             positions = positions.Where(a => a != null);
             if (positions == null || positions.Count()==0)
@@ -34,7 +34,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
             var prices = positions.Select(a => a.Price * a.Position.InstrumentMarket.PriceQuoteMultiplier).Distinct();
 
-            if (prices.Count()!=1 && tickerTypeId == TickerTypeIds.PrivatePlacement)
+            if (prices.Count()!=1 && tickerTypeId == InstrumentTypeIds.PrivatePlacement)
             {
                 throw new ApplicationException("Cannot establish unique price");
             }
@@ -54,24 +54,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return previousReferenceDate;
         }
 
-        private string GetName(IEnumerable<DTOGrouping> groupings)
-        {
-
-            var names = groupings.Select(a => a.Position.InstrumentMarket.Name).Distinct();
-            if (names.Count() > 1)
-            {
-                names = groupings.Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.ContractForDifference)
-                    .Select(a => a.Position.InstrumentMarket.Name).Distinct();
-
-                if (names.Count() > 1)
-                {
-                    throw new ApplicationException($"Cannot establish unique name. Names = {string.Join(",", names)}");
-                }
-            }
-            return names.First();
-        }
-
-        public List<PortfolioDTO> Get(FundDTO fund)
+        
+        public List<PortfolioDTO> GetPortfolio(Fund fund, bool includeHedging, bool onlyIncludeFX)
         {
             using (KeeleyModel context = new KeeleyModel())
             {
@@ -86,11 +70,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     .Include(a => a.Position.InstrumentMarket.Market.LegalEntity.Country)
                     .Where(a => a.FundId == fund.FundId && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat);
 
-                if (fund.FundFXTreatmentId != FundFXTreatmentIds.ShareClass)//MAC & OEI
+                if (!includeHedging)//Share 
                 {
-                     portfolios = portfolios.Where(a=>!AssetClassIdsToExclude.Contains(a.Position.InstrumentMarket.Instrument.DerivedAssetClassId));
+                     portfolios = portfolios.Where(a=>a.Position.InstrumentMarket.Instrument.DerivedAssetClassId != (int)DerivedAssetClassIds.Cash);
                 }
-                if (fund.FundFXTreatmentId != FundFXTreatmentIds.Normal)//MAC and share classes
+                if (onlyIncludeFX)//MAC and share classes
                 {
                     portfolios = portfolios.Where(a => a.Position.InstrumentMarket.Instrument.InstrumentClassID == (int)InstrumentClassIds.ForwardFX);
                 }
@@ -109,51 +93,40 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 var fxToAdd = BuildFX(fxPositions, fund);
                 return portfoliosByPosition
                     .Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.ForwardFX)
-                    .GroupBy(g => DTOGroupBuilder.Instance.Get(g.Position, fund))
+                    .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.Get(g.Position.InstrumentMarket) })
                 .Select(a => new PortfolioDTO(
                     a.Key.Book,
-                    a.Key.AssetClass,
-                    GetName(a),
-                    a.Key.Ticker,
-                    a.Key.Currency, 
-                    a.Key.CountryIso,
-                    a.Key.CountryName,
+                    a.Key.Instrument,
                     a.Sum(s => s.Previous == null ? 0 : s.Previous.NetPosition),
-                    a.Sum(s=> s.Current == null ? 0 : s.Current.NetPosition), 
-                    a.Key.TickerTypeId,
-                    GetPrice(a.Select(s => s.PreviousPrevious), a.Key.TickerTypeId),
-                    GetPrice(a.Select(s => s.Previous), a.Key.TickerTypeId),
-                    GetPrice(a.Select(s=>s.Current), a.Key.TickerTypeId),
-                    a.Key.PriceDivisor))
+                    a.Sum(s=> s.Current == null ? 0 : s.Current.NetPosition),                   
+                    GetPrice(a.Select(s => s.PreviousPrevious), a.Key.Instrument.InstrumentTypeId),
+                    GetPrice(a.Select(s => s.Previous), a.Key.Instrument.InstrumentTypeId),
+                    GetPrice(a.Select(s=>s.Current), a.Key.Instrument.InstrumentTypeId)
+                    ))
                     .Union(fxToAdd).ToList();
             }
         }
 
-        private string GetFXName(string ticker)
-        {
-            return $"{ticker.Substring(0, 3)}/{ticker.Substring(3, 3)}";
-        }
+       
 
-        private List<PortfolioDTO> BuildFX(List<DTOGrouping> fxPositions, FundDTO fund)
+        private List<PortfolioDTO> BuildFX(List<DTOGrouping> fxPositions, Fund fund)
         {
             var quantities = fxPositions
-                    .GroupBy(g => DTOGroupBuilder.Instance.GetFX(g.Position, fund))
+                    .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.GetFX(g.Position.InstrumentMarket) })
                     .Select(a =>
                     new
                     {
                         Key = a.Key,
-                        PreviousPreviousNetPosition = GetFXNetPosition(a.Select(s => s.PreviousPrevious),a.Key),
-                        PreviousNetPosition = GetFXNetPosition(a.Select(s => s.Previous), a.Key),
-                        CurrentNetPosition = GetFXNetPosition(a.Select(s => s.Current), a.Key)
+                        PreviousPreviousNetPosition = GetFXNetPosition(a.Select(s => s.PreviousPrevious),a.Key.Instrument),
+                        PreviousNetPosition = GetFXNetPosition(a.Select(s => s.Previous), a.Key.Instrument),
+                        CurrentNetPosition = GetFXNetPosition(a.Select(s => s.Current), a.Key.Instrument)
                     }
                     );
-            return quantities.Select(a => new PortfolioDTO(
-                a.Key.Book, a.Key.AssetClass, GetFXName(a.Key.Ticker), a.Key.Ticker, a.Key.Currency, a.Key.CountryIso, a.Key.CountryName,
-                a.PreviousNetPosition, a.CurrentNetPosition, a.Key.TickerTypeId, null, null, null, a.Key.PriceDivisor)
+            return quantities.Select(a => new PortfolioDTO(a.Key.Book, a.Key.Instrument,a.PreviousNetPosition, a.CurrentNetPosition, null, null, null)
             ).ToList();
         }
 
-        private decimal GetFXNetPosition(IEnumerable<Portfolio> positions, DTOGroup group)
+        private decimal GetFXNetPosition(IEnumerable<Portfolio> positions, InstrumentDTO instrument)
         {
             positions = positions.Where(a => a != null && a.NetPosition !=0);
             if (positions == null || positions.Count() == 0)
@@ -163,68 +136,58 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
             var nonFlat = positions.GroupBy(a => new { a.Position.BookID, a.Position.InstrumentMarketID, a.Position.AccountID, a.Position.Strategy })
                 .Where(a => a.Count() >= 2).SelectMany(a => a);
-            return nonFlat.Where(a => a.Position.Currency.IsoCode == group.Currency).Sum(a => a.NetPosition);            
+            return nonFlat.Where(a => a.Position.Currency.IsoCode == instrument.Currency).Sum(a => a.NetPosition);            
         }
 
-        private FundFXTreatmentIds GetFundFXTreatmentId(Odey.Framework.Keeley.Entities.Fund fund)
-        {
-            if (fund.FundTypeId == (int)FundTypeIds.ShareClass)
-            {
-                return FundFXTreatmentIds.ShareClass;
-            }
-            else if (fund.LegalEntityID != (int) FundIds.OEI)
-            {
-                return FundFXTreatmentIds.FXOnly;
-            }
-            else
-            {
-                return FundFXTreatmentIds.Normal;
-            }
-        }
+       
 
-        public FundDTO GetFund(FundIds fundId)
+        public Fund GetFund(FundIds fundId)
         {
             using (KeeleyModel context = new KeeleyModel())
             {
                 var fund = context.Funds.Include(a=>a.LegalEntity).Include(a=>a.Currency.Instrument).FirstOrDefault(a => a.LegalEntityID == (int)fundId);
-                FundDTO toReturn = new FundDTO() { FundId = fund.LegalEntityID, Name = fund.Name, Currency = fund.Currency.IsoCode, FundFXTreatmentId = GetFundFXTreatmentId(fund) };
+                Fund toReturn = new Fund(fund.LegalEntityID,fund.Name,fund.Currency.IsoCode,false);
                 DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
                 var navs = context.FundNetAssetValues.Where(a => a.FundId == fund.LegalEntityID && referenceDates.Contains(a.ReferenceDate)).ToList();
-                toReturn.CurrentNav = navs.FirstOrDefault(a => a.ReferenceDate == ReferenceDate).MarketValue;
-                toReturn.PreviousNav = navs.FirstOrDefault(a => a.ReferenceDate == PreviousReferenceDate).MarketValue;
-                if (toReturn.FundFXTreatmentId == FundFXTreatmentIds.Normal)
-                {
-                    AddBooks(toReturn, context, referenceDates);
-                }
+                toReturn.Nav = navs.FirstOrDefault(a => a.ReferenceDate == ReferenceDate).MarketValue;
+                toReturn.PreviousNav = navs.FirstOrDefault(a => a.ReferenceDate == PreviousReferenceDate).MarketValue;                
                 return toReturn;
             }
         }
 
-        public void AddBooks(FundDTO fund, KeeleyModel context, DateTime[] referenceDates)
-        {
-            var books = context.Books.Where(a => a.FundID == fund.FundId);
-            var booksById = books.ToDictionary(a=>a.BookID,a => new BookDTO() { BookId = a.BookID, Name = a.Name });
-           
-            var navs = context.BookNetAssetValues.Where(a => booksById.Keys.Contains(a.BookId) && referenceDates.Contains(a.ReferenceDate)).ToList();
-            foreach (var nav in navs)
-            {
-                var book = booksById[nav.BookId];
-                if (nav.ReferenceDate == PreviousReferenceDate)
-                {
-                    book.PreviousNav = nav.MarketValue.Value;
-                }
-                else if (nav.ReferenceDate == ReferenceDate)
-                {
-                    book.Nav = nav.MarketValue.Value;
-                }
-                else
-                {
-                    throw new ApplicationException($"Unknown date {nav.ReferenceDate}");
-                }               
-            }
 
-            fund.Books = booksById.Values.ToDictionary(a=>a.Name,a=>a);
+
+        public List<Book> GetBooks(Fund fund)
+        {
+            using (KeeleyModel context = new KeeleyModel())
+            {
+                var books = context.Books.Where(a => a.FundID == fund.FundId);
+                var booksById = books.ToDictionary(a => a.BookID, a => new Book(fund,a.BookID, a.Name,false));
+                DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
+                var navs = context.BookNetAssetValues.Where(a => booksById.Keys.Contains(a.BookId) && referenceDates.Contains(a.ReferenceDate)).ToList();
+                foreach (var nav in navs)
+                {
+                    var book = booksById[nav.BookId];
+                    if (nav.ReferenceDate == PreviousReferenceDate)
+                    {
+                        book.PreviousNav = nav.MarketValue.Value;
+                    }
+                    else if (nav.ReferenceDate == ReferenceDate)
+                    {
+                        book.Nav = nav.MarketValue.Value;
+                    }
+                    else
+                    {
+                        throw new ApplicationException($"Unknown date {nav.ReferenceDate}");
+                    }
+
+                }
+                return booksById.Values.ToList();
+            }
         }
+
+
+
 
         public List<FXRateDTO> GetFXRates()
         {
@@ -241,6 +204,47 @@ namespace Odey.Excel.CrispinsSpreadsheet
                           PreviousPreviousValue = a.FirstOrDefault(f => f.ReferenceDate == PreviousPreviousReferenceDate).Value,
                           PreviousValue = a.FirstOrDefault(f => f.ReferenceDate == PreviousReferenceDate).Value
                       }).ToList();
+            }
+        }
+
+        public InstrumentDTO GetInstrument(string ticker)
+        {
+            using (KeeleyModel context = new KeeleyModel())
+            {
+                var instrumentMarkets = context.InstrumentMarkets
+                    .Include(a=>a.Instrument)
+                    .Include(a => a.Market.LegalEntity.Country)
+                .Where(a => a.BloombergTicker == ticker).ToList();
+                if (instrumentMarkets.Count == 0)
+                {
+                    return null;
+                }
+                if (instrumentMarkets.Count >1)
+                {
+                    instrumentMarkets = instrumentMarkets.Where(a => a.InstrumentClassIdAsEnum != InstrumentClassIds.ContractForDifference).ToList();
+                }
+                return InstrumentBuilder.Instance.Get(instrumentMarkets.FirstOrDefault());
+            }
+        }
+
+
+        public void AddExchangeCountryToInstrument(InstrumentDTO instrument)
+        {
+            using (KeeleyModel context = new KeeleyModel())
+            {
+                string ticker = instrument.Identifier.Code;
+                int countOfSpaces = instrument.Identifier.Code.Count(a => a == ' ');
+                if (countOfSpaces==2)
+                {
+                    string exchangeCode = ticker.Substring(ticker.IndexOf(' '));
+                    exchangeCode = exchangeCode.Substring(0, exchangeCode.IndexOf(' ') - 1);
+                    var market = context.Markets.Include(a=>a.Country).FirstOrDefault(a => a.BBExchangeCode == exchangeCode);
+                    if (market!=null)
+                    {
+                        instrument.ExchangeCountryIsoCode = market.Country.IsoCode;
+                        instrument.ExchangeCountryName = market.Country.Name;
+                    }
+                }
             }
         }
     }

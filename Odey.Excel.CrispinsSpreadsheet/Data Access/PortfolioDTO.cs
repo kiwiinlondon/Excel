@@ -9,50 +9,32 @@ namespace Odey.Excel.CrispinsSpreadsheet
     public class PortfolioDTO
     {
 
-        public PortfolioDTO (string book,string assetClass,string name, string ticker, string currency,string countryIsoCode, string countryName,
-             decimal previousNetPosition,decimal currentNetPosition, TickerTypeIds tickerTypeId, decimal? previousPreviousPrice, decimal? previousPrice, decimal? currentPrice, decimal priceDivisor)
+        public PortfolioDTO(string book,InstrumentDTO instrument,
+             decimal previousNetPosition, decimal currentNetPosition, decimal? previousPreviousPrice, decimal? previousPrice, decimal? currentPrice)
         {
+
             Book = book;
-            AssetClass = assetClass;
-            Name = name;
-            Ticker = ticker;
-            CountryIsoCode = countryIsoCode;
-            CountryName = countryName;
+            Instrument = instrument;
+            
             PreviousNetPosition = previousNetPosition;
             CurrentNetPosition = currentNetPosition;
-            TickerTypeId = tickerTypeId;
+            
             PreviousPreviousPrice = previousPreviousPrice;
             PreviousPrice = previousPrice;
             CurrentPrice = currentPrice;
-            Currency = currency;
-            PriceDivisor = priceDivisor;
         }
 
         public string Book { get; set; }
 
-        public string AssetClass { get; set; }
-
-        public string Name { get; set; }
-
-        public string Ticker { get; set; }
-
-        public string CountryIsoCode { get; set; }
-
-        public string CountryName { get; set; }
-
-        public string Currency { get; set; }
+        public InstrumentDTO Instrument { get; set;}
 
         public decimal CurrentNetPosition { get; set; }
         public decimal PreviousNetPosition { get; set; }
-
-        public TickerTypeIds TickerTypeId { get; set; }
 
         public decimal? CurrentPrice { get; set; }
 
         public decimal? PreviousPrice { get; set; }
 
         public decimal? PreviousPreviousPrice { get; set; }
-
-        public decimal PriceDivisor { get; set; }
     }
 }

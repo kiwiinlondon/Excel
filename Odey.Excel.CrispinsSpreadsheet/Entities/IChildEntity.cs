@@ -12,5 +12,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
         string Name { get; set; }
 
         int RowNumber { get; }
+
+        Identifier Identifier { get;  }
+
+        object Ordering { get; }
     }
 }

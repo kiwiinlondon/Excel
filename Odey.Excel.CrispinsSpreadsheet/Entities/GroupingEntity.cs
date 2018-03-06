@@ -9,19 +9,24 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public abstract class GroupingEntity : IChildEntity
     {
-        public GroupingEntity(string code, int firstRowOffset)
+        public GroupingEntity(GroupingEntity parent,string code,string name,bool childrenArePositions,object ordering)
         {
-            Code = code;
-            _firstRowOffset = firstRowOffset;
+            Identifier = new Identifier(null,code);
+            Name = name;
+            ChildrenArePositions = childrenArePositions;
+            Ordering = ordering;
+            Parent = parent;
         }
 
-        private int _firstRowOffset;
+        public GroupingEntity Parent { get; private set; }
 
-        public string Code { get; private set; }
+        public object Ordering { get; private set; }
+
+        public Identifier Identifier { get; private set;}
 
         public string Name { get; set; }
 
-        public int FirstRowNumber => Children.Min(a => a.Value.RowNumber)- _firstRowOffset;
+        public GroupingEntity Previous { get; set; }
 
         public XL.Range TotalRow { get; set; }
 
@@ -29,10 +34,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public override string ToString()
         {
-            return $"{Code}({Name})";
+            return $"{Identifier.Code}({Name})";
         }
 
-        public Dictionary<string, IChildEntity> Children { get; set; } = new Dictionary<string, IChildEntity>();
+        public bool ChildrenArePositions { get; set; }
+
+        public Dictionary<Identifier, IChildEntity> Children { get; set; } = new Dictionary<Identifier, IChildEntity>();
 
         public string ControlString { get; set; }
 

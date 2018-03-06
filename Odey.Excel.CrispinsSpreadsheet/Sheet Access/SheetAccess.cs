@@ -20,95 +20,97 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private static readonly string _controlColumn = "A";
         private static readonly int _controlColumnNumber = GetColumnNumber(_controlColumn);
 
-        private static readonly string _tickerColumn = "B";
+        private static readonly string _instrumentMarketIdColumn = "B";
+        private static readonly int _instrumentMarketIdColumnNumber = GetColumnNumber(_instrumentMarketIdColumn);
+
+        private static readonly string _tickerColumn = "C";
         private static readonly int _tickerColumnNumber = GetColumnNumber(_tickerColumn);
 
-        private static readonly string _currencyColumn = "C";
+        private static readonly string _currencyColumn = "D";
         private static readonly int _currencyColumnNumber = GetColumnNumber(_currencyColumn);
 
-        private static readonly string _nameColumn = "D";
+        private static readonly string _nameColumn = "E";
         private static readonly int _nameColumnNumber = GetColumnNumber(_nameColumn);
 
-        private static readonly string _closePriceColumn = "E";
+        private static readonly string _closePriceColumn = "F";
         private static readonly int _closePriceColumnNumber = GetColumnNumber(_closePriceColumn);
 
-        private static readonly string _currentPriceColumn = "F";
+        private static readonly string _currentPriceColumn = "G";
         private static readonly int _currentPriceColumnNumber = GetColumnNumber(_currentPriceColumn);
 
-        private static readonly string _priceChangeColumn = "G";
+        private static readonly string _priceChangeColumn = "H";
         private static readonly int _priceChangeColumnNumber = GetColumnNumber(_priceChangeColumn);
 
-        private static readonly string _pricePercentageChangeColumn = "H";
+        private static readonly string _pricePercentageChangeColumn = "I";
         private static readonly int _pricePercentageChangeColumnNumber = GetColumnNumber(_pricePercentageChangeColumn);
 
-        private static readonly string _netPositionColumn = "I";
+        private static readonly string _netPositionColumn = "J";
         private static readonly int _netPositionColumnNumber = GetColumnNumber(_netPositionColumn);
 
-        private static readonly string _currencyTickerColumn = "J";
+        private static readonly string _currencyTickerColumn = "K";
         private static readonly int _currencyTickerColumnNumber = GetColumnNumber(_currencyTickerColumn);
 
-        private static readonly string _quoteFactorColumn = "K";
+        private static readonly string _quoteFactorColumn = "L";
         private static readonly int _quoteFactorColumnNumber = GetColumnNumber(_quoteFactorColumn);
 
-        private static readonly string _fxRateColumn = "L";
+        private static readonly string _fxRateColumn = "M";
         private static readonly int _fxRateColumnNumber = GetColumnNumber(_fxRateColumn);
 
-        private static readonly string _pnlColumn = "M";
+        private static readonly string _pnlColumn = "N";
         private static readonly int _pnlColumnNumber = GetColumnNumber(_pnlColumn);
 
-        private static readonly string _contributionColumn = "N";
+        private static readonly string _contributionColumn = "O";
         private static readonly int _contributionColumnNumber = GetColumnNumber(_contributionColumn);
 
-        private static readonly string _exposureColumn = "O";
+        private static readonly string _exposureColumn = "P";
         private static readonly int _exposureColumnNumber = GetColumnNumber(_exposureColumn);
 
-        private static readonly string _exposurePercentageColumn = "P";
+        private static readonly string _exposurePercentageColumn = "Q";
         private static readonly int _exposurePercentageColumnNumber = GetColumnNumber(_exposurePercentageColumn);
 
-        private static readonly string _shortColumn = "Q";
+        private static readonly string _shortColumn = "R";
         private static readonly int _shortColumnNumber = GetColumnNumber(_shortColumn);
 
-        private static readonly string _longColumn = "R";
+        private static readonly string _longColumn = "S";
         private static readonly int _longColumnNumber = GetColumnNumber(_longColumn);
 
-        private static readonly string _priceMultiplierColumn = "S";
+        private static readonly string _priceMultiplierColumn = "T";
         private static readonly int _priceMultiplierColumnNumber = GetColumnNumber(_priceMultiplierColumn);
 
-        private static readonly string _tickerTypeColumn = "T";
-        private static readonly int _tickerTypeColumnNumber = GetColumnNumber(_tickerTypeColumn);
+        private static readonly string _instrumentTypeColumn = "U";
+        private static readonly int _instrumentTypeColumnNumber = GetColumnNumber(_instrumentTypeColumn);
 
-        private static readonly string _priceDivisorColumn = "U";
+        private static readonly string _priceDivisorColumn = "V";
         private static readonly int _priceDivisorColumnNumber = GetColumnNumber(_priceDivisorColumn);
 
-        private static readonly string _shortWinnersColumn = "V";
+        private static readonly string _shortWinnersColumn = "W";
         private static readonly int _shortWinnersColumnNumber = GetColumnNumber(_shortWinnersColumn);
 
-        private static readonly string _longWinnersColumn = "W";
+        private static readonly string _longWinnersColumn = "X";
         private static readonly int _longWinnersColumnNumber = GetColumnNumber(_longWinnersColumn);
 
-        private static readonly string _navColumn = "X";
+        private static readonly string _navColumn = "Y";
         private static readonly int _navColumnNumber = GetColumnNumber(_navColumn);
 
-        private static readonly string _previousClosePriceColumn = "Y";
+        private static readonly string _previousClosePriceColumn = "Z";
         private static readonly int _previousClosePriceColumnNumber = GetColumnNumber(_previousClosePriceColumn);
 
-        private static readonly string _previousPriceChangeColumn = "Z";
+        private static readonly string _previousPriceChangeColumn = "AA";
         private static readonly int _previousPriceChangeColumnNumber = GetColumnNumber(_previousPriceChangeColumn);
 
-
-        private static readonly string _previousPricePercentageChangeColumn = "AA";
+        private static readonly string _previousPricePercentageChangeColumn = "AB";
         private static readonly int _previousPricePercentageChangeColumnNumber = GetColumnNumber(_previousPricePercentageChangeColumn);
 
-        private static readonly string _previousNetPositionColumn = "AB";
+        private static readonly string _previousNetPositionColumn = "AC";
         private static readonly int _previousNetPositionColumnNumber = GetColumnNumber(_previousNetPositionColumn);
 
-        private static readonly string _previousFXRateColumn = "AC";
+        private static readonly string _previousFXRateColumn = "AD";
         private static readonly int _previousFXRateColumnNumber = GetColumnNumber(_previousFXRateColumn);
 
-        private static readonly string _previousContributionColumn = "AD";
+        private static readonly string _previousContributionColumn = "AE";
         private static readonly int _previousContributionColumnNumber = GetColumnNumber(_previousContributionColumn);
 
-        private static readonly string _previousNavColumn = "AE";
+        private static readonly string _previousNavColumn = "AF";
         private static readonly int _previousNavColumnNumber = GetColumnNumber(_previousNavColumn);
 
         private static readonly string _lastColumn = _previousNavColumn;
@@ -157,21 +159,36 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
             else
             {                
-                if (position.TickerTypeId == TickerTypeIds.PrivatePlacement)
+                if (position.InstrumentTypeId == InstrumentTypeIds.PrivatePlacement)
                 {
                     WritePrivatePlacementPosition(position);
                 }
-                else if (position.TickerTypeId == TickerTypeIds.FX)
+                else if (position.InstrumentTypeId == InstrumentTypeIds.FX)
                 {
                     WriteFXPosition(position);
                 }
                 else
                 {
+                    WriteValue(position.Row, _instrumentMarketIdColumnNumber, position.Identifier.Code, null);
                     WriteValue(position.Row, _nameColumnNumber, position.Name, null);
                     WriteValue(position.Row, _netPositionColumnNumber, position.NetPosition, null);
                     WriteValue(position.Row, _previousNetPositionColumnNumber, position.PreviousNetPosition, null);
                 }
             }
+        }
+
+        public Position AddInstrument(InstrumentDTO instrument)
+        {
+            string fundTotalLabel = CreateTotalLabel("OEI", null, null, null);
+            int? fundTotal = FindRow(fundTotalLabel, _controlColumn);
+
+            string bookTotalLabel = CreateTotalLabel("OEI", "BK-OEI", null, null);
+            int? bookTotal = FindRow(bookTotalLabel, _controlColumn);
+
+
+
+
+            return new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor,instrument.InstrumentTypeId, null);
         }
 
         public void AddPosition(Position previousPosition, Position position, GroupingEntity parent, Book book, Fund fund)
@@ -192,13 +209,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private void WritePosition(Position position, Book book, Fund fund)
         {
-            WriteValue(position.Row, _tickerColumnNumber, position.Ticker, null);
+            WriteValue(position.Row, _instrumentMarketIdColumnNumber, position.Identifier.Id, null);
+            WriteValue(position.Row, _tickerColumnNumber, position.Identifier.Code, null);
             WriteValue(position.Row, _nameColumnNumber, position.Name, null);
-            if (position.TickerTypeId == TickerTypeIds.FX)
+            if (position.InstrumentTypeId == InstrumentTypeIds.FX)
             {
                 WriteFXPosition(position);
             }
-            else if (position.TickerTypeId== TickerTypeIds.PrivatePlacement)
+            else if (position.InstrumentTypeId == InstrumentTypeIds.PrivatePlacement)
             {
                 WritePrivatePlacementPosition(position);
             }
@@ -213,16 +231,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
             WriteFormula(position.Row, _currencyTickerColumnNumber, GetCurrencyTickerFormula(position.RowNumber,fund.TotalRow), null);
             WriteFormula(position.Row, _quoteFactorColumnNumber, GetQuoteFactorFormula(position.RowNumber, fund.TotalRow), null);
             WriteFormula(position.Row, _fxRateColumnNumber, GetFXRateFormula(position.RowNumber, _fxRateColumn, fund.TotalRow), null);
-            WriteFormula(position.Row, _pnlColumnNumber, GetPNLFormula(position.TickerTypeId, position.RowNumber), null);
+            WriteFormula(position.Row, _pnlColumnNumber, GetPNLFormula(position.InstrumentTypeId, position.RowNumber), null);
             WriteFormula(position.Row, _contributionColumnNumber, GetDivideByNavFormula(position.RowNumber, _pnlColumn, true,fund.TotalRow), null);
 
-            WriteFormula(position.Row, _exposureColumnNumber, GetExposureFormula(position.TickerTypeId, position.RowNumber), null);
+            WriteFormula(position.Row, _exposureColumnNumber, GetExposureFormula(position.InstrumentTypeId, position.RowNumber), null);
             WriteFormula(position.Row, _exposurePercentageColumnNumber, GetDivideByNavFormula(position.RowNumber, _exposureColumn, false, fund.TotalRow), null);
 
             WriteFormula(position.Row, _shortColumnNumber, GetWriteIfIsLongCorrectColumn(position.RowNumber, false), null);
             WriteFormula(position.Row, _longColumnNumber, GetWriteIfIsLongCorrectColumn(position.RowNumber, true), null);
             WriteFormula(position.Row, _priceMultiplierColumnNumber, GetPriceMultiplierFormula(position.RowNumber), null);
-            WriteValue(position.Row, _tickerTypeColumnNumber, position.TickerTypeId, false);
+            WriteValue(position.Row, _instrumentTypeColumnNumber, position.InstrumentTypeId, false);
             WriteValue(position.Row, _priceDivisorColumnNumber, position.PriceDivisor, false);
             WriteFormula(position.Row, _shortWinnersColumnNumber, GetWinnerColumn(position.RowNumber, false), null);
             WriteFormula(position.Row, _longWinnersColumnNumber, GetWinnerColumn(position.RowNumber, true), null);
@@ -232,7 +250,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
             WriteValue(position.Row, _previousNetPositionColumnNumber, position.PreviousNetPosition, false);
             WriteFormula(position.Row, _previousFXRateColumnNumber, GetFXRateFormula(position.RowNumber, _previousFXRateColumn, fund.TotalRow), null);
-            WriteFormula(position.Row, _previousContributionColumnNumber, GetPreviousContribution(position.TickerTypeId,position.RowNumber,fund.TotalRow), null);
+            WriteFormula(position.Row, _previousContributionColumnNumber, GetPreviousContribution(position.InstrumentTypeId, position.RowNumber,fund.TotalRow), null);
         }
 
         private void WriteFXPosition(Position position)
@@ -263,7 +281,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void UpdateSums(GroupingEntity entity)
         {
-            int firstRowNumber = entity.FirstRowNumber;
+
+            int firstRowNumber = _firstRowOfData;
+            if (entity.Previous!=null)
+            {
+                firstRowNumber = entity.Previous.TotalRow.Row + 1;
+            }
             int lastRowNumber = entity.TotalRow.Row - 1;
             WriteFormula(entity.TotalRow, _pnlColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _pnlColumn),true);
             WriteFormula(entity.TotalRow, _contributionColumnNumber, GetSumFormula(firstRowNumber, lastRowNumber, _contributionColumn),false);
@@ -344,21 +367,21 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return string.Join("#", values);
         }
 
-        public void AddTotalRow(GroupingEntity previousGroup, GroupingEntity group, GroupingEntity parentGroup)
+        public void AddTotalRow(GroupingEntity group)
         {
             int addAtRowNumber;
-            if (previousGroup == null)
+            if (group.Previous == null)
             {
-                addAtRowNumber = parentGroup.RowNumber;
+                addAtRowNumber = _firstRowOfData+1;
             }
             else
             {
-                addAtRowNumber = previousGroup.FirstRowNumber;
+                addAtRowNumber = group.Previous.TotalRow.Row+1;
             }
 
             group.TotalRow = AddRow(addAtRowNumber,2);
 
-            group.ControlString = GetControlString(parentGroup.ControlString, group.Code);
+            group.ControlString = GetControlString(group.Parent.ControlString, group.Identifier.Code);
             WriteValue(group.TotalRow, _controlColumnNumber, group.ControlString, false);
             WriteValue(group.TotalRow, _nameColumnNumber, group.Name,true);
             group.TotalRow.Borders[XL.XlBordersIndex.xlEdgeBottom].LineStyle = XL.XlLineStyle.xlContinuous;
@@ -373,137 +396,166 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return string.Join("#", new[] { fund, book, assetClass, country }) + _totalSuffix;                
         }
 
-
-        public int GetRowNumberOffSet(FundDTO fund)
+        public void AddFundRange(Fund fund)
         {
-
-            switch (fund.FundFXTreatmentId)
-            {
-                case FundFXTreatmentIds.Normal:
-                    return 0;
-                case FundFXTreatmentIds.FXOnly:
-                    return 1;
-                case FundFXTreatmentIds.ShareClass:
-                    return 2;
-                default:
-                    throw new ApplicationException($"Unknown FX Treatment");
-            }
-
-        }
-
-        public Fund GetFund(Fund previousFund, FundDTO currentFund)
-        {
-            int firstRowOffset = GetRowNumberOffSet(currentFund);
-            Fund fund = new Fund(currentFund.Name, firstRowOffset);
             int firstRowOfData = _firstRowOfData;
-            if(previousFund!=null)
+            if (fund.Previous != null)
             {
-                firstRowOfData = previousFund.RowNumber + 3 + firstRowOffset;               
+                firstRowOfData = fund.Previous.RowNumber + 1;
             }
-            string fundTotalLabel = CreateTotalLabel(currentFund.Name, null, null, null);
+
+            string fundTotalLabel = CreateTotalLabel(fund.Name, null, null, null);
             int? lastRow = FindRow(fundTotalLabel, _controlColumn);
 
             if (!lastRow.HasValue)
             {
-                throw new ApplicationException($"No Total Row exists for fund {currentFund.Name}");
+                throw new ApplicationException($"No Total Row exists for fund {fund.Name}");
             }
+            fund.Range = _worksheet.get_Range($"{_firstColumn}{firstRowOfData}:{_lastColumn}{lastRow.Value}");
+        }
 
-            XL.Range fundRange = _worksheet.get_Range($"{_firstColumn}{firstRowOfData}:{_lastColumn}{lastRow.Value}");
-            
-            Dictionary<string, Country> countrypositions = new Dictionary<string, Country>();
-            
-            List<Position> positions = null;
-            foreach (XL.Range row in fundRange.Rows)
+        public List<ExistingGroupDTO> GetExisting(Fund fund)
+        {
+            List<ExistingGroupDTO> existingGroups = new List<ExistingGroupDTO>();
+            List<ExistingPositionDTO> positions = new List<ExistingPositionDTO>();
+            //GroupingEntity previousGroupingEntity = fund.Previous;
+            foreach (XL.Range row in fund.Range.Rows)
             {
                 string valueInTickerColumn = GetStringValue(row, _tickerColumnNumber);
+                int? valueInInstrumentMarketColumn = GetIntValue(row, _instrumentMarketIdColumnNumber);
+
                 string controlString = GetStringValue(row, _controlColumnNumber);
-                string valueInNameColumn = GetStringValue(row, _nameColumnNumber);
-                if (string.IsNullOrWhiteSpace(valueInTickerColumn) && string.IsNullOrWhiteSpace(controlString) && string.IsNullOrWhiteSpace(valueInNameColumn))
+
+                if ((!valueInInstrumentMarketColumn.HasValue && string.IsNullOrWhiteSpace(valueInTickerColumn) && string.IsNullOrWhiteSpace(controlString)) || controlString == _ignoreLabel)
                 {
                     continue;
                 }
+               
+                string valueInNameColumn = GetStringValue(row, _nameColumnNumber);
 
                 if (RowIsTotal(controlString))
                 {
-                    AddToParent(controlString, positions,valueInNameColumn, row, fund);
-                    positions = null;
+                    existingGroups.Add(new ExistingGroupDTO(controlString, valueInNameColumn, row, positions));
+                    //var entity = AddToParent(controlString, positions,valueInNameColumn, row, fund);
+                    //entity.Previous = previousGroupingEntity;
+                    //previousGroupingEntity = entity;
+                    positions = new List<ExistingPositionDTO>();
                 }
                 else
                 {
-                    var position = BuildPosition(row, valueInTickerColumn, valueInNameColumn);
-                    if (positions == null)
-                    {
-                        positions = new List<Position>();
-                    }
+                    var position = new ExistingPositionDTO(valueInInstrumentMarketColumn, valueInTickerColumn, valueInNameColumn, row);
+                    //if (positions == null)
+                   // {
+                   //     positions = new List<ExistingPositionDTO>();
+                   // }
                     positions.Add(position);
-                }                                         
-            }
-            return fund;
-        }
-
-
-        private void AddToParent(string controlString, List<Position> positions, string name, XL.Range row, Fund fund)
-        {
-            var values = controlString.Split('#');
-            string fundCode = values[0];
-            string bookCode = values[1];
-            string assetClassCode = values[2];
-            string countryCode = values[3];
-                      
-            GroupingEntity entity = fund;
-
-            if (!string.IsNullOrWhiteSpace(bookCode))
-            {
-                entity = GetEntity(entity, bookCode, GroupingEntityTypes.Book);
-            }
-
-            if (!string.IsNullOrWhiteSpace(assetClassCode))
-            {
-                entity = GetEntity(entity, assetClassCode, GroupingEntityTypes.AssetClass);
-            }
-
-            if (!string.IsNullOrWhiteSpace(countryCode))
-            {
-                entity = GetEntity(entity, countryCode, GroupingEntityTypes.Country);
-            }
-
-            entity.TotalRow = row;
-            entity.Name = name;
-            entity.ControlString = controlString;
-            if (positions != null && positions.Count > 0)
-            {
-                entity.Children = positions.ToDictionary(a => a.Ticker, a => (IChildEntity)a);
-            }
-        }
-
-        private GroupingEntity GetEntity(GroupingEntity parent, string code,GroupingEntityTypes entityType)
-        {
-            GroupingEntity entity;
-            if (parent.Children.ContainsKey(code))
-            {
-                entity = (GroupingEntity)parent.Children[code];
-            }
-            else
-            {
-                switch (entityType)
-                {
-                    case GroupingEntityTypes.Book:
-                        entity = new Book(code);
-                        break;
-                    case GroupingEntityTypes.AssetClass:
-                        entity = new AssetClass(code);
-                        break;
-                    case GroupingEntityTypes.Country:
-                        entity = new Country(code);
-                        break;
-                    default:
-                        throw new ApplicationException($"Unknown Entity Type {entityType}");
                 }
-                parent.Children.Add(code,entity);
-
             }
-            return entity;
+            return existingGroups;
         }
+
+
+        //private GroupingEntity AddToParent(string controlString, List<ExistingPositionDTO> existingPositions, string name, XL.Range row, Fund fund)
+        //{
+        //    var values = controlString.Split('#');
+        //    string fundCode = values[0];
+        //    string bookCode = values[1];
+        //    string assetClassCode = values[2];
+        //    string countryCode = values[3];
+                      
+        //    GroupingEntity entity = fund;
+
+        //    if (!string.IsNullOrWhiteSpace(bookCode))
+        //    {
+        //        entity = GetEntity(entity, bookCode, GroupingEntityTypes.Book);
+        //    }
+
+        //    if (!string.IsNullOrWhiteSpace(assetClassCode))
+        //    {
+        //        entity = GetEntity(entity, assetClassCode, GroupingEntityTypes.AssetClass);
+        //    }
+
+        //    if (!string.IsNullOrWhiteSpace(countryCode))
+        //    {
+        //        entity = GetEntity(entity, countryCode, GroupingEntityTypes.Country);
+        //    }
+
+        //    entity.TotalRow = row;
+        //    entity.Name = name;
+        //    entity.ControlString = controlString;
+        //    if (existingPositions != null && existingPositions.Count > 0)
+        //    {
+        //        AddPositions(entity, existingPositions);
+        //    }
+        //    return entity;
+        //}
+
+        //private void AddPositions(GroupingEntity entity,List<ExistingPositionDTO> existingPositions)
+        //{
+        //    foreach (var existingPosition in existingPositions)
+        //    {
+        //        Position position;
+        //        if (entity.Children.ContainsKey(existingPosition.Identifier))
+        //        {
+        //            position = (Position)entity.Children[existingPosition.Identifier];
+        //            if (position.InstrumentTypeId == InstrumentTypeIds.FX)
+        //            {
+        //                position.Name = existingPosition.Name;
+        //            }
+        //            position.Row = existingPosition.Row;
+        //        }
+        //        else
+        //        {
+        //            position = BuildPosition(existingPosition);
+        //            entity.Children.Add(existingPosition.Identifier, position);
+        //        }
+        //    }
+        //}        
+
+        public Position BuildPosition(ExistingPositionDTO existingPosition)
+        {
+            
+            var row = existingPosition.Row;
+            int? instrumentTypeIdAsInt = GetIntValue(row, _instrumentTypeColumnNumber);
+
+            InstrumentTypeIds instrumentTypeId = (InstrumentTypeIds)(instrumentTypeIdAsInt ?? 0);
+            string currency = null;
+            if (instrumentTypeId == InstrumentTypeIds.FX)
+            {
+                currency = GetStringValue(row, _currencyColumnNumber);
+            }
+            decimal? priceDivisor = GetDecimalValue(row, _priceDivisorColumnNumber);
+            return new Position(existingPosition.Identifier, existingPosition.Name, priceDivisor ?? 1, instrumentTypeId, row) { Currency = currency };
+        }
+
+
+        //private GroupingEntity GetEntity(GroupingEntity parent, string code,GroupingEntityTypes entityType)
+        //{
+        //    Identifier identifier = new Identifier(null,code);
+        //    GroupingEntity entity;
+        //    if (parent.Children.ContainsKey(identifier))
+        //    {
+        //        entity = (GroupingEntity)parent.Children[identifier];
+        //    }
+        //    else
+        //    {
+        //        switch (entityType)
+        //        {
+        //            case GroupingEntityTypes.Book:
+        //                throw new ApplicationException($"Book should have already been setup");
+        //            case GroupingEntityTypes.AssetClass:
+        //                throw new ApplicationException($"Asset Class should have already been setup");
+        //            case GroupingEntityTypes.Country:
+        //                entity = new Country(code);
+        //                break;
+        //            default:
+        //                throw new ApplicationException($"Unknown Entity Type {entityType}");
+        //        }
+        //        parent.Children.Add(identifier, entity);
+
+        //    }
+        //    return entity;
+        //}
 
         
 
@@ -551,19 +603,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return null;
         }
 
-        private Position BuildPosition(XL.Range row, string ticker, string name)
-        {
-            int? tickerTypeIdAsInt = GetIntValue(row, _tickerTypeColumnNumber);
-
-            TickerTypeIds tickerTypeId = (TickerTypeIds)(tickerTypeIdAsInt ?? 0);
-            string currency = null;
-            if (tickerTypeId == TickerTypeIds.FX)
-            {
-                currency = GetStringValue(row, _currencyColumnNumber);
-            }
-            decimal? priceDivisor = GetDecimalValue(row, _priceDivisorColumnNumber);
-            return new Position(ticker, name, priceDivisor ?? 1, tickerTypeId, row) { Currency = currency };            
-        }
+        
 
         
 
@@ -602,9 +642,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private static readonly int _firstRowOfData = 10;
         private static readonly int _bloombergMnemonicRow = 7;
-        private static readonly string _previousReferenceDateLabel = "$C$1";
-        private static readonly string _referenceDateLabel = "$D$1";
+        private static readonly string _previousReferenceDateLabel = $"${_currencyColumn}$1";
+        private static readonly string _referenceDateLabel = $"${_nameColumn}$1";
         private static readonly string _totalSuffix = "#Total";
+        private static readonly string _ignoreLabel = "#IGNORE#";
+
+
 
 
 
@@ -630,11 +673,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         
 
-        private string GetExposureFormula(TickerTypeIds tickerTypeId, int rowNumber)
+        private string GetExposureFormula(InstrumentTypeIds instrumentTypeId, int rowNumber)
         {
             string[] columns;
             string[] divideColumn = new string[] { _fxRateColumn };
-            if (tickerTypeId == TickerTypeIds.FX)
+            if (instrumentTypeId == InstrumentTypeIds.FX)
             {
                 columns = new string[] { _netPositionColumn };
             }
@@ -643,17 +686,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 columns = new string[] { _currentPriceColumn, _netPositionColumn, _priceMultiplierColumn };
             }
             string formula = GetMultiplyFormula(rowNumber, columns, divideColumn);
-            if (tickerTypeId == TickerTypeIds.FX)
+            if (instrumentTypeId == InstrumentTypeIds.FX)
             {
                 formula = formula.Replace("=", "=Abs(") + ")";
             }
             return formula;
         }
 
-        private string GetPNLFormula(TickerTypeIds tickerTypeId, int rowNumber)
+        private string GetPNLFormula(InstrumentTypeIds instrumentTypeId, int rowNumber)
         {
             
-            if (tickerTypeId == TickerTypeIds.FX)
+            if (instrumentTypeId == InstrumentTypeIds.FX)
             {
                 return GetMultiplyFormula(rowNumber, new string[] { _priceChangeColumn, _netPositionColumn }, new string[] { _fxRateColumn,_currentPriceColumn });
             }
@@ -686,10 +729,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"=if(or({divisor}=0,{divisor}={_bloombergError}),0,{dividendColumn}{rowNumber} / {divisor}{multiplyBy100})";
         }
 
-        private string GetPreviousContribution(TickerTypeIds tickerTypeId,int rowNumber, XL.Range navRow)
+        private string GetPreviousContribution(InstrumentTypeIds tickerTypeId,int rowNumber, XL.Range navRow)
         {
             string pnlFormula;
-            if (tickerTypeId == TickerTypeIds.FX)
+            if (tickerTypeId == InstrumentTypeIds.FX)
             {
                 pnlFormula = GetMultiplyFormula(rowNumber, new string[] { _previousPriceChangeColumn, _previousNetPositionColumn}, new string[] { _previousFXRateColumn, _previousClosePriceColumn });
             }
