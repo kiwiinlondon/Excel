@@ -42,6 +42,7 @@
             this.editBox1 = this.Factory.CreateRibbonEditBox();
             this.button2 = this.Factory.CreateRibbonButton();
             this.label1 = this.Factory.CreateRibbonLabel();
+            this.button3 = this.Factory.CreateRibbonButton();
             this.CrispinTab.SuspendLayout();
             this.group1.SuspendLayout();
             this.box1.SuspendLayout();
@@ -57,6 +58,7 @@
             // 
             this.group1.Items.Add(this.button1);
             this.group1.Items.Add(this.box1);
+            this.group1.Items.Add(this.button3);
             this.group1.Items.Add(this.label1);
             this.group1.Label = "Crsipin";
             this.group1.Name = "group1";
@@ -95,6 +97,12 @@
             this.label1.Name = "label1";
             this.label1.ShowLabel = false;
             // 
+            // button3
+            // 
+            this.button3.Label = "Bulk Load";
+            this.button3.Name = "button3";
+            this.button3.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button3_Click);
+            // 
             // CrispinRibbon
             // 
             this.Name = "CrispinRibbon";
@@ -120,6 +128,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton button2;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton button1;
         internal Microsoft.Office.Tools.Ribbon.RibbonLabel label1;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton button3;
     }
 
     partial class ThisRibbonCollection

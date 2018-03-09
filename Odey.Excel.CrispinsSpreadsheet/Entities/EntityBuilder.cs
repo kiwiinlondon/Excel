@@ -152,12 +152,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-        private GroupingEntity GetCountry(AssetClass parentEntity, string code, string name)
+        private Country GetCountry(AssetClass parentEntity, string code, string name)
         {
             Identifier identifier = new Identifier(null, code);
             if (parentEntity.Children.ContainsKey(identifier))
             {
-                return (GroupingEntity)parentEntity.Children[identifier];
+                return (Country)parentEntity.Children[identifier];
             }
             else
             {
@@ -165,7 +165,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 {
                     name = "United Kingdom";
                 }
-                GroupingEntity entity = new Country(parentEntity, code, name);                        
+                Country entity = new Country(parentEntity, code, name);                        
                 parentEntity.Children.Add(identifier, entity);
                 return entity;
             }
@@ -198,19 +198,20 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 {
                     position.Name = existingPosition.Name;
                 }
-                position.Row = existingPosition.Row;
+                
             }
             else
             {
                 position = _sheetAccess.BuildPosition(existingPosition);
                 parent.Children.Add(existingPosition.Identifier, position);
             }
+            position.Row = existingPosition.Row;
         }
 
         private void AddDTOToParent(GroupingEntity parent, PortfolioDTO dto)
         {
 
-            Position position = new Position(dto.Instrument.Identifier, dto.Instrument.Name, dto.Instrument.PriceDivisor, dto.Instrument.InstrumentTypeId, null);
+            Position position = new Position(dto.Instrument.Identifier, dto.Instrument.Name, dto.Instrument.PriceDivisor, dto.Instrument.InstrumentTypeId);
             parent.Children.Add(dto.Instrument.Identifier, position);
 
             position.PreviousNetPosition = dto.PreviousNetPosition;
@@ -222,6 +223,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
             position.OdeyPreviousPrice = dto.PreviousPrice;
             position.OdeyCurrentPrice = dto.CurrentPrice;
 
+        }
+
+        public GroupingEntity AddInstrument(Book book, InstrumentDTO instrument)
+        {
+            
+            AssetClass assetClass = (AssetClass)book.Children[new Identifier(null, EntityBuilder.EquityLabel)];
+            Country country = GetCountry(assetClass, instrument.ExchangeCountryIsoCode, instrument.ExchangeCountryName);
+            var position = new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor, instrument.InstrumentTypeId);
+            country.Children.Add(position.Identifier, position);
+            
+            return country;
         }
     }        
 }

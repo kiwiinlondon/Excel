@@ -11,8 +11,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class SheetAccess
     {
+        private ThisWorkbook _workbook;
+
         public SheetAccess(ThisWorkbook workBook)
         {
+            _workbook = workBook;
             _worksheet = workBook.Sheets["Portfolio"];
         }
         private XL.Worksheet _worksheet;
@@ -185,24 +188,28 @@ namespace Odey.Excel.CrispinsSpreadsheet
             string bookTotalLabel = CreateTotalLabel("OEI", "BK-OEI", null, null);
             int? bookTotal = FindRow(bookTotalLabel, _controlColumn);
 
-
-
-
-            return new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor,instrument.InstrumentTypeId, null);
+            return new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor,instrument.InstrumentTypeId);
         }
 
         public void AddPosition(Position previousPosition, Position position, GroupingEntity parent, Book book, Fund fund)
         {
-            XL.Range previous;
+            int rowToAddAt;
             if (previousPosition == null)
             {
-                previous = parent.TotalRow;
+                if (parent.Previous == null)
+                {
+                    rowToAddAt = _firstRowOfData;
+                }
+                else
+                {
+                    rowToAddAt = parent.Previous.TotalRow.Row+2;
+                }
             }
             else
             {
-                previous = previousPosition.Row;
+                rowToAddAt = previousPosition.RowNumber+1;
             }
-            position.Row = AddRow(previous.Row,1);
+            position.Row = AddRow(rowToAddAt);
 
             WritePosition(position, book, fund);
         }
@@ -211,7 +218,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             WriteValue(position.Row, _instrumentMarketIdColumnNumber, position.Identifier.Id, null);
             WriteValue(position.Row, _tickerColumnNumber, position.Identifier.Code, null);
-            WriteValue(position.Row, _nameColumnNumber, position.Name, null);
+            WriteName(position);
             if (position.InstrumentTypeId == InstrumentTypeIds.FX)
             {
                 WriteFXPosition(position);
@@ -251,6 +258,19 @@ namespace Odey.Excel.CrispinsSpreadsheet
             WriteValue(position.Row, _previousNetPositionColumnNumber, position.PreviousNetPosition, false);
             WriteFormula(position.Row, _previousFXRateColumnNumber, GetFXRateFormula(position.RowNumber, _previousFXRateColumn, fund.TotalRow), null);
             WriteFormula(position.Row, _previousContributionColumnNumber, GetPreviousContribution(position.InstrumentTypeId, position.RowNumber,fund.TotalRow), null);
+        }
+
+        private void WriteName(Position position)
+        {
+
+            if (position.InstrumentTypeId == InstrumentTypeIds.FuturesActiveCurrency)
+            {
+                WriteFormula(position.Row, _nameColumnNumber, GetBloombergMnemonicFormula(position.Row.Row, _nameColumn,_tickerColumn), null);
+            }       
+            else
+            {
+                WriteValue(position.Row, _nameColumnNumber, position.Name, null);
+            }
         }
 
         private void WriteFXPosition(Position position)
@@ -302,17 +322,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
 
-        private XL.Range AddRow(int rowNumber,int numberOfRowsToAdd)
+        private XL.Range AddRow(int rowNumber)
         {
-            int lastRowNumberAdded = rowNumber-1;
-            for (int i = 0; i < numberOfRowsToAdd; i++)
-            {
-                lastRowNumberAdded++;
-                _worksheet.Rows[lastRowNumberAdded].Insert(XL.XlDirection.xlUp, XL.XlInsertFormatOrigin.xlFormatFromLeftOrAbove);
-                
-            }
-            XL.Range insertedRow = GetRow(lastRowNumberAdded);
+            _worksheet.Rows[rowNumber].Insert(XL.XlDirection.xlUp, XL.XlInsertFormatOrigin.xlFormatFromLeftOrAbove);
+            XL.Range insertedRow = GetRow(rowNumber);
             insertedRow.Font.Bold = false;
+            insertedRow.RowHeight = 12;
             return insertedRow;
         }
 
@@ -379,7 +394,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 addAtRowNumber = group.Previous.TotalRow.Row+1;
             }
 
-            group.TotalRow = AddRow(addAtRowNumber,2);
+            group.TotalRow = AddRow(addAtRowNumber);
+
+            AddRow(group.TotalRow.Row);//Gap Between sections
 
             group.ControlString = GetControlString(group.Parent.ControlString, group.Identifier.Code);
             WriteValue(group.TotalRow, _controlColumnNumber, group.ControlString, false);
@@ -513,8 +530,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         //}        
 
         public Position BuildPosition(ExistingPositionDTO existingPosition)
-        {
-            
+        {            
             var row = existingPosition.Row;
             int? instrumentTypeIdAsInt = GetIntValue(row, _instrumentTypeColumnNumber);
 
@@ -525,7 +541,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 currency = GetStringValue(row, _currencyColumnNumber);
             }
             decimal? priceDivisor = GetDecimalValue(row, _priceDivisorColumnNumber);
-            return new Position(existingPosition.Identifier, existingPosition.Name, priceDivisor ?? 1, instrumentTypeId, row) { Currency = currency };
+            return new Position(existingPosition.Identifier, existingPosition.Name, priceDivisor ?? 1, instrumentTypeId) { Currency = currency };
         }
 
 
@@ -823,5 +839,21 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
         #endregion
+
+        public List<string> GetBulkTickers()
+        {
+            List<string> tickers = new List<string>();
+            var worksheet = _workbook.Sheets["Sheet1"];
+            XL.Range usedRange = worksheet.UsedRange;
+            foreach(XL.Range row in usedRange.Rows)
+            {
+                var ticker = GetStringValue(row, 1);
+                if (ticker!=null)
+                {
+                    tickers.Add(ticker);
+                }
+            }
+            return tickers;
+        }
     }
 }

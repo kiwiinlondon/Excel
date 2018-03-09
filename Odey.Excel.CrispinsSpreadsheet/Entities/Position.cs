@@ -9,10 +9,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Position : IChildEntity
     {
-        public Position(Identifier identifier, string name, decimal priceDivisor, InstrumentTypeIds instrumentTypeId, XL.Range row)
+        public Position(Identifier identifier, string name, decimal priceDivisor, InstrumentTypeIds instrumentTypeId)
         {
             Identifier = identifier;
-            Row = row;
             Name = name;
             InstrumentTypeId = instrumentTypeId;
             PriceDivisor = priceDivisor;
@@ -27,7 +26,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public string Name { get; set; }
 
-        public object Ordering => Name;
+        public object Ordering => InstrumentTypeId == InstrumentTypeIds.FuturesActiveCurrency ? "_" : "" + Name?.ToUpper();
 
         public string Currency { get; set; }
 
@@ -44,6 +43,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public decimal PriceDivisor { get; set; }
 
         public decimal PreviousNetPosition { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Identifier}: {Name}";
+        }
 
     }
 }

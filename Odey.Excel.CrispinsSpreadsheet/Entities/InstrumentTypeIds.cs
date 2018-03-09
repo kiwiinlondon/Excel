@@ -11,5 +11,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
         Normal = 0,
         PrivatePlacement=1,
         FX=2,
+        FuturesActiveCurrency=3
     }
 }

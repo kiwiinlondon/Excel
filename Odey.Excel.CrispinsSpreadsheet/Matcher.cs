@@ -50,15 +50,68 @@ namespace Odey.Excel.CrispinsSpreadsheet
             string message;
             if (_instrumentRetriever.ValidateTicker(ticker, out message))
             {
-                var instrument = _instrumentRetriever.Get(ticker, out message);
-                if (instrument != null)
+                Fund fund = _funds[FundIds.OEI];
+                Book book = (Book)fund.Children.Values.FirstOrDefault(a => (((Book)a).BookId == (int)BookIds.OEI));
+                if (TickerAlreadyExists(ticker, book))
                 {
-                    var position = _sheetAccess.AddInstrument(instrument);
-                    message = $"Success. {ticker} added to Country {instrument.ExchangeCountryName} at row ";// {position.RowNumber}";
+                    message = "Ticker Already Exists";
+                }
+                else
+                {
+
+                    var instrument = _instrumentRetriever.Get(ticker, out message);
+                    if (instrument != null)
+                    {
+                        var country = _entityBuilder.AddInstrument(book, instrument);
+
+                        GroupingEntity entityToWrite = country;
+                        if (country.TotalRow==null)
+                        {
+                            entityToWrite = country.Parent;
+                        }
+                        WriteGroupingEntity(entityToWrite, null, book, fund);
+                        Position position = (Position)country.Children[instrument.Identifier];
+                        message = $"Success. {ticker} added to Country {instrument.ExchangeCountryName} at row {position.RowNumber}";
+                    }
                 }
             }
             return message;
         }
+
+        private bool TickerAlreadyExists(string ticker, GroupingEntity groupingEntity)
+        {
+            if (groupingEntity.ChildrenArePositions)
+            {
+                var identitifer = new Identifier(null, ticker);
+                return groupingEntity.Children.ContainsKey(identitifer);
+            }
+            else
+            {
+                foreach (var child in groupingEntity.Children.Values)
+                {
+                    var found = TickerAlreadyExists(ticker, (GroupingEntity)child);
+                    if (found)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+        }
+
+        public string AddBulk()
+        {
+            _sheetAccess.DisableCalculations();
+            var tickers = _sheetAccess.GetBulkTickers();
+            foreach(var ticker in tickers)
+            {
+                AddTicker(ticker);
+            }
+            _sheetAccess.EnableCalculations();
+            return "Success";
+        }
+
 
         private Dictionary<FundIds, Fund> _funds;
 
@@ -138,7 +191,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void WritePositions(GroupingEntity entity, List<FXRateDTO> rates, Book book, Fund fund)
         {
             Position previous = null;
-            foreach (Position position in entity.Children.Values.OrderBy(a => a.Ordering))
+            var orderedPositions = entity.Children.Values.OrderBy(a => a.Ordering).ToList();
+            foreach (Position position in orderedPositions)
             {
                 WritePosition(previous, position, entity, rates, book, fund);
                 previous = position;

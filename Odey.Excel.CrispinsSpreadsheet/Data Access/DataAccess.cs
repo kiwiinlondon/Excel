@@ -214,6 +214,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 var instrumentMarkets = context.InstrumentMarkets
                     .Include(a=>a.Instrument)
                     .Include(a => a.Market.LegalEntity.Country)
+                    .Include(a => a.PriceCurrency.Instrument)
+                    
                 .Where(a => a.BloombergTicker == ticker).ToList();
                 if (instrumentMarkets.Count == 0)
                 {
@@ -236,9 +238,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 int countOfSpaces = instrument.Identifier.Code.Count(a => a == ' ');
                 if (countOfSpaces==2)
                 {
-                    string exchangeCode = ticker.Substring(ticker.IndexOf(' '));
-                    exchangeCode = exchangeCode.Substring(0, exchangeCode.IndexOf(' ') - 1);
-                    var market = context.Markets.Include(a=>a.Country).FirstOrDefault(a => a.BBExchangeCode == exchangeCode);
+                    string exchangeCode = ticker.Substring(ticker.IndexOf(' ')+1);
+                    exchangeCode = exchangeCode.Substring(0, exchangeCode.IndexOf(' '));
+                    var market = context.Markets.Include(a=>a.LegalEntity.Country).FirstOrDefault(a => a.BBExchangeCode == exchangeCode);
                     if (market!=null)
                     {
                         instrument.ExchangeCountryIsoCode = market.Country.IsoCode;

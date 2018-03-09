@@ -42,5 +42,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
             string message = _matcher.AddTicker(ticker);
             DisplayMessage(message);
         }
+
+        private void button3_Click(object sender, RibbonControlEventArgs e)
+        {
+            string message = _matcher.AddBulk();
+            DisplayMessage(message);
+        }
     }
 }
