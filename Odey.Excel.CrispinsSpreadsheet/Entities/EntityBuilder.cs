@@ -48,6 +48,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void AddBook(Fund fund, Book book)
         {
             book.ChildrenArePositions = book.BookId != (int)BookIds.OEI;
+            book.ChildrenAreDeleteable = book.ChildrenArePositions;
+            book.ChildrenAreHidden = book.ChildrenArePositions; 
             if (!book.ChildrenArePositions)
             {
                 AddAssetClasses(book);
@@ -59,35 +61,23 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             if (!book.ChildrenArePositions)
             {
-                AddAssetClass(book, EquityLabel,1);
-                AddAssetClass(book, MacroLabel,2);
-                AddAssetClass(book, FXLabel,3);
+                AddAssetClass(book, EquityLabel,1,true);
+                AddAssetClass(book, MacroLabel,2, true);
+                AddAssetClass(book, FXLabel,3, false);
             }
         }
 
-        private void AddAssetClass(Book book, string assetClassLabel,int ordering)
+        private void AddAssetClass(Book book, string assetClassLabel,int ordering,bool positionsAreDeletable)
         {
             var assetClass = new AssetClass(book,assetClassLabel, assetClassLabel != EquityLabel, ordering);
+            assetClass.ChildrenAreDeleteable = positionsAreDeletable;
             book.Children.Add(assetClass.Identifier, assetClass);
         }
 
 
         
 
-        public void RemovePositions(GroupingEntity groupingEntity)
-        {           
-            if (groupingEntity.ChildrenArePositions)
-            {
-                groupingEntity.Children = new Dictionary<Identifier, IChildEntity>();
-            }
-            else
-            {
-                foreach (var child in groupingEntity.Children)
-                {
-                    RemovePositions((GroupingEntity)child.Value);
-                }
-            }
-        }
+        
 
         public void AddPortfolio(Fund fund)
         {
@@ -115,7 +105,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         
 
-        public void AddExistingPortfolio(Fund fund)
+        public void AddExistingPortfolio(Fund fund,List<Position> toBeUpdatedFromDatabase)
         {
             List<ExistingGroupDTO> existingGroups = _sheetAccess.GetExisting(fund);
             foreach(var existingGroup in existingGroups)
@@ -137,7 +127,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
                 entity.TotalRow = existingGroup.TotalRow;
                 entity.ControlString = existingGroup.ControlString;
-                AddExistingPositionsToParent(entity, existingGroup);
+                AddExistingPositionsToParent(entity, existingGroup, toBeUpdatedFromDatabase);
             }
         }
 
@@ -171,7 +161,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void AddExistingPositionsToParent(GroupingEntity parent,ExistingGroupDTO existingGroup)
+        private void AddExistingPositionsToParent(GroupingEntity parent,ExistingGroupDTO existingGroup, List<Position> toBeUpdatedFromDatabase)
         {
             if (existingGroup.Positions != null && existingGroup.Positions.Count>0)
             {
@@ -181,29 +171,37 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
                 foreach (var existingPosition in existingGroup.Positions)
                 {
-                    AddExistingPositionToParent(parent, existingPosition);
+                    AddExistingPositionToParent(parent, existingPosition, toBeUpdatedFromDatabase);
                 }
             }
             
 
         }
 
-        private void AddExistingPositionToParent(GroupingEntity parent,ExistingPositionDTO existingPosition)
-        {
+        private void AddExistingPositionToParent(GroupingEntity parent,ExistingPositionDTO existingPosition,List<Position> toBeUpdatedFromDatabase)
+        {            
             Position position;
             if (parent.Children.ContainsKey(existingPosition.Identifier))
             {
                 position = (Position)parent.Children[existingPosition.Identifier];
                 if (position.InstrumentTypeId == InstrumentTypeIds.FX)
                 {
-                    position.Name = existingPosition.Name;
+                    position.Name = _sheetAccess.GetNameFromRow(existingPosition.Row);
                 }
-                
             }
             else
             {
                 position = _sheetAccess.BuildPosition(existingPosition);
                 parent.Children.Add(existingPosition.Identifier, position);
+                if (position.InstrumentTypeId == InstrumentTypeIds.DeleteableDerivative || position.InstrumentTypeId == InstrumentTypeIds.PrivatePlacement || (parent.ChildrenAreDeleteable && position.InstrumentTypeId == InstrumentTypeIds.Normal))
+                {
+                    parent.ChildrenToDelete.Add(position);
+                }
+                else if (position.InstrumentTypeId != InstrumentTypeIds.FX)
+                {
+                    toBeUpdatedFromDatabase.Add(position);
+                }
+
             }
             position.Row = existingPosition.Row;
         }
@@ -211,7 +209,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void AddDTOToParent(GroupingEntity parent, PortfolioDTO dto)
         {
 
-            Position position = new Position(dto.Instrument.Identifier, dto.Instrument.Name, dto.Instrument.PriceDivisor, dto.Instrument.InstrumentTypeId);
+            Position position = new Position(dto.Instrument.Identifier, dto.Instrument.Name, dto.Instrument.PriceDivisor, dto.Instrument.InstrumentTypeId, dto.Instrument.InvertPNL);
             parent.Children.Add(dto.Instrument.Identifier, position);
 
             position.PreviousNetPosition = dto.PreviousNetPosition;
@@ -230,7 +228,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             
             AssetClass assetClass = (AssetClass)book.Children[new Identifier(null, EntityBuilder.EquityLabel)];
             Country country = GetCountry(assetClass, instrument.ExchangeCountryIsoCode, instrument.ExchangeCountryName);
-            var position = new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor, instrument.InstrumentTypeId);
+            var position = new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor, instrument.InstrumentTypeId,instrument.InvertPNL);
             country.Children.Add(position.Identifier, position);
             
             return country;

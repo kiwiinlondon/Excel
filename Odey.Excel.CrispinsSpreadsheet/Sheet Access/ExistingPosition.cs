@@ -9,16 +9,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class ExistingPositionDTO
     {
-        public ExistingPositionDTO(int? instrumentMarketId,string ticker,string name, XL.Range row )
+        public ExistingPositionDTO(int? instrumentMarketId,string ticker, XL.Range row )
         {
             Identifier = new Identifier(instrumentMarketId, ticker);           
-            Name = name;
             Row = row;
         }
 
 
         public Identifier Identifier { get; private set; }
-        public string Name { get; set; }
 
         public XL.Range Row { get; set; }
     }

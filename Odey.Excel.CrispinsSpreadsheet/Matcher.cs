@@ -9,6 +9,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Matcher
     {
+
         private EntityBuilder _entityBuilder;
         private DataAccess _dataAccess;
         private SheetAccess  _sheetAccess;
@@ -23,24 +24,32 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
 
-        public void Match(bool resetExisting)
+        public void Match(bool refreshFormulas)
         {
             _sheetAccess.DisableCalculations();
 
             var rates = _dataAccess.GetFXRates();
             _sheetAccess.WriteDates(_dataAccess.PreviousReferenceDate, _dataAccess.ReferenceDate);
-            Fund previousFund = null;
-            foreach (Fund fund in _funds.Values.OrderBy(a=>a.Ordering))
-            {
-                fund.Previous = previousFund;
-                MatchFund(fund, resetExisting, rates);
-                previousFund = fund;
+            var funds = BuildFunds(new FundIds[] { FundIds.OEI, FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS });
+
+
+            foreach (Fund fund in funds.Values.OrderBy(a => a.Ordering))
+            {                
+                MatchFund(fund, rates, refreshFormulas);
             }
             _sheetAccess.EnableCalculations();
+            _sheetAccess.Save();
         }
 
 
         public string AddTicker(string ticker)
+        {
+            var m = AddTicker(ticker, null);
+            _sheetAccess.Save();
+            return m;
+        }
+
+        private string AddTicker(string ticker,Fund fund)
         {
             if (_instrumentRetriever == null)
             {
@@ -50,7 +59,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
             string message;
             if (_instrumentRetriever.ValidateTicker(ticker, out message))
             {
-                Fund fund = _funds[FundIds.OEI];
+                if (fund == null)
+                {
+                    fund = BuildOEIFromSheet();
+                }
                 Book book = (Book)fund.Children.Values.FirstOrDefault(a => (((Book)a).BookId == (int)BookIds.OEI));
                 if (TickerAlreadyExists(ticker, book))
                 {
@@ -58,23 +70,18 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
                 else
                 {
-
                     var instrument = _instrumentRetriever.Get(ticker, out message);
                     if (instrument != null)
                     {
                         var country = _entityBuilder.AddInstrument(book, instrument);
 
-                        GroupingEntity entityToWrite = country;
-                        if (country.TotalRow==null)
-                        {
-                            entityToWrite = country.Parent;
-                        }
-                        WriteGroupingEntity(entityToWrite, null, book, fund);
+                        WriteGroupingEntity(fund, null, book, fund, false, false);
                         Position position = (Position)country.Children[instrument.Identifier];
                         message = $"Success. {ticker} added to Country {instrument.ExchangeCountryName} at row {position.RowNumber}";
                     }
                 }
             }
+
             return message;
         }
 
@@ -104,57 +111,80 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             _sheetAccess.DisableCalculations();
             var tickers = _sheetAccess.GetBulkTickers();
+            Fund fund = BuildOEIFromSheet();
             foreach(var ticker in tickers)
             {
-                AddTicker(ticker);
+                AddTicker(ticker, fund);
             }
             _sheetAccess.EnableCalculations();
+            _sheetAccess.Save();
             return "Success";
         }
 
 
-        private Dictionary<FundIds, Fund> _funds;
 
-        public void BuildFunds()
+        private Dictionary<FundIds, Fund> BuildFunds(FundIds[] fundIds)
         {
-            _funds = new Dictionary<FundIds, Fund>();
-            
-            BuildAndAddFund( FundIds.OEI);
-            BuildAndAddFund( FundIds.OEIMAC);            
-            BuildAndAddFund( FundIds.OEIMACGBPBSHARECLASS);
-            BuildAndAddFund( FundIds.OEIMACGBPBMSHARECLASS);
+            var funds = new Dictionary<FundIds, Fund>();
+            Fund previous = null;
+            foreach(FundIds fundId in fundIds)
+            {                
+                var fund = BuildFund(fundId, previous);                
+                funds.Add(fundId, fund);
+                previous = fund;
+            }
+            return funds;
         }
-
-        private Fund BuildAndAddFund(FundIds fundId)
-        {
-            var fund = BuildFund(fundId);
-            _funds.Add(fundId, fund);
-            return fund;
-        }
-
-        private Fund BuildFund(FundIds fundId)
+        
+        private Fund BuildFund(FundIds fundId,Fund previous)
         {
             Fund fund = _entityBuilder.GetFund(fundId);
+            fund.Previous = previous;
+            _sheetAccess.AddFundRange(fund);
             return fund;
         }
 
-       
-
-        private void MatchFund(Fund fund, bool resetExisting, List<FXRateDTO> rates)
+        private Fund BuildOEIFromSheet()
         {
-            if (resetExisting)
-            {
-                _entityBuilder.RemovePositions(fund);
-            }
-            _entityBuilder.AddPortfolio(fund);
-            _sheetAccess.AddFundRange(fund);
-            _entityBuilder.AddExistingPortfolio(fund);
-            WriteGroupingEntity(fund, rates, null, fund);
+            Fund fund = BuildFund(FundIds.OEI, null);
+            
+            List<Position> positionsToBeUpdatedFromDatabase = new List<Position>();
+            _entityBuilder.AddExistingPortfolio(fund, positionsToBeUpdatedFromDatabase);
+            return fund;
         }
 
-        
+        private void MatchFund(Fund fund, List<FXRateDTO> rates, bool refreshFormulas)
+        {
+            _entityBuilder.AddPortfolio(fund);
 
-        private void WriteGroupingEntity(GroupingEntity entity, List<FXRateDTO> rates, Book book, Fund fund)
+            List<Position> positionsToBeUpdatedFromDatabase = new List<Position>();
+            _entityBuilder.AddExistingPortfolio(fund, positionsToBeUpdatedFromDatabase);
+            UpdatePositionsFromDatabase(positionsToBeUpdatedFromDatabase);
+
+            WriteGroupingEntity(fund, rates, null, fund, true, refreshFormulas);
+        }
+
+        private void UpdatePositionsFromDatabase(List<Position> positions)
+        {
+            var instruments = _dataAccess.GetInstruments(positions.Select(a => a.Identifier).ToList());
+            foreach(Position position in positions)
+            {
+                var instrument = instruments.FirstOrDefault(a => a.Identifier == position.Identifier);
+                if (instrument!=null)
+                {
+                    position.Identifier.Id = instrument.Identifier.Id;
+                    position.Identifier.Code = instrument.Identifier.Code;
+                    position.Name = instrument.Name;
+                    position.PriceDivisor = instrument.PriceDivisor;
+                    if (position.InstrumentTypeId != InstrumentTypeIds.DoNotDelete)
+                    {
+                        position.InstrumentTypeId = instrument.InstrumentTypeId;
+                    }
+                }
+            }
+        }
+
+        private void WriteGroupingEntity(GroupingEntity entity, List<FXRateDTO> rates, Book book, Fund fund, bool updateExistingPositions, bool forceRefresh)
         {
             if (entity.TotalRow == null)
             {               
@@ -162,40 +192,96 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
             if (entity.ChildrenArePositions)
             {
-                WritePositions(entity, rates, book, fund);
-                _sheetAccess.UpdateSums(entity);
+                WritePositions(entity, rates, book, fund, updateExistingPositions, forceRefresh);               
             }
-            else
+            else 
             {
+                var updateTotal = false;
                 GroupingEntity previous = null;
                 foreach (IChildEntity childEntity in entity.Children.Values.OrderBy(a => a.Ordering))
                 {       
-
                     if (childEntity is Book)
                     {
                         book = (Book)childEntity;
                     }
                     GroupingEntity groupingEntity = (GroupingEntity)childEntity;
+                    if (groupingEntity.TotalRow==null)
+                    {
+                        updateTotal = true;
+                    }
                     groupingEntity.Previous = previous;
-                    WriteGroupingEntity(groupingEntity, rates, book, fund);
-                    previous = groupingEntity;
+                    WriteGroupingEntity(groupingEntity, rates, book, fund, updateExistingPositions, forceRefresh);
+                    if (groupingEntity.Children.Count == 0 && entity.ChildrenAreDeleteable)
+                    {
+                        updateTotal = true;
+                        entity.ChildrenToDelete.Add(groupingEntity);
+                    }
+                    else
+                    {
+                        previous = groupingEntity;
+                    }
                 }
-                entity.Previous = previous;
-                _sheetAccess.UpdateTotalsOnTotalRow(entity);
-                _sheetAccess.UpdateNavs(entity);
 
-            }  
-            
+                RemoveChildrenToBeDeleted(entity, updateExistingPositions);
+                entity.Previous = previous;
+                if (updateTotal || forceRefresh)
+                {
+                    _sheetAccess.UpdateTotalsOnTotalRow(entity);
+                }
+                if (updateExistingPositions)
+                {
+                    _sheetAccess.UpdateNavs(entity);
+                }
+            }
+            HideRows(entity);
         }
 
-        private void WritePositions(GroupingEntity entity, List<FXRateDTO> rates, Book book, Fund fund)
+        private void HideRows(GroupingEntity entity)
+        {
+            if (entity.ChildrenAreHidden)
+            {
+                _sheetAccess.HideRows(entity.Previous.TotalRow.Row + 1, entity.TotalRow.Row - 1);
+            }
+        }
+
+        private void RemoveChildrenToBeDeleted(GroupingEntity entity, bool updateExistingPositions)
+        {
+            if (updateExistingPositions)
+            {
+                foreach (var child in entity.ChildrenToDelete)
+                {
+                    if (entity.Children.ContainsKey(child.Identifier))
+                    {
+                        entity.Children.Remove(child.Identifier);
+                    }
+                    if (entity.ChildrenArePositions)
+                    {
+                        _sheetAccess.DeleteRange(((Position)child).Row);
+                    }
+                    else
+                    {
+                        int rowNumber = child.RowNumber;
+                        _sheetAccess.DeleteRows(rowNumber - 1, rowNumber);
+                    }
+                }
+                entity.ChildrenToDelete = new List<IChildEntity>();
+            }
+        }
+
+        private void WritePositions(GroupingEntity entity, List<FXRateDTO> rates, Book book, Fund fund, bool updateExisting, bool forceRefresh)
         {
             Position previous = null;
             var orderedPositions = entity.Children.Values.OrderBy(a => a.Ordering).ToList();
+            var updateSums = false;
             foreach (Position position in orderedPositions)
             {
-                WritePosition(previous, position, entity, rates, book, fund);
+                WritePosition(previous, position, entity, rates, book, fund, updateExisting, forceRefresh, ref updateSums);
                 previous = position;
+            }
+            RemoveChildrenToBeDeleted(entity, updateExisting);
+            if (updateSums || forceRefresh)
+            {
+                _sheetAccess.UpdateSums(entity);
             }
         }
 
@@ -203,18 +289,22 @@ namespace Odey.Excel.CrispinsSpreadsheet
        
 
         private void WritePosition(Position previousPosition,Position position,GroupingEntity parent,List<FXRateDTO> rates,
-            Book book,Fund fund)
+            Book book,Fund fund, bool updateExisting,bool forceRefresh, ref bool updateSums)
         {
             if (position.Row != null)
             {
-                if (position.InstrumentTypeId == InstrumentTypeIds.FX)
+                if (updateExisting || forceRefresh)
                 {
-                    EnhanceFXPosition(position, rates);
+                    if (position.InstrumentTypeId == InstrumentTypeIds.FX)
+                    {
+                        EnhanceFXPosition(position, rates);
+                    }
+                    _sheetAccess.WritePosition(position, book, fund, forceRefresh);
                 }
-                _sheetAccess.UpdatePosition(true, position,book,fund);
             }
             else
             {
+                updateSums = true;
                 _sheetAccess.AddPosition(previousPosition, position, parent, book, fund);
             }
         }

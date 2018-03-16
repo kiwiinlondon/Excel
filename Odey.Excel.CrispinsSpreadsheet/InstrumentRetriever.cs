@@ -47,6 +47,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             dto.InstrumentTypeId = InstrumentTypeIds.Normal;
             dto.PriceDivisor = 1;
             dto.AssetClass = EntityBuilder.EquityLabel;
+            dto.InvertPNL = true;
             _dataAccess.AddExchangeCountryToInstrument(dto);
         }
 
@@ -95,6 +96,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 .Replace(" NP ", " FP ")
                 .Replace(" IB ", " IN ")
                 .Replace(" CD Equity", " CP Equity");
+
+
+            ticker = ticker.ToUpper().Replace(" EQUITY", " Equity").Replace(" GOVT", " Govt").Replace(" COMDTY", " Comdty").Replace(" INDEX", " Index");
+
             return ticker;
         }
 

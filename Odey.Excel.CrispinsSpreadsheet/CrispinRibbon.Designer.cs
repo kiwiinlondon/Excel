@@ -41,11 +41,14 @@
             this.box1 = this.Factory.CreateRibbonBox();
             this.editBox1 = this.Factory.CreateRibbonEditBox();
             this.button2 = this.Factory.CreateRibbonButton();
-            this.label1 = this.Factory.CreateRibbonLabel();
             this.button3 = this.Factory.CreateRibbonButton();
+            this.label1 = this.Factory.CreateRibbonLabel();
+            this.checkBox1 = this.Factory.CreateRibbonCheckBox();
+            this.box2 = this.Factory.CreateRibbonBox();
             this.CrispinTab.SuspendLayout();
             this.group1.SuspendLayout();
             this.box1.SuspendLayout();
+            this.box2.SuspendLayout();
             this.SuspendLayout();
             // 
             // CrispinTab
@@ -56,7 +59,7 @@
             // 
             // group1
             // 
-            this.group1.Items.Add(this.button1);
+            this.group1.Items.Add(this.box2);
             this.group1.Items.Add(this.box1);
             this.group1.Items.Add(this.button3);
             this.group1.Items.Add(this.label1);
@@ -91,17 +94,28 @@
             this.button2.Name = "button2";
             this.button2.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button2_Click_1);
             // 
+            // button3
+            // 
+            this.button3.Label = "Bulk Load";
+            this.button3.Name = "button3";
+            this.button3.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button3_Click);
+            // 
             // label1
             // 
             this.label1.Label = "...";
             this.label1.Name = "label1";
             this.label1.ShowLabel = false;
             // 
-            // button3
+            // checkBox1
             // 
-            this.button3.Label = "Bulk Load";
-            this.button3.Name = "button3";
-            this.button3.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button3_Click);
+            this.checkBox1.Label = "Refresh Formulas";
+            this.checkBox1.Name = "checkBox1";
+            // 
+            // box2
+            // 
+            this.box2.Items.Add(this.button1);
+            this.box2.Items.Add(this.checkBox1);
+            this.box2.Name = "box2";
             // 
             // CrispinRibbon
             // 
@@ -115,6 +129,8 @@
             this.group1.PerformLayout();
             this.box1.ResumeLayout(false);
             this.box1.PerformLayout();
+            this.box2.ResumeLayout(false);
+            this.box2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -129,6 +145,8 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton button1;
         internal Microsoft.Office.Tools.Ribbon.RibbonLabel label1;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton button3;
+        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox checkBox1;
+        internal Microsoft.Office.Tools.Ribbon.RibbonBox box2;
     }
 
     partial class ThisRibbonCollection

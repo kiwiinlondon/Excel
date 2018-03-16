@@ -26,7 +26,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
             else if (!string.IsNullOrWhiteSpace(Code) && !string.IsNullOrWhiteSpace(other.Code))
             {
-                return string.Equals(Code, other.Code);
+                return string.Equals(Code.ToUpper(), other.Code.ToUpper());
             }
             return false;                    
         }

@@ -66,9 +66,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     .Include(a => a.Position.Book)
                     .Include(a => a.Position.Currency.Instrument)
                     .Include(a => a.Position.InstrumentMarket.PriceCurrency.Instrument)
-                    .Include(a => a.Position.InstrumentMarket.Instrument)
+                    .Include(a => a.Position.InstrumentMarket.Instrument.InstrumentClass.ParentInstrumentClassRelationships)
                     .Include(a => a.Position.InstrumentMarket.Market.LegalEntity.Country)
-                    .Where(a => a.FundId == fund.FundId && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat);
+                    .Where(a => a.FundId == fund.FundId 
+                        && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat);
+
+
 
                 if (!includeHedging)//Share 
                 {
@@ -88,10 +91,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
                         Previous = a.FirstOrDefault(f => f.ReferenceDate == PreviousReferenceDate),
                         Current = a.FirstOrDefault(f => f.ReferenceDate == ReferenceDate),
                     });
-
                 var fxPositions = portfoliosByPosition.Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.ForwardFX).ToList();
                 var fxToAdd = BuildFX(fxPositions, fund);
-                return portfoliosByPosition
+                var toReturn =  portfoliosByPosition
                     .Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.ForwardFX)
                     .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.Get(g.Position.InstrumentMarket) })
                 .Select(a => new PortfolioDTO(
@@ -103,7 +105,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     GetPrice(a.Select(s => s.Previous), a.Key.Instrument.InstrumentTypeId),
                     GetPrice(a.Select(s=>s.Current), a.Key.Instrument.InstrumentTypeId)
                     ))
-                    .Union(fxToAdd).ToList();
+                    .Union(fxToAdd);
+                return toReturn.Where(a => a.CurrentNetPosition != 0 && a.PreviousNetPosition != 0).ToList();
             }
         }
 
@@ -212,7 +215,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             using (KeeleyModel context = new KeeleyModel())
             {
                 var instrumentMarkets = context.InstrumentMarkets
-                    .Include(a=>a.Instrument)
+                    .Include(a => a.Instrument.InstrumentClass.ParentInstrumentClassRelationships)
                     .Include(a => a.Market.LegalEntity.Country)
                     .Include(a => a.PriceCurrency.Instrument)
                     
@@ -229,6 +232,37 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
+
+        public List<InstrumentDTO> GetInstruments(List<Identifier> identifiers)
+        {
+            int[] instrumentMarketIds = identifiers.Where(a => a.Id.HasValue).Select(a => a.Id.Value).Distinct().ToArray();
+
+            string[] tickers = identifiers.Where(a => !a.Id.HasValue).Select(a => a.Code).Distinct().ToArray();
+
+            using (KeeleyModel context = new KeeleyModel())
+            {
+
+                var instrumentMarkets = context.InstrumentMarkets
+                    .Include(a => a.Instrument.InstrumentClass.ParentInstrumentClassRelationships)
+                    .Include(a => a.Market.LegalEntity.Country)
+                    .Include(a => a.PriceCurrency.Instrument)
+                    .Where(a => instrumentMarketIds.Contains(a.InstrumentMarketID) ).ToList();
+
+                List<InstrumentDTO> dtos = instrumentMarkets.Select(a => InstrumentBuilder.Instance.Get(a)).ToList();
+
+                instrumentMarkets = context.InstrumentMarkets
+                    .Include(a => a.Instrument.InstrumentClass.ParentInstrumentClassRelationships)
+                    .Include(a => a.Market.LegalEntity.Country)
+                    .Include(a => a.PriceCurrency.Instrument)
+
+                    .Where(a => tickers.Contains(a.BloombergTicker) && a.Instrument.InstrumentClassID != (int)InstrumentClassIds.ContractForDifference).ToList();
+
+                var tickerDtos = instrumentMarkets.Select(a => InstrumentBuilder.Instance.Get(a)).ToList();
+
+                dtos.AddRange(tickerDtos);
+                return dtos;
+            }
+        }
 
         public void AddExchangeCountryToInstrument(InstrumentDTO instrument)
         {

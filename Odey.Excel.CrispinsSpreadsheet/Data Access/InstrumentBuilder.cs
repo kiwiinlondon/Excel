@@ -88,7 +88,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     GetCountryName(instrumentMarket),
                     instrumentMarket.PriceDivisor,
                     instrumentTypeId,                    
-                    instrumentMarket.PriceCurrency.IsoCode);
+                    instrumentMarket.PriceCurrency.IsoCode,
+                    false);
         }
 
         private string GetTicker(InstrumentMarket instrumentMarket, InstrumentTypeIds instrumentTypeId)
@@ -113,6 +114,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 return InstrumentTypeIds.PrivatePlacement;
             }
+            if ((instrumentMarket.ParentInstrumentClassIdAsEnum == ParentInstrumentClassIds.Funds && instrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.ExchangeTradedFunds ) ||
+                instrumentMarket.ParentInstrumentClassIdAsEnum == ParentInstrumentClassIds.FixedIncome || 
+                instrumentMarket.ParentInstrumentClassIdAsEnum == ParentInstrumentClassIds.Option || 
+                instrumentMarket.ParentInstrumentClassIdAsEnum == ParentInstrumentClassIds.Future)
+            { 
+                return InstrumentTypeIds.DeleteableDerivative;
+            }
             return InstrumentTypeIds.Normal;
         }
 
@@ -124,16 +132,22 @@ namespace Odey.Excel.CrispinsSpreadsheet
             string currency2;
 
             GetCurrencyPair(instrumentMarket, out currency1, out currency2);
+            string currency = GetFXCurrency(currency1, currency2);
+            string ticker = GetFXTicker(currency1, currency2);
+
+            bool invertPNL = currency != currency1;
             return new InstrumentDTO(
                     null,
-                    GetFXTicker(currency1, currency2),
+                    ticker,
                     GetFXName(currency1, currency2),
                     GetAssetClass(instrumentMarket),
                     null,
                     null,
                     1,
                     InstrumentTypeIds.FX,
-                    GetFXCurrency(currency1, currency2));
+                    currency,
+                    invertPNL
+                    );
         }
 
 

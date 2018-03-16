@@ -39,7 +39,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public bool ChildrenArePositions { get; set; }
 
+        public bool ChildrenAreDeleteable { get; set; } = false;
+
+        public bool ChildrenAreHidden { get; set; } = false;
+
         public Dictionary<Identifier, IChildEntity> Children { get; set; } = new Dictionary<Identifier, IChildEntity>();
+
+        public List<IChildEntity> ChildrenToDelete { get; set; } = new List<IChildEntity>(); 
 
         public string ControlString { get; set; }
 
