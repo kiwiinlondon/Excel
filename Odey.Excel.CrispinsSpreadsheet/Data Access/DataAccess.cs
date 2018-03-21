@@ -71,7 +71,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     .Where(a => a.FundId == fund.FundId 
                         && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat);
 
-
+                
 
                 if (!includeHedging)//Share 
                 {
@@ -91,6 +91,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                         Previous = a.FirstOrDefault(f => f.ReferenceDate == PreviousReferenceDate),
                         Current = a.FirstOrDefault(f => f.ReferenceDate == ReferenceDate),
                     });
+
+          
                 var fxPositions = portfoliosByPosition.Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.ForwardFX).ToList();
                 var fxToAdd = BuildFX(fxPositions, fund);
                 var toReturn =  portfoliosByPosition
@@ -106,7 +108,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     GetPrice(a.Select(s=>s.Current), a.Key.Instrument.InstrumentTypeId)
                     ))
                     .Union(fxToAdd);
-                return toReturn.Where(a => a.CurrentNetPosition != 0 && a.PreviousNetPosition != 0).ToList();
+           
+                return toReturn.Where(a => a.CurrentNetPosition != 0 || a.PreviousNetPosition != 0).ToList();
             }
         }
 

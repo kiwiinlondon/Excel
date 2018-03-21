@@ -74,6 +74,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return instrumentMarket.Name;
         }
 
+        private string GetCurrency(InstrumentMarket instrumentMarket,InstrumentTypeIds instrumentTypeId)
+        {
+            string currency = instrumentMarket.PriceCurrency.IsoCode;
+            if (instrumentTypeId == InstrumentTypeIds.PrivatePlacement && instrumentMarket.PriceQuoteMultiplier != 1)
+            {
+                currency =  currency.Substring(0, currency.Length - 1) + char.ToLower(currency[currency.Length - 1]);
+            }
+            return currency;
+        }
+
         public InstrumentDTO Get(InstrumentMarket instrumentMarket)
         {
             var instrumentTypeId = GetInstrumentType(instrumentMarket);
@@ -87,8 +97,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     countryIsoCode,
                     GetCountryName(instrumentMarket),
                     instrumentMarket.PriceDivisor,
-                    instrumentTypeId,                    
-                    instrumentMarket.PriceCurrency.IsoCode,
+                    instrumentTypeId,
+                    GetCurrency(instrumentMarket, instrumentTypeId),
                     false);
         }
 

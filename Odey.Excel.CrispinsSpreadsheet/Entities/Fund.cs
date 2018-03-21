@@ -20,5 +20,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public XL.Range Range { get; set; }
 
+        public WorksheetAccess WorksheetAccess { get; set; }
+
     }
 }

@@ -59,8 +59,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 t.Start(parent);
 
                 var dataAccess = new DataAccess(DateTime.Today);
-                var sheetAccess = new SheetAccess(Globals.ThisWorkbook);
-                var matcher = new Matcher(new EntityBuilder(dataAccess, sheetAccess), dataAccess, sheetAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
+                var workbookAccess = new WorkbookAccess(Globals.ThisWorkbook);
+                var matcher = new Matcher(new EntityBuilder(dataAccess, workbookAccess), dataAccess, workbookAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
                 matcher.Match(refreshFormulas);
 
                 InvokeClose invokeClose = new InvokeClose(splashScreen.Close);
@@ -94,8 +94,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             string ticker = this.editBox1.Text;
             var dataAccess = new DataAccess(DateTime.Today);
-            var sheetAccess = new SheetAccess(Globals.ThisWorkbook);
-            var matcher = new Matcher(new EntityBuilder(dataAccess, sheetAccess), dataAccess, sheetAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
+            var workbookAccess = new WorkbookAccess(Globals.ThisWorkbook);
+            var matcher = new Matcher(new EntityBuilder(dataAccess, workbookAccess), dataAccess, workbookAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
             string message = matcher.AddTicker(ticker);
             DisplayMessage(message);
         }
@@ -103,8 +103,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void button3_Click(object sender, RibbonControlEventArgs e)
         {
             var dataAccess = new DataAccess(DateTime.Today);
-            var sheetAccess = new SheetAccess(Globals.ThisWorkbook);
-            var matcher = new Matcher( new EntityBuilder(dataAccess, sheetAccess), dataAccess, sheetAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
+            var workbookAccess = new WorkbookAccess(Globals.ThisWorkbook);
+            var matcher = new Matcher( new EntityBuilder(dataAccess, workbookAccess), dataAccess, workbookAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
             string message = matcher.AddBulk();
             DisplayMessage(message);
         }

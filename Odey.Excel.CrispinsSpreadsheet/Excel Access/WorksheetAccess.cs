@@ -9,14 +9,14 @@ using System.Text.RegularExpressions;
 
 namespace Odey.Excel.CrispinsSpreadsheet
 {
-    public class SheetAccess
+    public class WorksheetAccess
     {
-        private ThisWorkbook _workbook;
+       
 
-        public SheetAccess(ThisWorkbook workBook)
+        public WorksheetAccess(XL.Worksheet worksheet)
         {
-            _workbook = workBook;
-            _worksheet = workBook.Sheets["Portfolio"];
+         //   _workbook = workBook;
+            _worksheet = worksheet;
         }
         private XL.Worksheet _worksheet;
 
@@ -133,14 +133,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private static readonly int _firstRowOfData = 11;
         private static readonly int _bloombergMnemonicRow = 8;
         private static readonly string _previousReferenceDateLabel = $"${_currencyColumn}$1";
-        private static readonly string _referenceDateLabel = $"${_tickerColumn}$1";
+        private static readonly string _referenceDateLabel = $"${_nameColumn}$1";
         private static readonly string _totalSuffix = "#Total";
         private static readonly string _ignoreLabel = "#IGNORE#";
 
-        public void Save()
-        {
-            _workbook.Save();
-        }
+        
         private int? FindRow(string toFind, string column)
         {
             XL.Range controls = _worksheet.get_Range($"${column}:${column}");
@@ -348,10 +345,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             range.Delete();            
         }
-        public void HideRows(int firstRow, int lastRow)
+        public void ChangeRowVisibilty(int firstRow, int lastRow,bool hidden)
         {
-            _worksheet.get_Range($"{_firstColumn}{firstRow}:{_lastColumn}{lastRow}").EntireRow.Hidden = true;
+            _worksheet.get_Range($"{_firstColumn}{firstRow}:{_lastColumn}{lastRow}").EntireRow.Hidden = hidden;
         }
+
+        
 
         private XL.Range GetRow(int rowNumber)
         {
@@ -485,7 +484,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
                 if (RowIsTotal(controlString))
                 {
-                    existingGroups.Add(new ExistingGroupDTO(controlString, valueInTickerColumn, row, positions));
+                    string name = GetStringValue(row, _nameColumnNumber);
+                    existingGroups.Add(new ExistingGroupDTO(controlString, name, row, positions));
                     positions = new List<ExistingPositionDTO>();
                 }
                 else
@@ -571,20 +571,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             _worksheet.Range[_referenceDateLabel].Cells.Value = referenceDate;
         }
 
-        public void DisableCalculations()
-        {
-            _worksheet.Application.Calculation = XL.XlCalculation.xlCalculationManual;
-            _worksheet.Application.ScreenUpdating = false;
-            _worksheet.Application.EnableEvents = false;
-        }
-
-        public void EnableCalculations()
-        {
-
-            _worksheet.Application.Calculation = XL.XlCalculation.xlCalculationAutomatic;
-            _worksheet.Application.ScreenUpdating = true;
-            _worksheet.Application.EnableEvents = true;
-        }
+        
 
         private void WriteValue(XL.Range row, int columnNumber, object value, bool? isBold)
         {
@@ -804,12 +791,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public List<string> GetBulkTickers()
         {
             List<string> tickers = new List<string>();
-            var worksheet = _workbook.Sheets["Sheet1"];
-            XL.Range usedRange = worksheet.UsedRange;
-            foreach(XL.Range row in usedRange.Rows)
+            XL.Range usedRange = _worksheet.UsedRange;
+            foreach (XL.Range row in usedRange.Rows)
             {
                 var ticker = GetStringValue(row, 1);
-                if (ticker!=null)
+                if (ticker != null)
                 {
                     tickers.Add(ticker);
                 }

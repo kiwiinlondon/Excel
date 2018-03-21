@@ -19,7 +19,7 @@
     <PublishUrl>\\oam\shared\Share\ODEYAPPS\CrispinSpreadsheet\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.13</ApplicationVersion>
+    <ApplicationVersion>1.0.0.15</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
@@ -165,8 +165,8 @@
     </Compile>
     <Compile Include="Data Access\DataAccess.cs" />
     <Compile Include="Entities\EntityBuilder.cs" />
-    <Compile Include="Sheet Access\ExistingGroup.cs" />
-    <Compile Include="Sheet Access\ExistingPosition.cs" />
+    <Compile Include="Excel Access\ExistingGroup.cs" />
+    <Compile Include="Excel Access\ExistingPosition.cs" />
     <Compile Include="Entities\Fund.cs" />
     <Compile Include="Entities\GroupingEntity.cs" />
     <Compile Include="Entities\GroupingEntityTypes.cs" />
@@ -180,6 +180,7 @@
     <Compile Include="Matcher.cs" />
     <Compile Include="Data Access\PortfolioDTO.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Excel Access\WorkbookAccess.cs" />
     <Compile Include="Sheet1.cs">
       <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
     </Compile>
@@ -192,7 +193,7 @@
     <Compile Include="Sheet2.Designer.cs">
       <DependentUpon>Sheet2.Designer.xml</DependentUpon>
     </Compile>
-    <Compile Include="Sheet Access\SheetAccess.cs" />
+    <Compile Include="Excel Access\WorksheetAccess.cs" />
     <Compile Include="SplashScreen.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -11,20 +11,49 @@ namespace Odey.Excel.CrispinsSpreadsheet
     {
 
         private DataAccess _dataAccess;
-        private SheetAccess _sheetAccess;
+        private WorkbookAccess _workBookAccess;
         public static readonly string EquityLabel = "Equity";
         public static readonly string MacroLabel = "Macro";
         public static readonly string FXLabel = "FX";
 
-        public EntityBuilder(DataAccess dataAccess,SheetAccess sheetAccess)
+        public EntityBuilder(DataAccess dataAccess,WorkbookAccess sheetAccess)
         {
             _dataAccess = dataAccess;
-            _sheetAccess = sheetAccess;
+            _workBookAccess = sheetAccess;
+        }
+
+        private EntityTypes GetFundChildType(FundIds fundId)
+        {
+            switch (fundId)
+            {
+                case FundIds.OEI:
+                    return EntityTypes.Book;
+                case FundIds.OEIMAC:
+                case FundIds.OEIMACGBPBSHARECLASS:
+                case FundIds.OEIMACGBPBMSHARECLASS:
+                    return EntityTypes.Position;
+                case FundIds.ALEG:
+                    return EntityTypes.Country;
+                case FundIds.SWAN:
+                    return EntityTypes.AssetClass;
+                default:
+                    throw new ApplicationException($"Unknown Fund {fundId}");
+
+            }
+
+        }
+
+        private bool FundChildrenArePositions(FundIds fundId)
+        {
+            return fundId == FundIds.OEI;
         }
 
         public Fund GetFund(FundIds fundId)
         {
             Fund fund = _dataAccess.GetFund(fundId);
+           
+         //   EntityTypes childEntiy
+
             fund.ChildrenArePositions = fundId != FundIds.OEI;
             if (!fund.ChildrenArePositions)
             {
@@ -84,6 +113,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             bool includeHedging = fund.FundId == (int)FundIds.OEIMACGBPBSHARECLASS || fund.FundId == (int)FundIds.OEIMACGBPBMSHARECLASS;
             bool includeOnlyFX = fund.FundId != (int)FundIds.OEI;
             List<PortfolioDTO> portfolio = _dataAccess.GetPortfolio(fund, includeHedging, includeOnlyFX);
+     
             foreach (PortfolioDTO position in portfolio)
             {
                 GroupingEntity parentEntity = fund;
@@ -107,7 +137,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void AddExistingPortfolio(Fund fund,List<Position> toBeUpdatedFromDatabase)
         {
-            List<ExistingGroupDTO> existingGroups = _sheetAccess.GetExisting(fund);
+            List<ExistingGroupDTO> existingGroups = fund.WorksheetAccess.GetExisting(fund);
             foreach(var existingGroup in existingGroups)
             {
                 GroupingEntity entity = fund;
@@ -127,7 +157,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
                 entity.TotalRow = existingGroup.TotalRow;
                 entity.ControlString = existingGroup.ControlString;
-                AddExistingPositionsToParent(entity, existingGroup, toBeUpdatedFromDatabase);
+                AddExistingPositionsToParent(fund.WorksheetAccess, entity, existingGroup, toBeUpdatedFromDatabase);
             }
         }
 
@@ -161,7 +191,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void AddExistingPositionsToParent(GroupingEntity parent,ExistingGroupDTO existingGroup, List<Position> toBeUpdatedFromDatabase)
+        private void AddExistingPositionsToParent(WorksheetAccess worksheetAccess, GroupingEntity parent,ExistingGroupDTO existingGroup, List<Position> toBeUpdatedFromDatabase)
         {
             if (existingGroup.Positions != null && existingGroup.Positions.Count>0)
             {
@@ -171,14 +201,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
                 foreach (var existingPosition in existingGroup.Positions)
                 {
-                    AddExistingPositionToParent(parent, existingPosition, toBeUpdatedFromDatabase);
+                    AddExistingPositionToParent(worksheetAccess, parent, existingPosition, toBeUpdatedFromDatabase);
                 }
             }
             
 
         }
 
-        private void AddExistingPositionToParent(GroupingEntity parent,ExistingPositionDTO existingPosition,List<Position> toBeUpdatedFromDatabase)
+        private void AddExistingPositionToParent(WorksheetAccess worksheetAccess, GroupingEntity parent,ExistingPositionDTO existingPosition,List<Position> toBeUpdatedFromDatabase)
         {            
             Position position;
             if (parent.Children.ContainsKey(existingPosition.Identifier))
@@ -186,12 +216,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 position = (Position)parent.Children[existingPosition.Identifier];
                 if (position.InstrumentTypeId == InstrumentTypeIds.FX)
                 {
-                    position.Name = _sheetAccess.GetNameFromRow(existingPosition.Row);
+                    position.Name = worksheetAccess.GetNameFromRow(existingPosition.Row);
                 }
             }
             else
             {
-                position = _sheetAccess.BuildPosition(existingPosition);
+                position = worksheetAccess.BuildPosition(existingPosition);
                 parent.Children.Add(existingPosition.Identifier, position);
                 if (position.InstrumentTypeId == InstrumentTypeIds.DeleteableDerivative || position.InstrumentTypeId == InstrumentTypeIds.PrivatePlacement || (parent.ChildrenAreDeleteable && position.InstrumentTypeId == InstrumentTypeIds.Normal))
                 {
