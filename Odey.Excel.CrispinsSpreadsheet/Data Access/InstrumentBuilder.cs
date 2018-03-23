@@ -120,7 +120,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
             if (string.IsNullOrWhiteSpace(instrumentMarket.BloombergTicker) 
                 || instrumentMarket.BloombergTicker.StartsWith(".") 
                 || PrivateListingStatusIds.Contains(instrumentMarket.ListingStatusId)
-                || PrivateInstrumentMarketIds.Contains(instrumentMarket.InstrumentMarketID))
+                || PrivateInstrumentMarketIds.Contains(instrumentMarket.InstrumentMarketID)
+                || instrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.InterestRateSwap)
             {
                 return InstrumentTypeIds.PrivatePlacement;
             }

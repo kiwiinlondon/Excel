@@ -10,7 +10,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
     public class Book : GroupingEntity, IChildEntity
     {
         public int BookId { get; private set; }
-        public Book(Fund fund,int bookId,string code, bool childrenArePositions) : base(fund,code, code, childrenArePositions,code)
+        public Book(Fund fund,int bookId,string code, EntityTypes childEntityType) : base(fund,code, code, childEntityType, code)
         {
             BookId = bookId;
         }

@@ -30,25 +30,31 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
             var rates = _dataAccess.GetFXRates();
 
-            MatchFundSet(new FundIds[] { FundIds.OEI, FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
-           // MatchFundSet(new FundIds[] { FundIds.ALEG }, rates, refreshFormulas);
-
+            var firstPage = MatchFundSet(FundIds.OEI, new FundIds[] {FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
+            MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);
+            MatchFundSet(FundIds.SWAN, null, rates, refreshFormulas);
+            firstPage.WorksheetAccess.MakeActive();
             _workbookAccess.EnableCalculations();
             _workbookAccess.Save();
+
         }
 
-        private void MatchFundSet(FundIds[] fundIds,List<FXRateDTO> rates, bool refreshFormulas)
+        private Fund MatchFundSet(FundIds primaryFundId,FundIds[] additionalFundIds,List<FXRateDTO> rates, bool refreshFormulas)
         {
-            WorksheetAccess worksheetAccess = _workbookAccess.GetWorksheetAccess(fundIds[0]);
-            var funds = BuildFunds(fundIds,worksheetAccess);
+                   
+            var primaryFund = BuildFund(primaryFundId, null,null);
+            var additionalFunds = BuildAdditionalFunds(primaryFund,additionalFundIds);
 
-            worksheetAccess.WriteDates(_dataAccess.PreviousReferenceDate, _dataAccess.ReferenceDate);
+            primaryFund.WorksheetAccess.WriteDates(_dataAccess.PreviousReferenceDate, _dataAccess.ReferenceDate);
 
-            foreach (Fund fund in funds.Values.OrderBy(a => a.Ordering))
+            MatchFund(primaryFund, rates, refreshFormulas);
+            foreach (Fund fund in additionalFunds.OrderBy(a => a.Ordering))
             {
                 MatchFund(fund, rates, refreshFormulas);
             }
 
+            primaryFund.WorksheetAccess.FinaliseFormatting();
+            return primaryFund;
         }
 
 
@@ -96,7 +102,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private bool TickerAlreadyExists(string ticker, GroupingEntity groupingEntity)
         {
-            if (groupingEntity.ChildrenArePositions)
+            if (groupingEntity.ChildEntityType == EntityTypes.Position)
             {
                 var identitifer = new Identifier(null, ticker);
                 return groupingEntity.Children.ContainsKey(identitifer);
@@ -133,32 +139,42 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
 
-        private Dictionary<FundIds, Fund> BuildFunds(FundIds[] fundIds, WorksheetAccess worksheetAccess)
+        private List<Fund> BuildAdditionalFunds(Fund primaryFund, FundIds[] fundIds)
         {
-            var funds = new Dictionary<FundIds, Fund>();
-            Fund previous = null;
-            foreach(FundIds fundId in fundIds)
-            {                
-                var fund = BuildFund(fundId, previous, worksheetAccess);                
-                funds.Add(fundId, fund);
-                previous = fund;
+            var funds = new List<Fund>();
+            if (fundIds != null)
+            {
+                Fund previous = primaryFund;
+                foreach (FundIds fundId in fundIds)
+                {
+                    var fund = BuildFund(fundId, previous, primaryFund.WorksheetAccess);
+                    funds.Add( fund);
+                    previous = fund;
+                }
             }
             return funds;
         }
         
-        private Fund BuildFund(FundIds fundId,Fund previous,WorksheetAccess worksheetAccess)
+        private Fund BuildFund(FundIds fundId,Fund previous, WorksheetAccess worksheetAccess)
         {
-            Fund fund = _entityBuilder.GetFund(fundId);
+            Fund fund = _entityBuilder.GetFund(fundId,previous == null);
             fund.Previous = previous;
-            fund.WorksheetAccess = worksheetAccess;
-            worksheetAccess.AddFundRange(fund);
+            if (worksheetAccess == null)
+            {
+                fund.WorksheetAccess = _workbookAccess.GetWorksheetAccess(fund);
+            }
+            else
+            {
+                fund.WorksheetAccess = worksheetAccess;
+            }
+            fund.WorksheetAccess.AddFundRange(fund);
             return fund;
         }
 
         private Fund BuildOEIFromSheet()
         {
             
-            Fund fund = BuildFund(FundIds.OEI,null, _workbookAccess.GetWorksheetAccess(FundIds.OEI));
+            Fund fund = BuildFund(FundIds.OEI,null,null);
             
             List<Position> positionsToBeUpdatedFromDatabase = new List<Position>();
             _entityBuilder.AddExistingPortfolio(fund, positionsToBeUpdatedFromDatabase);
@@ -203,7 +219,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 fund.WorksheetAccess.AddTotalRow(entity); 
             }
-            if (entity.ChildrenArePositions)
+            if (entity.ChildEntityType == EntityTypes.Position)
             {
                 WritePositions(entity, rates, book, fund, updateExistingPositions, forceRefresh);               
             }
@@ -268,7 +284,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     {
                         entity.Children.Remove(child.Identifier);
                     }
-                    if (entity.ChildrenArePositions)
+                    if (entity.ChildEntityType == EntityTypes.Position)
                     {
                         worksheetAccess.DeleteRange(((Position)child).Row);
                     }
@@ -305,14 +321,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void WritePosition(Position previousPosition,Position position,GroupingEntity parent,List<FXRateDTO> rates,
             Book book,Fund fund, bool updateExisting,bool forceRefresh, ref bool updateSums)
         {
+            if (position.InstrumentTypeId == InstrumentTypeIds.FX)
+            {
+                EnhanceFXPosition(position, rates);
+            }
             if (position.Row != null)
             {
                 if (updateExisting || forceRefresh)
-                {
-                    if (position.InstrumentTypeId == InstrumentTypeIds.FX)
-                    {
-                        EnhanceFXPosition(position, rates);
-                    }
+                {                    
                     fund.WorksheetAccess.WritePosition(position, book, fund, forceRefresh);
                 }
             }

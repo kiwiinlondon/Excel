@@ -55,7 +55,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
         
-        public List<PortfolioDTO> GetPortfolio(Fund fund, bool includeHedging, bool onlyIncludeFX)
+        public List<PortfolioDTO> GetPortfolio(Fund fund)
         {
             using (KeeleyModel context = new KeeleyModel())
             {
@@ -73,11 +73,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
                 
 
-                if (!includeHedging)//Share 
+                if (!fund.IncludeHedging)//Share 
                 {
                      portfolios = portfolios.Where(a=>a.Position.InstrumentMarket.Instrument.DerivedAssetClassId != (int)DerivedAssetClassIds.Cash);
                 }
-                if (onlyIncludeFX)//MAC and share classes
+                if (fund.IncludeOnlyFX)//MAC and share classes
                 {
                     portfolios = portfolios.Where(a => a.Position.InstrumentMarket.Instrument.InstrumentClassID == (int)InstrumentClassIds.ForwardFX);
                 }
@@ -147,16 +147,22 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
        
 
-        public Fund GetFund(FundIds fundId)
+        public Fund GetFund(FundIds fundId, EntityTypes childEntityType, bool isPrimary)
         {
             using (KeeleyModel context = new KeeleyModel())
             {
-                var fund = context.Funds.Include(a=>a.LegalEntity).Include(a=>a.Currency.Instrument).FirstOrDefault(a => a.LegalEntityID == (int)fundId);
-                Fund toReturn = new Fund(fund.LegalEntityID,fund.Name,fund.Currency.IsoCode,false);
+                var fund = context.Funds.Include(a => a.LegalEntity).Include(a => a.Currency.Instrument).FirstOrDefault(a => a.LegalEntityID == (int)fundId);
+
+
+
+                bool includeHedging = fund.FundTypeId == (int)FundTypeIds.ShareClass;
+                bool IncludeOnlyFX = !isPrimary;
+
+                Fund toReturn = new Fund(fund.LegalEntityID, fund.Name, fund.Currency.IsoCode, false, fund.IsLongOnly, childEntityType, includeHedging, IncludeOnlyFX);              
                 DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
                 var navs = context.FundNetAssetValues.Where(a => a.FundId == fund.LegalEntityID && referenceDates.Contains(a.ReferenceDate)).ToList();
                 toReturn.Nav = navs.FirstOrDefault(a => a.ReferenceDate == ReferenceDate).MarketValue;
-                toReturn.PreviousNav = navs.FirstOrDefault(a => a.ReferenceDate == PreviousReferenceDate).MarketValue;                
+                toReturn.PreviousNav = navs.FirstOrDefault(a => a.ReferenceDate == PreviousReferenceDate).MarketValue;
                 return toReturn;
             }
         }
@@ -168,7 +174,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             using (KeeleyModel context = new KeeleyModel())
             {
                 var books = context.Books.Where(a => a.FundID == fund.FundId);
-                var booksById = books.ToDictionary(a => a.BookID, a => new Book(fund,a.BookID, a.Name,false));
+                var booksById = books.ToDictionary(a => a.BookID, a => new Book(fund,a.BookID, a.Name, EntityTypes.Position  ));
                 DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
                 var navs = context.BookNetAssetValues.Where(a => booksById.Keys.Contains(a.BookId) && referenceDates.Contains(a.ReferenceDate)).ToList();
                 foreach (var nav in navs)

@@ -31,33 +31,37 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 case FundIds.OEIMAC:
                 case FundIds.OEIMACGBPBSHARECLASS:
                 case FundIds.OEIMACGBPBMSHARECLASS:
+                case FundIds.BEST:
+                case FundIds.OBID:
                     return EntityTypes.Position;
                 case FundIds.ALEG:
+                case FundIds.FDXC:
                     return EntityTypes.Country;
+                    
                 case FundIds.SWAN:
                     return EntityTypes.AssetClass;
                 default:
                     throw new ApplicationException($"Unknown Fund {fundId}");
-
             }
-
         }
 
-        private bool FundChildrenArePositions(FundIds fundId)
-        {
-            return fundId == FundIds.OEI;
-        }
 
-        public Fund GetFund(FundIds fundId)
-        {
-            Fund fund = _dataAccess.GetFund(fundId);
-           
-         //   EntityTypes childEntiy
 
-            fund.ChildrenArePositions = fundId != FundIds.OEI;
-            if (!fund.ChildrenArePositions)
+
+        public Fund GetFund(FundIds fundId,bool isPrimary)
+        {
+            Fund fund = _dataAccess.GetFund(fundId, GetFundChildType(fundId), isPrimary);
+            
+            fund.ChildrenAreDeleteable = isPrimary && (fund.ChildEntityType == EntityTypes.Country || fund.ChildEntityType == EntityTypes.Position);
+            switch (fund.ChildEntityType)
             {
-                AddBooks(fund);
+                case EntityTypes.Book:
+                    AddBooks(fund);
+                    break;
+                case EntityTypes.AssetClass:
+                    AddAssetClasses(fund);
+                    break;
+                    
             }           
             return fund;
         }
@@ -76,31 +80,39 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private void AddBook(Fund fund, Book book)
         {
-            book.ChildrenArePositions = book.BookId != (int)BookIds.OEI;
-            book.ChildrenAreDeleteable = book.ChildrenArePositions;
-            book.ChildrenAreHidden = book.ChildrenArePositions; 
-            if (!book.ChildrenArePositions)
+            if (book.BookId == (int)BookIds.OEI)
+            {
+                book.ChildEntityType = EntityTypes.AssetClass;
+            }
+            book.ChildrenAreDeleteable = book.ChildEntityType == EntityTypes.Position;
+            book.ChildrenAreHidden = book.ChildEntityType == EntityTypes.Position; 
+            if (book.ChildEntityType== EntityTypes.AssetClass)
             {
                 AddAssetClasses(book);
             }
             fund.Children.Add(book.Identifier, book);
         }
 
-        private void AddAssetClasses(Book book)
+        private void AddAssetClasses(GroupingEntity parent)
         {
-            if (!book.ChildrenArePositions)
-            {
-                AddAssetClass(book, EquityLabel,1,true);
-                AddAssetClass(book, MacroLabel,2, true);
-                AddAssetClass(book, FXLabel,3, false);
-            }
+            AddAssetClass(parent, EquityLabel, 1, true);
+            AddAssetClass(parent, MacroLabel, 2, true);
+            AddAssetClass(parent, FXLabel, 3, false);
+
         }
 
-        private void AddAssetClass(Book book, string assetClassLabel,int ordering,bool positionsAreDeletable)
+        
+
+        private void AddAssetClass(GroupingEntity parent, string assetClassLabel, int ordering, bool childrenAreDeletable)
         {
-            var assetClass = new AssetClass(book,assetClassLabel, assetClassLabel != EquityLabel, ordering);
-            assetClass.ChildrenAreDeleteable = positionsAreDeletable;
-            book.Children.Add(assetClass.Identifier, assetClass);
+            EntityTypes childEntityType = EntityTypes.Position;
+            if (assetClassLabel == EquityLabel)
+            {
+                childEntityType = EntityTypes.Country;
+            }
+            var assetClass = new AssetClass(parent, assetClassLabel, childEntityType, ordering);
+            assetClass.ChildrenAreDeleteable = childrenAreDeletable;
+            parent.Children.Add(assetClass.Identifier, assetClass);
         }
 
 
@@ -110,30 +122,37 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void AddPortfolio(Fund fund)
         {
-            bool includeHedging = fund.FundId == (int)FundIds.OEIMACGBPBSHARECLASS || fund.FundId == (int)FundIds.OEIMACGBPBMSHARECLASS;
-            bool includeOnlyFX = fund.FundId != (int)FundIds.OEI;
-            List<PortfolioDTO> portfolio = _dataAccess.GetPortfolio(fund, includeHedging, includeOnlyFX);
+
+            List<PortfolioDTO> portfolio = _dataAccess.GetPortfolio(fund);
      
             foreach (PortfolioDTO position in portfolio)
             {
-                GroupingEntity parentEntity = fund;
-                if (!fund.ChildrenArePositions)
-                {
-                    parentEntity = (GroupingEntity)parentEntity.Children[new Identifier(null, position.Book)];
-                    if (!parentEntity.ChildrenArePositions)
-                    {
-                        parentEntity = (GroupingEntity)parentEntity.Children[new Identifier(null,position.Instrument.AssetClass)];
-                        if (!parentEntity.ChildrenArePositions)
-                        {
-                            parentEntity = GetCountry((AssetClass)parentEntity, position.Instrument.ExchangeCountryIsoCode, position.Instrument.ExchangeCountryName);
-                        }
-                    }
-                }
-                AddDTOToParent(parentEntity, position);
+                GroupingEntity parentForPositions = GetChildEntityWithPositions(fund, position,fund);                
+                AddDTOToParent(parentForPositions, position);
             }
         }
 
-        
+        private GroupingEntity GetChildEntityWithPositions(GroupingEntity parentEntity, PortfolioDTO position,Fund fund)
+        {
+            GroupingEntity child = null;
+            switch (parentEntity.ChildEntityType)
+            {
+                case EntityTypes.Position:
+                    return parentEntity;
+                case EntityTypes.Book:
+                    child = (GroupingEntity)parentEntity.Children[new Identifier(null, position.Book)];
+                    break;
+                case EntityTypes.AssetClass:
+                    child = (GroupingEntity)parentEntity.Children[new Identifier(null, position.Instrument.AssetClass)];
+                    break;
+                case EntityTypes.Country:
+                    child = GetCountry((GroupingEntity)parentEntity, position.Instrument.ExchangeCountryIsoCode, position.Instrument.ExchangeCountryName,fund);
+                    break;
+                default:
+                    throw new ApplicationException($"Unknown Child Enity Type {parentEntity.ChildEntityType}");
+            }
+            return GetChildEntityWithPositions(child, position,fund);
+        }
 
         public void AddExistingPortfolio(Fund fund,List<Position> toBeUpdatedFromDatabase)
         {
@@ -153,7 +172,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
                 if (!string.IsNullOrWhiteSpace(existingGroup.CountryCode))
                 {
-                    entity = GetCountry((AssetClass)entity, existingGroup.CountryCode, existingGroup.Name);
+                    entity = GetCountry(entity, existingGroup.CountryCode, existingGroup.Name,fund);
                 }
                 entity.TotalRow = existingGroup.TotalRow;
                 entity.ControlString = existingGroup.ControlString;
@@ -172,7 +191,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-        private Country GetCountry(AssetClass parentEntity, string code, string name)
+        private Country GetCountry(GroupingEntity parentEntity, string code, string name,Fund fund)
         {
             Identifier identifier = new Identifier(null, code);
             if (parentEntity.Children.ContainsKey(identifier))
@@ -185,7 +204,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 {
                     name = "United Kingdom";
                 }
-                Country entity = new Country(parentEntity, code, name);                        
+                Country entity = new Country(parentEntity, code, name);
+                entity.ChildrenAreDeleteable = fund.ChildrenAreDeleteable;
                 parentEntity.Children.Add(identifier, entity);
                 return entity;
             }
@@ -195,7 +215,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             if (existingGroup.Positions != null && existingGroup.Positions.Count>0)
             {
-                if (!parent.ChildrenArePositions)
+                if (parent.ChildEntityType != EntityTypes.Position)
                 {
                     throw new ApplicationException($"Not expecting positions on parent entity {parent}");
                 }
@@ -257,7 +277,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             
             AssetClass assetClass = (AssetClass)book.Children[new Identifier(null, EntityBuilder.EquityLabel)];
-            Country country = GetCountry(assetClass, instrument.ExchangeCountryIsoCode, instrument.ExchangeCountryName);
+            Country country = GetCountry(assetClass, instrument.ExchangeCountryIsoCode, instrument.ExchangeCountryName,(Fund)book.Parent);
             var position = new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor, instrument.InstrumentTypeId,instrument.InvertPNL);
             country.Children.Add(position.Identifier, position);
             

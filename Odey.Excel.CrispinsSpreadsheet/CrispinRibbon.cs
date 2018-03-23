@@ -15,9 +15,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
     public partial class CrispinRibbon
     {
 
-        public delegate void InvokeClose();
-
-        private SplashScreen splashScreen = new SplashScreen();
 
         private static readonly log4net.ILog Logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -28,6 +25,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             Logger.Info("Loaded Ribbon");
             DoMatch(false);
             DisplayMessage(GetVersion());
+            Logger.Info("Finished Loading Ribbon");
         }
 
         public string GetVersion()
@@ -46,37 +44,22 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void DoMatch(bool refreshFormulas)
         {
             Logger.Info("Starting Match");
-            IntPtr hwndWin = System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
 
-            NativeWindow parent = new NativeWindow();
-
-            parent.AssignHandle(hwndWin);
-
-            try
-            {
-                System.Threading.Thread t = new System.Threading.Thread(SplashScreenProc);
-
-                t.Start(parent);
+          //  try
+         //   {
 
                 var dataAccess = new DataAccess(DateTime.Today);
                 var workbookAccess = new WorkbookAccess(Globals.ThisWorkbook);
                 var matcher = new Matcher(new EntityBuilder(dataAccess, workbookAccess), dataAccess, workbookAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
                 matcher.Match(refreshFormulas);
 
-                InvokeClose invokeClose = new InvokeClose(splashScreen.Close);
 
-                splashScreen.Invoke(invokeClose);
-            }
-            catch (Exception ex)
-            {
-                Logger.Info(ex);
-                throw ex;
-            }
-            finally
-            {
-                parent.ReleaseHandle();
-                Logger.Info("Finished Match");
-            }
+         //   }
+          //  catch (Exception ex)
+         //   {
+              //  Logger.Info(ex);
+              //  DisplayMessage($"Error: {ex.Message}");
+          //  }
         }
 
         private void button1_Click(object sender, RibbonControlEventArgs e)
@@ -109,15 +92,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
             DisplayMessage(message);
         }
 
-        private void SplashScreenProc(object param)
-
-        {
-
-            IWin32Window parent = (IWin32Window)param;
-
-
-            splashScreen.ShowDialog(parent);
-
-        }
+        
     }
 }

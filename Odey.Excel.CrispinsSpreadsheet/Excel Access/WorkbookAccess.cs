@@ -28,7 +28,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public WorksheetAccess GetBulkLoadTickerWorksheetAccess()
         {
-            return GetWorksheetAccess(_bulkLoadTickerWorksheetName);
+            return null;// GetWorksheetAccess(_bulkLoadTickerWorksheetName);
         }
 
         //public void WriteDates(DateTime previousReferenceDate, DateTime referenceDate)
@@ -39,17 +39,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
         //    }
         //}
 
-        public WorksheetAccess GetWorksheetAccess(FundIds fundId)
-        {
-            return GetWorksheetAccess(fundId.ToString());
-        }
+       
 
-        private WorksheetAccess GetWorksheetAccess(string sheetName)
+        public WorksheetAccess GetWorksheetAccess(Fund fund)
         {
+            string sheetName = fund.Name;
             WorksheetAccess worksheetAccess;
-            if (!_worksheets.TryGetValue(sheetName, out worksheetAccess))
+            if (!_worksheets.TryGetValue(fund.Name, out worksheetAccess))
             {                
-                worksheetAccess = new WorksheetAccess( _workbook.Sheets[sheetName]);
+                worksheetAccess = WorksheetAccessFactory.Instance.Get(_workbook.Sheets[sheetName],fund.IsLongOnly,fund.ChildEntityType== EntityTypes.Book);
+                worksheetAccess.SetupSheet();
                 _worksheets.Add(sheetName, worksheetAccess);
             }
             return worksheetAccess;

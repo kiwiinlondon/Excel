@@ -9,11 +9,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public abstract class GroupingEntity : IChildEntity
     {
-        public GroupingEntity(GroupingEntity parent,string code,string name,bool childrenArePositions,object ordering)
+        public GroupingEntity(GroupingEntity parent,string code,string name, EntityTypes childEntityType, object ordering)
         {
             Identifier = new Identifier(null,code);
             Name = name;
-            ChildrenArePositions = childrenArePositions;
+            ChildEntityType = childEntityType;
             Ordering = ordering;
             Parent = parent;
         }
@@ -37,7 +37,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"{Identifier.Code}({Name})";
         }
 
-        public bool ChildrenArePositions { get; set; }
+        public EntityTypes ChildEntityType { get; set; }
 
         public bool ChildrenAreDeleteable { get; set; } = false;
 
