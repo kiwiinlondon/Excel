@@ -9,10 +9,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class AssetClass : GroupingEntity, IChildEntity
     {
-        public AssetClass(GroupingEntity book, string code, EntityTypes childEntityType, int ordering) : base(book,code,code, childEntityType, ordering)
+        public AssetClass(GroupingEntity book, string code, EntityTypes childEntityType, int ordering) : base(book, code, code, childEntityType, ordering)
         {
-
         }
+
+        protected override RowType RowTypeForNewRow => RowType.MainBookOrAssetClassTotal;
+
 
     }
 }

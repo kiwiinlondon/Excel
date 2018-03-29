@@ -28,9 +28,26 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public GroupingEntity Previous { get; set; }
 
-        public XL.Range TotalRow { get; set; }
+        public Row TotalRow { get; set; }
 
-        public int RowNumber => TotalRow.Row;
+        public RowType RowType
+        {
+            get
+            {
+                if (TotalRow!= null)
+                {
+                    return TotalRow.RowType;
+                }
+                else
+                {
+                    return RowTypeForNewRow;
+                }
+            }
+        }
+
+        protected abstract RowType RowTypeForNewRow { get;}
+
+        public int RowNumber => TotalRow.RowNumber;
 
         public override string ToString()
         {

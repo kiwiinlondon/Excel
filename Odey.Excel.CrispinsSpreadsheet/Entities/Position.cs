@@ -20,9 +20,24 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public Identifier Identifier { get; private set; }
 
-        public XL.Range Row { get; set; }
+        public Row Row { get; set; }
 
-        public int RowNumber => Row.Row;
+        public RowType RowType
+        {
+            get
+            {
+                if (Row != null)
+                {
+                    return Row.RowType;
+                }
+                else
+                {
+                    return InstrumentTypeId == InstrumentTypeIds.FX ? RowType.FXPosition : RowType.Position;
+                }
+            }
+        }
+
+        public int RowNumber => Row.RowNumber;
 
         public string Name { get; set; }
 
@@ -51,5 +66,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"{Identifier}: {Name}";
         }
 
+        
     }
 }

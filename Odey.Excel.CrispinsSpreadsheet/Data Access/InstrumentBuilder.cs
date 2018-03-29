@@ -173,9 +173,25 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"{currency1}{currency2} Curncy";
         }
 
+        private string ChangeCurrencyToSymbol(string currency)
+        {
+            switch(currency)
+            {
+                case "USD":
+                    return "$";
+                case "EUR":
+                    return "€";
+                case "GBP":
+                    return "£";
+
+            }
+            return currency;
+
+        }
+
         private string GetFXName(string currency1, string currency2)
         {
-            return $"{currency1}/{currency2}";
+            return $"{ChangeCurrencyToSymbol(currency1)}/{ChangeCurrencyToSymbol(currency2)}";
         }
 
         private string GetFXCurrency(string currency1, string currency2)

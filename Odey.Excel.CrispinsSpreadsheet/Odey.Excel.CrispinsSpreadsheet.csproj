@@ -165,6 +165,9 @@
     </Compile>
     <Compile Include="Data Access\DataAccess.cs" />
     <Compile Include="Entities\EntityBuilder.cs" />
+    <Compile Include="Entities\Row.cs" />
+    <Compile Include="Excel Access\CellStyler.cs" />
+    <Compile Include="Excel Access\CellStyling.cs" />
     <Compile Include="Excel Access\ExistingGroup.cs" />
     <Compile Include="Excel Access\ExistingPosition.cs" />
     <Compile Include="Entities\Fund.cs" />
@@ -179,7 +182,8 @@
     <Compile Include="Excel Access\LongOnlyWorksheetAccess.cs" />
     <Compile Include="Excel Access\LongShortWithBooksWorksheetAccess.cs" />
     <Compile Include="Excel Access\LongShortWithoutBooksWorksheetAccess.cs" />
-    <Compile Include="Excel Access\Style.cs" />
+    <Compile Include="Excel Access\ColumnDefinition.cs" />
+    <Compile Include="Excel Access\RowType.cs" />
     <Compile Include="Excel Access\WorksheetAccessFactory.cs" />
     <Compile Include="InstrumentRetriever.cs" />
     <Compile Include="Matcher.cs" />

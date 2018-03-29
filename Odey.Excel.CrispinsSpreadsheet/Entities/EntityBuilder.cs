@@ -32,12 +32,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 case FundIds.OEIMACGBPBSHARECLASS:
                 case FundIds.OEIMACGBPBMSHARECLASS:
                 case FundIds.BEST:
-                case FundIds.OBID:
+                case FundIds.OBID:                
                     return EntityTypes.Position;
                 case FundIds.ALEG:
                 case FundIds.FDXC:
-                    return EntityTypes.Country;
-                    
+                case FundIds.OPUS:
+                case FundIds.OPE:
+                    return EntityTypes.Country;                    
                 case FundIds.SWAN:
                     return EntityTypes.AssetClass;
                 default:
@@ -52,7 +53,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             Fund fund = _dataAccess.GetFund(fundId, GetFundChildType(fundId), isPrimary);
             
-            fund.ChildrenAreDeleteable = isPrimary && (fund.ChildEntityType == EntityTypes.Country || fund.ChildEntityType == EntityTypes.Position);
+            fund.ChildrenAreDeleteable = isPrimary && (fundId != FundIds.OEI);
             switch (fund.ChildEntityType)
             {
                 case EntityTypes.Book:
@@ -156,6 +157,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void AddExistingPortfolio(Fund fund,List<Position> toBeUpdatedFromDatabase)
         {
+            if (fund.Name == "SWAN")
+            {
+                int i = 0;
+            }
             List<ExistingGroupDTO> existingGroups = fund.WorksheetAccess.GetExisting(fund);
             foreach(var existingGroup in existingGroups)
             {
@@ -174,7 +179,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 {
                     entity = GetCountry(entity, existingGroup.CountryCode, existingGroup.Name,fund);
                 }
-                entity.TotalRow = existingGroup.TotalRow;
+                entity.TotalRow = new Row(entity.RowType, existingGroup.TotalRow);
                 entity.ControlString = existingGroup.ControlString;
                 AddExistingPositionsToParent(fund.WorksheetAccess, entity, existingGroup, toBeUpdatedFromDatabase);
             }
@@ -253,7 +258,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 }
 
             }
-            position.Row = existingPosition.Row;
+            position.Row = new Row(position.RowType, existingPosition.Row);
         }
 
         private void AddDTOToParent(GroupingEntity parent, PortfolioDTO dto)
@@ -273,11 +278,32 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         }
 
-        public GroupingEntity AddInstrument(Book book, InstrumentDTO instrument)
+        private GroupingEntity GetWhereChildrenAreCountry(GroupingEntity groupingEntity)
         {
-            
-            AssetClass assetClass = (AssetClass)book.Children[new Identifier(null, EntityBuilder.EquityLabel)];
-            Country country = GetCountry(assetClass, instrument.ExchangeCountryIsoCode, instrument.ExchangeCountryName,(Fund)book.Parent);
+            if (groupingEntity.ChildEntityType == EntityTypes.Country)
+            {
+                return groupingEntity;
+            }
+            else if (groupingEntity.ChildEntityType == EntityTypes.AssetClass)
+            {
+                return GetWhereChildrenAreCountry((AssetClass)groupingEntity.Children[new Identifier(null, EntityBuilder.EquityLabel)]);
+            }
+            else if (groupingEntity.ChildEntityType == EntityTypes.Book)
+            {
+                return GetWhereChildrenAreCountry((Book)groupingEntity.Children.Values.FirstOrDefault(a => ((Book)a).IsPrimary));
+            }
+            else
+            { 
+                throw new ApplicationException("Unknown way to find country");
+            }
+        }
+
+        public GroupingEntity AddInstrument(Fund fund, InstrumentDTO instrument)
+        {
+
+            GroupingEntity countryParent = GetWhereChildrenAreCountry(fund);
+
+            Country country = GetCountry(countryParent, instrument.ExchangeCountryIsoCode, instrument.ExchangeCountryName,fund);
             var position = new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor, instrument.InstrumentTypeId,instrument.InvertPNL);
             country.Children.Add(position.Identifier, position);
             

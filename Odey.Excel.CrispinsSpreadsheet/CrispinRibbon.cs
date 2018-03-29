@@ -45,8 +45,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             Logger.Info("Starting Match");
 
-          //  try
-         //   {
+            try
+            {
 
                 var dataAccess = new DataAccess(DateTime.Today);
                 var workbookAccess = new WorkbookAccess(Globals.ThisWorkbook);
@@ -54,12 +54,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 matcher.Match(refreshFormulas);
 
 
-         //   }
-          //  catch (Exception ex)
-         //   {
-              //  Logger.Info(ex);
-              //  DisplayMessage($"Error: {ex.Message}");
-          //  }
+            }
+            catch (Exception ex)
+            {
+                Logger.Info(ex);
+                DisplayMessage($"Error: {ex.Message}");
+            }
         }
 
         private void button1_Click(object sender, RibbonControlEventArgs e)

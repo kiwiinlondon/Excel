@@ -19,25 +19,19 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void Save()
         {
+            _workbook.Application.Run("RefreshAllStaticData");
             _workbook.Save();
         }
 
         private Dictionary<string, WorksheetAccess> _worksheets = new Dictionary<string, WorksheetAccess>();
 
-        private static readonly string _bulkLoadTickerWorksheetName = "Sheet1";
+       // private static readonly string _bulkLoadTickerWorksheetName = "Sheet1";
 
         public WorksheetAccess GetBulkLoadTickerWorksheetAccess()
         {
             return null;// GetWorksheetAccess(_bulkLoadTickerWorksheetName);
         }
 
-        //public void WriteDates(DateTime previousReferenceDate, DateTime referenceDate)
-        //{
-        //    foreach (var worksheet in _worksheets.Where(a=>a.Key!=_bulkLoadTickerWorksheetName).Select(a=>a.Value))
-        //    {
-        //        worksheet.WriteDates( previousReferenceDate, referenceDate);
-        //    }
-        //}
 
        
 

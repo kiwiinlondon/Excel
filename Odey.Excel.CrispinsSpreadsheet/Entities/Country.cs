@@ -16,8 +16,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public string BloombergCode { get; set; }
 
- 
 
+        protected override RowType RowTypeForNewRow => RowType.Total;
 
     }
 }

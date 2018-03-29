@@ -10,9 +10,18 @@ namespace Odey.Excel.CrispinsSpreadsheet
     public class Book : GroupingEntity, IChildEntity
     {
         public int BookId { get; private set; }
-        public Book(Fund fund,int bookId,string code, EntityTypes childEntityType) : base(fund,code, code, childEntityType, code)
+        public Book(Fund fund,int bookId,string code, EntityTypes childEntityType, bool isPrimaryBook) : base(fund,code, code, childEntityType, code)
         {
             BookId = bookId;
+            IsPrimary = isPrimaryBook;
+        }
+
+        protected override RowType RowTypeForNewRow
+        {
+            get
+            {
+                return IsPrimary ? RowType.MainBookOrAssetClassTotal : RowType.SecondaryBookTotal;
+            }
         }
 
         public bool IsPrimary { get; set; }

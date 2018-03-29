@@ -11,13 +11,23 @@ namespace Odey.Excel.CrispinsSpreadsheet
     {
         public int FundId { get; private set; }
 
-        public Fund(int fundId, string name, string currency,bool childrenArePositions, bool isLongOnly, EntityTypes childEntityType, bool includeHedging, bool includeOnlyFX) : base(null,name,name, childEntityType, fundId)
+        public Fund(int fundId, string name, string currency,bool childrenArePositions, bool isLongOnly, EntityTypes childEntityType, bool includeHedging, bool includeOnlyFX,bool isPrimary) : base(null,name,name, childEntityType, fundId)
         {
             FundId = fundId;
             Currency = currency;
             IsLongOnly = isLongOnly;
             IncludeHedging = includeHedging;
             IncludeOnlyFX = includeOnlyFX;
+            if (isPrimary)
+            {
+                _rowType = RowType.FundTotal;
+                
+            }
+            else
+            {
+                _rowType = RowType.AdditionalFundTotal;
+            }
+
         }
         public string Currency { get; private set; }        
 
@@ -30,8 +40,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public bool IncludeHedging { get; set; }
         
         public bool IncludeOnlyFX { get; set; }
-            
 
+        private RowType _rowType;
+        protected override RowType RowTypeForNewRow => _rowType;
 
     }
 }

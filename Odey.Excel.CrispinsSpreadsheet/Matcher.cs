@@ -31,8 +31,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
             var rates = _dataAccess.GetFXRates();
 
             var firstPage = MatchFundSet(FundIds.OEI, new FundIds[] {FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
-            MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);
             MatchFundSet(FundIds.SWAN, null, rates, refreshFormulas);
+            MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);            
+            MatchFundSet(FundIds.OPUS, null, rates, refreshFormulas);
+            MatchFundSet(FundIds.OPE, null, rates, refreshFormulas);
+            MatchFundSet(FundIds.BEST, null, rates, refreshFormulas);
+            MatchFundSet(FundIds.OBID, null, rates, refreshFormulas);
+            MatchFundSet(FundIds.FDXC, null, rates, refreshFormulas);
             firstPage.WorksheetAccess.MakeActive();
             _workbookAccess.EnableCalculations();
             _workbookAccess.Save();
@@ -48,12 +53,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             primaryFund.WorksheetAccess.WriteDates(_dataAccess.PreviousReferenceDate, _dataAccess.ReferenceDate);
 
             MatchFund(primaryFund, rates, refreshFormulas);
+            var lastFund = primaryFund;
             foreach (Fund fund in additionalFunds.OrderBy(a => a.Ordering))
             {
                 MatchFund(fund, rates, refreshFormulas);
+                lastFund = fund;
             }
 
-            primaryFund.WorksheetAccess.FinaliseFormatting();
+            primaryFund.WorksheetAccess.FinaliseFormatting(lastFund);
             return primaryFund;
         }
 
@@ -79,8 +86,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 {
                     fund = BuildOEIFromSheet();
                 }
-                Book book = (Book)fund.Children.Values.FirstOrDefault(a => (((Book)a).BookId == (int)BookIds.OEI));
-                if (TickerAlreadyExists(ticker, book))
+              //  Book book = (Book)fund.Children.Values.FirstOrDefault(a => (((Book)a).BookId == (int)BookIds.OEI));
+                if (TickerAlreadyExists(ticker, fund))
                 {
                     message = "Ticker Already Exists";
                 }
@@ -89,8 +96,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     var instrument = _instrumentRetriever.Get(ticker, out message);
                     if (instrument != null)
                     {
-                        var country = _entityBuilder.AddInstrument(book, instrument);
-                        WriteGroupingEntity(fund, null, book, fund, false, false);
+                        var rates = _dataAccess.GetFXRates();
+                        var country = _entityBuilder.AddInstrument(fund, instrument);
+                        WriteGroupingEntity(fund, rates, null, fund, false, false);
                         Position position = (Position)country.Children[instrument.Identifier];
                         message = $"Success. {ticker} added to Country {instrument.ExchangeCountryName} at row {position.RowNumber}";
                     }
@@ -173,7 +181,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private Fund BuildOEIFromSheet()
         {
-            
             Fund fund = BuildFund(FundIds.OEI,null,null);
             
             List<Position> positionsToBeUpdatedFromDatabase = new List<Position>();
@@ -217,7 +224,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             ChangeGroupVisiblity(entity, fund.WorksheetAccess, false);
             if (entity.TotalRow == null)
             {
-                fund.WorksheetAccess.AddTotalRow(entity); 
+                fund.WorksheetAccess.AddTotalRow(entity);
             }
             if (entity.ChildEntityType == EntityTypes.Position)
             {
@@ -258,10 +265,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 {
                     fund.WorksheetAccess.UpdateTotalsOnTotalRow(entity);
                 }
-                if (updateExistingPositions)
-                {
-                    fund.WorksheetAccess.UpdateNavs(entity);
-                }
+
+            }
+            
+            if (updateExistingPositions)
+            {
+                fund.WorksheetAccess.UpdateNavs(entity);
             }
             ChangeGroupVisiblity(entity,fund.WorksheetAccess,true);
         }
@@ -270,7 +279,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             if (entity.ChildrenAreHidden)
             {
-                worksheetAccess.ChangeRowVisibilty(entity.Previous.TotalRow.Row + 1, entity.TotalRow.Row - 1, hidden);
+                worksheetAccess.ChangeRowVisibilty(entity.Previous.TotalRow.RowNumber + 1, entity.TotalRow.RowNumber - 1, hidden);
             }
         }
 
@@ -286,7 +295,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     }
                     if (entity.ChildEntityType == EntityTypes.Position)
                     {
-                        worksheetAccess.DeleteRange(((Position)child).Row);
+                        worksheetAccess.DeleteRange(((Position)child).Row.Range);
                     }
                     else
                     {
