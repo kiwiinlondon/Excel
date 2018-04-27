@@ -290,14 +290,22 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 _worksheet.Columns[style.Key].EntireColumn.Hidden = style.Value.IsHidden;
             }
             _worksheet.Select();
+            
+
             _worksheet.Application.ActiveWindow.Zoom = 115;
             _worksheet.Application.ActiveWindow.DisplayZeros = false;
+
             foreach (ColumnDefinition column in ColumnDefinitions.Values.Where(a => a.HasRightHandBorder))
             {
                 var columnToAddBorderTo = _worksheet.get_Range($"{column.ColumnLabel}{_bloombergMnemonicRow}:{column.ColumnLabel}{lastFund.TotalRow.RowNumber}");
                 columnToAddBorderTo.Borders[XL.XlBordersIndex.xlEdgeRight].LineStyle = XL.XlLineStyle.xlContinuous;
             }
             _worksheet.Rows[_bloombergMnemonicRow].EntireRow.Hidden = true;
+            _worksheet.Application.ActiveWindow.FreezePanes = false;
+            var toFreeze = _worksheet.get_Range($"{_closePriceColumn}{_bloombergMnemonicRow + 2}");
+            toFreeze.Select();
+            toFreeze.Activate();
+            _worksheet.Application.ActiveWindow.FreezePanes = true;
         }
         
 
