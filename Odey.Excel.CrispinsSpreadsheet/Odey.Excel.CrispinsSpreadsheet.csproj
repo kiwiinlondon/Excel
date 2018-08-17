@@ -16,10 +16,10 @@
     <SolutionID>bf25b271-8827-4751-935f-24ccb367c2fc</SolutionID>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>\\oam\shared\Share\ODEYAPPS\CrispinSpreadsheet\</PublishUrl>
+    <PublishUrl>\\oam.odey.com\shared\Applications\CrispinSpreadsheet\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.21</ApplicationVersion>
+    <ApplicationVersion>1.0.0.26</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>

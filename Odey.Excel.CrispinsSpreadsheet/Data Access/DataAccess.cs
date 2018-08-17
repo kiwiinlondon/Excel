@@ -207,14 +207,20 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 DateTime[] referenceDates = { PreviousPreviousReferenceDate, PreviousReferenceDate };
                 var todayRates = context.FXRates.Include(a => a.FromCurrency.Instrument).Include(a => a.ToCurrency.Instrument)
-                    .Where(a => referenceDates.Contains(a.ReferenceDate) && a.ReferenceDate == a.ForwardDate);
+                    .Where(a => referenceDates.Contains(a.ReferenceDate) && a.ReferenceDate == a.ForwardDate).ToList();
                 return todayRates.GroupBy(g => new { FromCurrency = g.FromCurrency.Instrument.Name, ToCurrency = g.ToCurrency.Instrument.Name })
-                      .Select(a => new FXRateDTO()
-                      {
-                          FromCurrency = a.Key.FromCurrency,
-                          ToCurrency = a.Key.ToCurrency,
-                          PreviousPreviousValue = a.FirstOrDefault(f => f.ReferenceDate == PreviousPreviousReferenceDate).Value,
-                          PreviousValue = a.FirstOrDefault(f => f.ReferenceDate == PreviousReferenceDate).Value
+                      .Select(a => {
+
+                          var previousPrevious = a.FirstOrDefault(f => f.ReferenceDate == PreviousPreviousReferenceDate);
+                          var previous = a.FirstOrDefault(f => f.ReferenceDate == PreviousReferenceDate);
+                          return new FXRateDTO()
+
+                          {
+                              FromCurrency = a.Key.FromCurrency,
+                              ToCurrency = a.Key.ToCurrency,
+                              PreviousPreviousValue = previousPrevious == null ? 1 : previousPrevious.Value,
+                              PreviousValue = previous == null ? 1 : previous.Value
+                          };                           
                       }).ToList();
             }
         }
