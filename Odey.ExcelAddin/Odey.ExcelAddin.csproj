@@ -31,10 +31,10 @@
     <DefineConstants>VSTO40</DefineConstants>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</PublishUrl>
-    <InstallUrl>\\oam\shared\Share\ODEYAPPS\ExcelAddin\</InstallUrl>
+    <PublishUrl>\\oam\shared\Applications\OUAR valuations\ExcelAddin\</PublishUrl>
+    <InstallUrl>\\oam\shared\Applications\OUAR valuations\ExcelAddin\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.39</ApplicationVersion>
+    <ApplicationVersion>1.0.0.40</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
