@@ -206,7 +206,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <None Include="App.config" />
-    <None Include="Odey.ExcelAddin_TemporaryKey.pfx" />
+    <None Include="Odey.ExcelAddin_1_TemporaryKey.pfx" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -240,10 +240,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Odey.ExcelAddin_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Odey.ExcelAddin_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>FF434FFB5E5948391B06E9536F9CDA38DCAC1DDD</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>8BEF6D0C7B1A9F6476FFE0B5EEA79894B32D5EF4</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
