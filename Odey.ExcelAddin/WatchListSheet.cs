@@ -1,9 +1,8 @@
 ﻿using Excel = Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
 using System.Linq;
-using Odey.Framework.Keeley.Entities.Enums;
-using Odey.PortfolioCache.Entities;
 using System;
+using Odey.Intranet.Entities.Grid;
 using System.Diagnostics;
 
 namespace Odey.ExcelAddin
@@ -116,7 +115,7 @@ namespace Odey.ExcelAddin
             },
         };
 
-        public static Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, List<PortfolioDTO> data)
+        public static Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, string[] tickers)
         {
             app.StatusBar = "Reading watch list...";
 
@@ -153,9 +152,10 @@ namespace Odey.ExcelAddin
                 ++row;
                 ticker = sheet.Cells[row, Ticker.Index.Value].Value2 as string;
             }
+            Debug.WriteLine($"{watchList.Count} tickers in Watch List");
 
             // Add new tickers
-            var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(watchList.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
+            var newTickers = tickers.Except(watchList.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
             foreach (var newTicker in newTickers)
             {
                 watchList.Add(newTicker, new WatchListItem
@@ -166,6 +166,7 @@ namespace Odey.ExcelAddin
                 sheet.Cells[row, Ticker.Index.Value] = newTicker;
                 ++row;
             }
+            Debug.WriteLine($"Added {newTickers.Count} new tickers to the Watch List. Now has {watchList.Count}");
 
             return watchList;
         }

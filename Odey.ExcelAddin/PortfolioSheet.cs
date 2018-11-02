@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
-using Odey.PortfolioCache.Entities;
 using System.Diagnostics;
 using System;
+using Odey.Query.Reporting.Contracts;
 
 namespace Odey.ExcelAddin
 {
@@ -209,26 +209,24 @@ namespace Odey.ExcelAddin
             },
         };
 
-        public static void Write(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
+        public static void Write(Excel.Application app, KeyValuePair<FundIds, string> fund, List<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
         {
-            var fundName = Ribbon1.GetFundName(fundId, weightings);
-            app.StatusBar = $"Writing {fundName} portfolio sheet...";
+            app.StatusBar = $"Writing {fund.Value} portfolio sheet...";
 
-            var rows = weightings
-                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
-                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName })
+            var rows = items
+                .Where(p => p.Ticker != null && p.FundId == fund.Key)
+                .ToLookup(p => new { p.Ticker, p.ManagerId }) // p.EquivalentInstrumentMarketId, 
                 .Select(g => new
                 {
-                    Ticker = g.Key.BloombergTicker,
-                    Manager = Ribbon1.GetManagerInitials(g.Key.ManagerName),
-                    PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
+                    g.Key.Ticker,
+                    PercentNAV = g.Sum(p => p.Exposure),
                 })
                 .ToList();
 
             app.AutoCorrect.AutoFillFormulasInLists = false;
-            var sheet = app.GetOrCreateVstoWorksheet($"Portfolio {fundName}");
+            var sheet = app.GetOrCreateVstoWorksheet($"Portfolio {fund.Value}");
 
-            var tName = $"Portfolio_{fundName}";
+            var tName = $"Portfolio_{fund.Value}";
             var table = sheet.GetListObject(tName);
             if (table == null)
             {

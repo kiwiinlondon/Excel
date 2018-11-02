@@ -124,27 +124,34 @@
   -->
   <ItemGroup>
     <Reference Include="Accessibility" />
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="Odey.Framework.Keeley.Entities.Enums">
       <HintPath>..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
     </Reference>
-    <Reference Include="Odey.PortfolioCache.Clients">
-      <HintPath>..\..\Binaries\Odey.PortfolioCache\Odey.PortfolioCache.Clients.dll</HintPath>
+    <Reference Include="Odey.Intranet.Entities">
+      <HintPath>..\..\Binaries\Odey.Intranet\Odey.Intranet.Entities.dll</HintPath>
     </Reference>
-    <Reference Include="Odey.PortfolioCache.Contracts">
-      <HintPath>..\..\Binaries\Odey.PortfolioCache\Odey.PortfolioCache.Contracts.dll</HintPath>
+    <Reference Include="Odey.Query.Client">
+      <HintPath>..\..\Binaries\Odey.Query\Odey.Query.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Odey.PortfolioCache.Entities">
-      <HintPath>..\..\Binaries\Odey.PortfolioCache\Odey.PortfolioCache.Entities.dll</HintPath>
+    <Reference Include="Odey.Query.Contracts">
+      <HintPath>..\..\Binaries\Odey.Query\Odey.Query.Contracts.dll</HintPath>
     </Reference>
-    <Reference Include="Odey.Reporting.Clients">
-      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Clients.dll</HintPath>
+    <Reference Include="Odey.Query.Reporting.Contracts">
+      <HintPath>..\..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll</HintPath>
     </Reference>
-    <Reference Include="Odey.Reporting.Entities.Specialised">
-      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Entities.Specialised.dll</HintPath>
+    <Reference Include="protobuf-net, Version=2.4.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.2.4.0\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
@@ -207,6 +214,7 @@
     </Compile>
     <None Include="App.config" />
     <None Include="Odey.ExcelAddin_1_TemporaryKey.pfx" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
