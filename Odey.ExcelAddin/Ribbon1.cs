@@ -38,6 +38,9 @@ namespace Odey.ExcelAddin
             Issuer = parent.Issuer;
             InstrumentId = parent.InstrumentId;
             Instrument = parent.Instrument;
+            InstrumentClassId = parent.InstrumentClassId;
+            InstrumentClass = parent.InstrumentClass;
+            IsShort = parent.IsShort;
         }
 
         public PortfolioItem Parent { get; set; }
@@ -60,10 +63,29 @@ namespace Odey.ExcelAddin
         public int InstrumentId { get; set; }
         public string Instrument { get; set; }
 
+        public InstrumentClassIds InstrumentClassId { get; set; }
+        public string InstrumentClass { get; set; }
+
+        public bool IsShort { get; set; }
+
+        /// <summary>
+        /// Ticker column
+        /// </summary>
         public string Ticker { get; set; }
+
+        /// <summary>
+        /// Exposure column
+        /// </summary>
         public decimal Exposure { get; set; }
+
+        /// <summary>
+        /// NetPosition column
+        /// </summary>
         public decimal NetPosition { get; internal set; }
 
+        /// <summary>
+        /// Reference to original node object from response
+        /// </summary>
         public Node Node { get; set; }
     }
 
@@ -147,15 +169,15 @@ namespace Odey.ExcelAddin
                 // Generate request
                 var tickerColReq = new ColumnRequest { ColumnRequestId = 2, PortfolioField = PortfolioFields.BloombergTicker };
                 var netPosColReq = new ColumnRequest { ColumnRequestId = 3, PortfolioField = PortfolioFields.NetPosition };
-                var exposureColReq = new ColumnRequest { ColumnRequestId = 5, PortfolioField = PortfolioFields.Exposure, GrossOrNet = GrossOrNet.Net, ApplyTenYearAdjustment = true };
+                var exposureColReq = new ColumnRequest { ColumnRequestId = 5, PortfolioField = PortfolioFields.Exposure, GrossOrNet = GrossOrNet.Net, PercentOf = PercentOf.FundNav, ApplyTenYearAdjustment = true };
                 var request = new AdhocRequest
                 {
                     Dates = new[] { DateTime.Today },
                     Funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR }.Cast<int>(),
                     ColumnHierarchy = new[] { ColumnHierarchyTypes.Column, ColumnHierarchyTypes.Fund, ColumnHierarchyTypes.Date },
-                    Columns = new[] { tickerColReq, netPosColReq, exposureColReq }.ToList(),
-                    TotalFields = new[] { TotalField.Total }.ToList(),
-                    PivotFundsAsColumns = true,
+                    Columns = new List<ColumnRequest> { tickerColReq, netPosColReq, exposureColReq },
+                    TotalFields = new List<TotalField>(),
+                    PivotFundsAsColumns = false,
                     PropsHierarchy = PropsHierarchyType.Off,
                     IncludeOffsetCash = false,
                     MakeWeightsSumToOne = false,
@@ -174,10 +196,18 @@ namespace Odey.ExcelAddin
                                 Field = PortfolioFields.Manager,
                                 Default = new DrilldownNode
                                 {
-                                    Field = PortfolioFields.Issuer,
+                                    Field = PortfolioFields.NetPositionLongShortType,
                                     Default = new DrilldownNode
                                     {
-                                        Field = PortfolioFields.Instrument,
+                                        Field = PortfolioFields.InstrumentClass,
+                                        Default = new DrilldownNode
+                                        {
+                                            Field = PortfolioFields.Issuer,
+                                            Default = new DrilldownNode
+                                            {
+                                                Field = PortfolioFields.Instrument,
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -262,7 +292,7 @@ namespace Odey.ExcelAddin
                 //}
                 foreach (var fund in funds)
                 {
-                    ExposureSheet.Write(app, request.Dates.First(), fund, rows, watchList);
+                    ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
                 }
                 //foreach (var fund in funds)
                 //{
@@ -295,65 +325,108 @@ namespace Odey.ExcelAddin
 
             foreach (var node in nodes)
             {
-                var current = new PortfolioItem(parent);
-                var name = node.Values[node.HierarchyColumn.Value].ToString();
-                var field = (PortfolioFields)node.NodeTypeId.Value;
-                var id = node.EntityId.Value;
-                current.Field = field;
-                current.Node = node;
-                if (field == PortfolioFields.Book)
+                var current = CreateItem(parent, node, tickerColumnId, exposureColumnId, netPositionColumnId);
+                if (current != null)
                 {
-                    current.Book = name;
-                    current.BookId = (BookIds)id;
+                    flattened.Add(current);
                 }
-                else if (field == PortfolioFields.Fund)
-                {
-                    current.Fund = name;
-                    current.FundId = (FundIds)id;
-                }
-                else if (field == PortfolioFields.Manager)
-                {
-                    current.Manager = name;
-                    current.ManagerId = (ApplicationUserIds)id;
-                    current.ManagerInitials = managerInitials[(ApplicationUserIds)id];
-                }
-                else if (field == PortfolioFields.Issuer)
-                {
-                    current.Issuer = name;
-                    current.IssuerId = id;
-                }
-                else if (field == PortfolioFields.Instrument)
-                {
-                    current.Instrument = name;
-                    current.InstrumentId = id;
-
-                    // Read column values as well
-                    if (node.Values.ContainsKey(tickerColumnId))
-                    {
-                        current.Ticker = node.Values[tickerColumnId].ToString(); // Ticker
-                    }
-                    if (node.Values.ContainsKey(exposureColumnId))
-                    {
-                        current.Exposure = node.Values[exposureColumnId].NumericValue.Value; // Exposure as % NAV
-                    }
-                    if (node.Values.ContainsKey(netPositionColumnId))
-                    {
-                        current.NetPosition = node.Values[netPositionColumnId].NumericValue.Value; // Net Position
-                    }
-                }
-                else
-                {
-                    throw new NotImplementedException($"The field {field} is not implemented");
-                }
-                flattened.Add(current);
-
-                if (node.Children != null)
+                if (current != null && node.Children != null)
                 {
                     GetFlattenedRows(node.Children, tickerColumnId, exposureColumnId, netPositionColumnId, flattened, current);
                 }
             }
 
             return flattened;
+        }
+
+        private static PortfolioItem CreateItem(PortfolioItem parent, Node node, uint tickerColumnId, uint exposureColumnId, uint netPositionColumnId)
+        {
+            var name = node.Values[node.HierarchyColumn.Value].ToString();
+            if (name == "Currency" || node.IsTotal)
+            {
+                // Ignore Currency/Total nodes (including children)
+                return null;
+            }
+            var item = new PortfolioItem(parent);
+            var field = (PortfolioFields)node.NodeTypeId.Value;
+
+            // Get Entity ID
+            if (node.EntityId == null)
+            {
+                throw new Exception("ID not recognised");
+            }
+            var id = node.EntityId.Value;
+
+            item.Field = field;
+            item.Node = node;
+
+            // Assign values
+            if (field == PortfolioFields.Book)
+            {
+                item.Book = name;
+                item.BookId = (BookIds)id;
+            }
+            else if (field == PortfolioFields.Fund)
+            {
+                item.Fund = name;
+                item.FundId = (FundIds)id;
+            }
+            else if (field == PortfolioFields.Manager)
+            {
+                item.Manager = name;
+                item.ManagerId = (ApplicationUserIds)id;
+                item.ManagerInitials = managerInitials[(ApplicationUserIds)id];
+            }
+            else if (field == PortfolioFields.InstrumentClass)
+            {
+                item.InstrumentClass = name;
+                item.InstrumentClassId = (InstrumentClassIds)id;
+            }
+            else if (field == PortfolioFields.Issuer)
+            {
+                item.Issuer = name;
+                item.IssuerId = id;
+            }
+            else if (field == PortfolioFields.NetPositionLongShortType)
+            {
+                item.IsShort = (id == 1);
+            }
+            else if (field == PortfolioFields.Instrument)
+            {
+                item.Instrument = name;
+                item.InstrumentId = id;
+
+                // Read column values as well
+                if (node.Values.ContainsKey(tickerColumnId))
+                {
+                    item.Ticker = node.Values[tickerColumnId].ToString(); // Ticker
+                }
+                else
+                {
+                    Debug.WriteLine($"No Ticker for instrument {name}");
+                }
+                if (node.Values.ContainsKey(exposureColumnId))
+                {
+                    item.Exposure = node.Values[exposureColumnId].NumericValue.Value; // Exposure as % NAV
+                }
+                else
+                {
+                    Debug.WriteLine($"No exposure for instrument {name}");
+                }
+                if (node.Values.ContainsKey(netPositionColumnId))
+                {
+                    item.NetPosition = node.Values[netPositionColumnId].NumericValue.Value; // Net Position
+                }
+                else
+                {
+                    Debug.WriteLine($"No netposition for instrument {name}");
+                }
+            }
+            else
+            {
+                throw new NotImplementedException($"The field {field} is not implemented");
+            }
+            return item;
         }
 
         private void ApplyManagerOverrides(IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)

@@ -14,7 +14,8 @@ namespace Odey.ExcelAddin
         public ApplicationUserIds ManagerId { get; set; }
         public decimal PercentNAV { get; set; }
         public decimal NetPosition { get; set; }
-        public List<int> InstrumentClassIds { get; set; }
+        public List<InstrumentClassIds> InstrumentClassIds { get; set; }
+        public bool IsShort { get; set; }
     }
 
     class ExposureSheet
@@ -26,22 +27,22 @@ namespace Odey.ExcelAddin
             { ApplicationUserIds.JamieGrimston, 10 },
         };
 
-        public static void Write(Excel.Application app, DateTime date, KeyValuePair<FundIds, string> fund, List<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
+        public static void Write(Excel.Application app, DateTime date, KeyValuePair<FundIds, string> fund, IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
         {
             app.StatusBar = $"Writing {fund.Value} exposure sheet...";
 
             var rows = items
-                .Where(p => p.Field == PortfolioFields.Instrument && p.Ticker != null && p.FundId == fund.Key)
-                .ToLookup(p => new { p.IssuerId, p.ManagerId, p.ManagerInitials })
+                .Where(p => p.Ticker != null)
+                .ToLookup(p => new { p.IssuerId, p.ManagerId, p.ManagerInitials, p.IsShort })
                 .Select(g => new ExposureItem
                 {
                     ManagerInitials = g.Key.ManagerInitials,
                     ManagerId = g.Key.ManagerId,
+                    IsShort = g.Key.IsShort,
                     PercentNAV = g.Sum(p => p.Exposure),
                     NetPosition = g.Sum(p => p.NetPosition),
                     Tickers = g.Select(p => p.Ticker).Distinct().ToList(),
-                    //InstrumentClassIds = g.Select(p => p.InstrumentClassId).Distinct().ToList(),
-                    //NetPositionLongShort
+                    InstrumentClassIds = g.Select(p => p.InstrumentClassId).Distinct().ToList(),
                 })
                 .ToList();
 
@@ -110,13 +111,13 @@ namespace Odey.ExcelAddin
                 fundPercentageCell.Formula = $"={managerExposureCell.Address}/{totalGrossExposureCell.Address}";
                 fundPercentageCell.NumberFormat = "0.0%";
 
-                // Write longs
-                var longs = managerPositions.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
+                // Write longs (They want index options to show at the end)
+                var longs = managerPositions.Where(x => x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
                 var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
                 column += headers.Length + 5;
 
-                // Write shorts
-                var shorts = managerPositions.Where(x => x.PercentNAV < 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
+                // Write shorts (They want index options to show at the end)
+                var shorts = managerPositions.Where(x => x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
                 column += headers.Length + 5;
 
