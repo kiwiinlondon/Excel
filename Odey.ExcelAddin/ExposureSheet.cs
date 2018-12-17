@@ -81,6 +81,7 @@ namespace Odey.ExcelAddin
             ++row;
             ++row;
 
+            var nameFormula = (Ribbon1.IsDebug ? "[Ticker]" : "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
             var column = 1;
             foreach (var manager in TargetItemCountByManager.Keys)
             {
@@ -110,12 +111,12 @@ namespace Odey.ExcelAddin
 
                 // Write longs
                 var longs = managerPositions.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
-                var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+                var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", nameFormula);
                 column += headers.Length + 5;
 
                 // Write shorts
                 var shorts = managerPositions.Where(x => x.PercentNAV < 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
-                var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+                var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", nameFormula);
                 column += headers.Length + 5;
 
                 if (manager == "JH")

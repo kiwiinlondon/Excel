@@ -42,6 +42,12 @@ namespace Odey.ExcelAddin
             { "James Hanbury", "JH" },
         };
 
+#if DEBUG
+        public const bool IsDebug = true;
+#else
+        public const bool IsDebug = false;
+#endif
+
         public static string GetFundName(FundIds fund, List<PortfolioDTO> data)
         {
             foreach (var item in data)
