@@ -12,7 +12,7 @@ namespace Odey.ExcelAddin
         public int RowIndex { get; set; }
         public string Ticker { get; set; }
         public string Quality { get; set; }
-        public string JHManagerOverride { get; set; }
+        public string ManagerOverride { get; set; }
         public double? Upside { get; set; }
     }
 
@@ -145,7 +145,7 @@ namespace Odey.ExcelAddin
                     RowIndex = row,
                     Ticker = ticker,
                     Quality = sheet.Cells[row, Quality.Index.Value].Value2 as string,
-                    JHManagerOverride = sheet.Cells[row, Manager.Index.Value].Value2 as string,
+                    ManagerOverride = sheet.Cells[row, Manager.Index.Value].Value2 as string,
                     Upside = sheet.Cells[row, Upside.Index.Value].Value2 as double?,
                 });
 
@@ -189,7 +189,7 @@ namespace Odey.ExcelAddin
             {
                 rows = rows.OrderBy(w => w.Upside);
             }
-            rows = rows.Take(NumItems);
+            rows = rows.Take(NumItems).ToArray();
 
             // Get the worksheet
             var isNewSheet = false;

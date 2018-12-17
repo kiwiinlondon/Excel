@@ -286,36 +286,22 @@ namespace Odey.ExcelAddin
                 // and puts it to the PortfolioSheet class
                 WatchListSheet.ReadColumns(app, PortfolioSheet.Columns);
 
-                // Make sure that the AC books' manager is actually Adrian Courtenay
-                // (Geoff changed the manager of those books to "James Hanbury", so that
-                // the trades appear on his trade blotters to sign off)
-                var acBooks = new[] { BookIds.ArffAC, BookIds.BvffAC, BookIds.DevmAC, BookIds.FdxhAC, BookIds.OuarAC }.ToList();
-                foreach (var row in rows)
-                {
-                    if (acBooks.Contains(row.BookId))
-                    {
-                        row.Manager = "Adrian Courtenay";
-                        row.ManagerId = ApplicationUserIds.AdrianCourtenay;
-                        row.ManagerInitials = ManagerInitials[ApplicationUserIds.AdrianCourtenay];
-                    }
-                }
-
                 // Apply manager overrides that were read from the Watch List
                 ApplyManagerOverrides(rows, watchList);
 
                 // Write Excel sheets (the order matters)
-                //foreach (var fund in funds)
+                //foreach (var fund in fundNames)
                 //{
                 //    ScenarioSheet.Write(app, fund, rows, watchList);
                 //}
+                //foreach (var fund in fundNames)
+                //{
+                //    ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
+                //}
                 foreach (var fund in fundNames)
                 {
-                    ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
+                    PortfolioSheet.Write(app, fund, rows, watchList);
                 }
-                //foreach (var fund in funds)
-                //{
-                //    PortfolioSheet.Write(app, fund, rows, watchList);
-                //}
                 //WatchListSheet.Write(app, watchList, "Watch List Top", true);
                 //WatchListSheet.Write(app, watchList, "Watch List Bottom", false);
                 //WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
@@ -461,25 +447,35 @@ namespace Odey.ExcelAddin
             //    }
             //}
 
-            // Apply manager override column from the watch list
+            var acBooks = new[] { BookIds.ArffAC, BookIds.BvffAC, BookIds.DevmAC, BookIds.FdxhAC, BookIds.OuarAC };
             foreach (var item in items)
             {
+                // Make sure that the AC books' manager is actually Adrian Courtenay
+                // (Geoff changed the manager of those books to "James Hanbury", so that
+                // the trades appear on his trade blotters to sign off)
+                if (acBooks.Contains(item.BookId))
+                {
+                    item.ManagerId = ApplicationUserIds.AdrianCourtenay;
+                    item.ManagerInitials = ManagerInitials[ApplicationUserIds.AdrianCourtenay];
+                    item.Manager = ManagerNames[ApplicationUserIds.AdrianCourtenay];
+                }
+
+                // Apply manager override column from the watch list
                 if (item.Ticker == null)
                 {
                     continue;
                 }
-                watchList.TryGetValue(item.Ticker, out var watchListItem);
-                if (watchListItem == null || watchListItem.JHManagerOverride == null)
+                watchList.TryGetValue(item.Ticker, out var wlEntry);
+                if (wlEntry == null || wlEntry.ManagerOverride == null)
                 {
                     continue;
                 }
-                var initials = watchListItem.JHManagerOverride;
-                if (!ManagerIds.ContainsKey(initials))
+                if (!ManagerIds.ContainsKey(wlEntry.ManagerOverride))
                 {
-                    throw new Exception($"Unknown manager initials {initials}");
+                    throw new Exception($"Unknown manager initials {wlEntry.ManagerOverride}");
                 }
-                item.ManagerId = ManagerIds[watchListItem.JHManagerOverride];
-                item.ManagerInitials = watchListItem.JHManagerOverride;
+                item.ManagerId = ManagerIds[wlEntry.ManagerOverride];
+                item.ManagerInitials = wlEntry.ManagerOverride;
                 item.Manager = ManagerNames[item.ManagerId];
             }
         }

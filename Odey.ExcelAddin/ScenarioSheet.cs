@@ -18,14 +18,15 @@ namespace Odey.ExcelAddin
 
             var rows = items
                 .Where(p => p.Field == PortfolioFields.Instrument && p.Ticker != null && p.FundId == fund.Key)
-                .ToLookup(p => new { p.Ticker, p.Manager, p.ManagerInitials }) // p.EquivalentInstrumentMarketId,
+                .ToLookup(p => new { p.Ticker, p.ManagerInitials })
                 .Select(g => new
                 {
                     g.Key.Ticker,
                     g.Key.ManagerInitials,
                     PercentNAV = g.Sum(p => p.Exposure),
                 })
-                .ToList();
+                .OrderBy(x => x.Ticker)
+                .ToArray();
 
             var sheet = app.GetOrCreateVstoWorksheet($"Scenarios {fund.Value}");
 

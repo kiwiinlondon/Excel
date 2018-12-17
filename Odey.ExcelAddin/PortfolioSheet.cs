@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
-using System.Diagnostics;
 using System;
-using Odey.Query.Reporting.Contracts;
+using System.Diagnostics;
 
 namespace Odey.ExcelAddin
 {
@@ -215,13 +214,16 @@ namespace Odey.ExcelAddin
 
             var rows = items
                 .Where(p => p.Ticker != null && p.FundId == fund.Key)
-                .ToLookup(p => new { p.Ticker, p.ManagerId }) // p.EquivalentInstrumentMarketId, 
+                .ToLookup(p => new { p.Ticker, p.ManagerId, p.ManagerInitials })
                 .Select(g => new
                 {
+                    // These will convert into columns of the same name
                     g.Key.Ticker,
+                    Manager = g.Key.ManagerInitials,
                     PercentNAV = g.Sum(p => p.Exposure),
                 })
-                .ToList();
+                .OrderBy(x => x.Ticker)
+                .ToArray();
 
             app.AutoCorrect.AutoFillFormulasInLists = false;
             var sheet = app.GetOrCreateVstoWorksheet($"Portfolio {fund.Value}");
@@ -230,6 +232,8 @@ namespace Odey.ExcelAddin
             var table = sheet.GetListObject(tName);
             if (table == null)
             {
+                // Create table
+                Debug.WriteLine($"Creating table {tName}");
                 table = sheet.CreateListObject(tName, HeaderRow, 1);
                 table.ShowTableStyleRowStripes = false;
                 table.ShowTableStyleFirstColumn = true;
@@ -239,16 +243,26 @@ namespace Odey.ExcelAddin
                 table.HeaderRowRange.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
                 table.HeaderRowRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
             }
+            else
+            {
+                Debug.WriteLine($"Using existing table {tName}");
+            }
 
+            // Set table data
             table.SetDataBinding(rows);
+
+            // Update column styles
             table.ListColumns["Ticker"].DataBodyRange.ColumnWidth = 22;
             table.ListColumns["PercentNAV"].DataBodyRange.ColumnWidth = 14;
             table.ListColumns["PercentNAV"].DataBodyRange.NumberFormat = "0.00%";
+
+            // Disconnect data binding
             table.Disconnect();
 
+            // Sort by whatever we set this column to
             Excel.ListColumn sortyByColumn = null;
 
-            // Add additional columns to the table
+            // Add additional columns to the table (static Columns list from above)
             foreach (var column in Columns)
             {
                 var col = table.ListColumns.Add();
@@ -305,7 +319,7 @@ namespace Odey.ExcelAddin
 
         private static string PrepareFormula(string formula, int watchListCount)
         {
-            var row = (HeaderRow + 1).ToString();
+            var row = (HeaderRow + 1);
             foreach (var placeholder in ColumnLocations)
             {
                 formula = formula.Replace(placeholder.Key, "$" + placeholder.Value + row);
