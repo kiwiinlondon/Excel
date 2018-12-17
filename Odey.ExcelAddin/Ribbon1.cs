@@ -114,11 +114,25 @@ namespace Odey.ExcelAddin
 
         private Office.IRibbonUI ribbon;
 
-        private static Dictionary<ApplicationUserIds, string> managerInitials = new Dictionary<ApplicationUserIds, string>
+        public static Dictionary<ApplicationUserIds, string> ManagerInitials = new Dictionary<ApplicationUserIds, string>
         {
             { ApplicationUserIds.AdrianCourtenay, "AC" },
             { ApplicationUserIds.JamieGrimston, "JG" },
             { ApplicationUserIds.JamesHanbury, "JH" },
+        };
+
+        private static Dictionary<string, ApplicationUserIds> ManagerIds = new Dictionary<string, ApplicationUserIds>
+        {
+            { "JH", ApplicationUserIds.JamesHanbury },
+            { "JG", ApplicationUserIds.JamieGrimston },
+            { "AC", ApplicationUserIds.AdrianCourtenay },
+        };
+
+        private static Dictionary<ApplicationUserIds, string> ManagerNames = new Dictionary<ApplicationUserIds, string>
+        {
+            { ApplicationUserIds.AdrianCourtenay, "Adrian Courtenay" },
+            { ApplicationUserIds.JamieGrimston, "Jamie Grimston" },
+            { ApplicationUserIds.JamesHanbury, "James Hanbury" },
         };
 
         private readonly string AddonName;
@@ -169,13 +183,14 @@ namespace Odey.ExcelAddin
                 // Generate request
                 var tickerColReq = new ColumnRequest { ColumnRequestId = 2, PortfolioField = PortfolioFields.BloombergTicker };
                 var netPosColReq = new ColumnRequest { ColumnRequestId = 3, PortfolioField = PortfolioFields.NetPosition };
+                var instrumentColReq = new ColumnRequest { ColumnRequestId = 4, PortfolioField = PortfolioFields.Instrument };
                 var exposureColReq = new ColumnRequest { ColumnRequestId = 5, PortfolioField = PortfolioFields.Exposure, GrossOrNet = GrossOrNet.Net, PercentOf = PercentOf.FundNav, ApplyTenYearAdjustment = true };
                 var request = new AdhocRequest
                 {
                     Dates = new[] { DateTime.Today },
                     Funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR }.Cast<int>(),
                     ColumnHierarchy = new[] { ColumnHierarchyTypes.Column, ColumnHierarchyTypes.Fund, ColumnHierarchyTypes.Date },
-                    Columns = new List<ColumnRequest> { tickerColReq, netPosColReq, exposureColReq },
+                    Columns = new List<ColumnRequest> { instrumentColReq, tickerColReq, netPosColReq, exposureColReq },
                     TotalFields = new List<TotalField>(),
                     PivotFundsAsColumns = false,
                     PropsHierarchy = PropsHierarchyType.Off,
@@ -240,11 +255,14 @@ namespace Odey.ExcelAddin
                 var exposureColId = response.Columns.Single(c => c.ColumnRequestId == exposureColReq.ColumnRequestId).ColumnId;
 
                 // Create a map from FundId to FundName
-                var funds = response.Nodes.Where(n => n.NodeTypeId == (int)PortfolioFields.Fund && n.LogicalEntityId == (int)LogicalEntities.Fund).GroupBy(n => (FundIds)(n.EntityId ?? -1)).ToDictionary(g => g.Key, g => {
-                    var node = g.First();
-                    return node.Values[node.HierarchyColumn.Value].ToString();
-                });
-                if (!funds.Any())
+                var fundNames = response.Nodes
+                    .Where(n => n.NodeTypeId == (int)PortfolioFields.Fund && n.LogicalEntityId == (int)LogicalEntities.Fund && n.EntityId.HasValue)
+                    .GroupBy(n => n.EntityId.Value)
+                    .ToDictionary(g => (FundIds)g.Key, g => {
+                        var node = g.First();
+                        return node.Values[node.HierarchyColumn.Value].ToString();
+                    });
+                if (!fundNames.Any())
                 {
                     throw new Exception("Expected funds in GridResponse");
                 }
@@ -278,7 +296,7 @@ namespace Odey.ExcelAddin
                     {
                         row.Manager = "Adrian Courtenay";
                         row.ManagerId = ApplicationUserIds.AdrianCourtenay;
-                        row.ManagerInitials = managerInitials[ApplicationUserIds.AdrianCourtenay];
+                        row.ManagerInitials = ManagerInitials[ApplicationUserIds.AdrianCourtenay];
                     }
                 }
 
@@ -290,7 +308,7 @@ namespace Odey.ExcelAddin
                 //{
                 //    ScenarioSheet.Write(app, fund, rows, watchList);
                 //}
-                foreach (var fund in funds)
+                foreach (var fund in fundNames)
                 {
                     ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
                 }
@@ -375,7 +393,7 @@ namespace Odey.ExcelAddin
             {
                 item.Manager = name;
                 item.ManagerId = (ApplicationUserIds)id;
-                item.ManagerInitials = managerInitials[(ApplicationUserIds)id];
+                item.ManagerInitials = ManagerInitials[(ApplicationUserIds)id];
             }
             else if (field == PortfolioFields.InstrumentClass)
             {
@@ -446,7 +464,7 @@ namespace Odey.ExcelAddin
             // Apply manager override column from the watch list
             foreach (var item in items)
             {
-                if (item.Ticker == null || item.ManagerId != ApplicationUserIds.JamesHanbury)
+                if (item.Ticker == null)
                 {
                     continue;
                 }
@@ -455,8 +473,14 @@ namespace Odey.ExcelAddin
                 {
                     continue;
                 }
-                item.Manager = watchListItem.JHManagerOverride;
-                item.ManagerId = (ApplicationUserIds)(-1);
+                var initials = watchListItem.JHManagerOverride;
+                if (!ManagerIds.ContainsKey(initials))
+                {
+                    throw new Exception($"Unknown manager initials {initials}");
+                }
+                item.ManagerId = ManagerIds[watchListItem.JHManagerOverride];
+                item.ManagerInitials = watchListItem.JHManagerOverride;
+                item.Manager = ManagerNames[item.ManagerId];
             }
         }
 

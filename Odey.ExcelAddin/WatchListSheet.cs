@@ -152,7 +152,7 @@ namespace Odey.ExcelAddin
                 ++row;
                 ticker = sheet.Cells[row, Ticker.Index.Value].Value2 as string;
             }
-            Debug.WriteLine($"{watchList.Count} tickers in Watch List");
+            Debug.WriteLine($"{watchList.Count} tickers loaded from Watch List");
 
             // Add new tickers
             var newTickers = tickers.Except(watchList.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();

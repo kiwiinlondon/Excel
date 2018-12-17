@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
 using System;
-using Odey.Query.Reporting.Contracts;
 
 namespace Odey.ExcelAddin
 {
@@ -84,6 +83,7 @@ namespace Odey.ExcelAddin
             ++row;
             ++row;
 
+            var nameFormula = (Ribbon1.IsDebug ? "[Ticker]" : "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
             var column = 1;
             foreach (var manager in TargetItemCountByManager.Keys)
             {
@@ -91,7 +91,7 @@ namespace Odey.ExcelAddin
                 var excessBelow = TargetItemCountByManager[manager];
 
                 // Manager initials
-                sheet.Cells[row, column] = manager;
+                sheet.Cells[row, column] = Ribbon1.ManagerInitials[manager];
 
                 // Manager Gross Exposure
                 sheet.Cells[row + 1, column + 1] = "Gross Exposure";
@@ -113,12 +113,12 @@ namespace Odey.ExcelAddin
 
                 // Write longs (They want index options to show at the end)
                 var longs = managerPositions.Where(x => x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
-                var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+                var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", nameFormula);
                 column += headers.Length + 5;
 
                 // Write shorts (They want index options to show at the end)
                 var shorts = managerPositions.Where(x => x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
-                var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+                var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", nameFormula);
                 column += headers.Length + 5;
 
                 if (manager == ApplicationUserIds.JamesHanbury)
