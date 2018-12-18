@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
 using Odey.Query.Reporting.Contracts;
+using System.Diagnostics;
 
 namespace Odey.ExcelAddin
 {
@@ -21,8 +22,9 @@ namespace Odey.ExcelAddin
                 .ToLookup(p => new { p.Ticker, p.ManagerInitials })
                 .Select(g => new
                 {
+                    // These property names will be used as column names
                     g.Key.Ticker,
-                    g.Key.ManagerInitials,
+                    Manager = g.Key.ManagerInitials,
                     PercentNAV = g.Sum(p => p.Exposure),
                 })
                 .OrderBy(x => x.Ticker)
@@ -34,6 +36,8 @@ namespace Odey.ExcelAddin
             var table = sheet.GetListObject(tName);
             if (table == null)
             {
+                // Create table
+                Debug.WriteLine($"Creating table {tName}");
                 table = sheet.CreateListObject(tName, HeaderRow, 1);
                 table.ShowTableStyleRowStripes = false;
                 table.ShowTableStyleFirstColumn = true;
@@ -43,11 +47,20 @@ namespace Odey.ExcelAddin
                 table.HeaderRowRange.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
                 table.HeaderRowRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
             }
+            else
+            {
+                Debug.WriteLine($"Using existing table {tName}");
+            }
 
+            // Set table data
             table.SetDataBinding(rows);
+
+            // Update column styles
             table.ListColumns["Ticker"].DataBodyRange.ColumnWidth = 22;
             table.ListColumns["PercentNAV"].DataBodyRange.ColumnWidth = 14;
             table.ListColumns["PercentNAV"].DataBodyRange.NumberFormat = "0.00%";
+
+            // Disconnect data binding
             table.Disconnect();
 
             app.AutoCorrect.AutoFillFormulasInLists = false;

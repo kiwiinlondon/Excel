@@ -34,7 +34,7 @@
     <PublishUrl>\\oam\shared\Applications\OUAR valuations\ExcelAddin\</PublishUrl>
     <InstallUrl>\\oam\shared\Applications\OUAR valuations\ExcelAddin\</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.42</ApplicationVersion>
+    <ApplicationVersion>1.0.0.43</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
