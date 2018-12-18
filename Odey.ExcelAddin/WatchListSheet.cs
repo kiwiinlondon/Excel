@@ -158,7 +158,7 @@ namespace Odey.ExcelAddin
             var last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing).Row;
             if (last > row)
             {
-                throw new Exception("You have a gap in the Watch List. Please fix.");
+                throw new Exception($"You have a gap in the Watch List near row {row}. Please fix.");
             }
 
             // Add new tickers

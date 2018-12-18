@@ -309,7 +309,7 @@ namespace Odey.ExcelAddin
 #if !DEBUG
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString(), AddonName);
+                MessageBox.Show(e.Message, AddonName);
             }
 #endif
             finally
