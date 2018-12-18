@@ -188,7 +188,7 @@ namespace Odey.ExcelAddin
                 var request = new AdhocRequest
                 {
                     Dates = new[] { DateTime.Today },
-                    Funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR }.Cast<int>(),
+                    Funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR, FundIds.IAR }.Cast<int>(),
                     Columns = new List<ColumnRequest> { instrumentColReq, tickerColReq, netPosColReq, exposureColReq },
 
                     ColumnHierarchy = new[] { ColumnHierarchyTypes.Column, ColumnHierarchyTypes.Fund, ColumnHierarchyTypes.Date },
@@ -456,7 +456,7 @@ namespace Odey.ExcelAddin
             //    }
             //}
 
-            var acBooks = new[] { BookIds.ArffAC, BookIds.BvffAC, BookIds.DevmAC, BookIds.FdxhAC, BookIds.OuarAC };
+            var acBooks = new[] { BookIds.ArffAC, BookIds.BvffAC, BookIds.DevmAC, BookIds.FdxhAC, BookIds.OuarAC, BookIds.IARAC };
             foreach (var item in items)
             {
                 // Make sure that the AC books' manager is actually Adrian Courtenay
