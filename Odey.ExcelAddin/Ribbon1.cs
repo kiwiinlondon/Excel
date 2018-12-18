@@ -398,7 +398,7 @@ namespace Odey.ExcelAddin
                 item.Instrument = name;
                 item.InstrumentId = id;
 
-                // Read column values as well
+                // Read column: Ticker
                 if (node.Values.ContainsKey(tickerColumnId))
                 {
                     item.Ticker = node.Values[tickerColumnId].ToString(); // Ticker
@@ -407,21 +407,25 @@ namespace Odey.ExcelAddin
                 {
                     Debug.WriteLine($"No Ticker for instrument {name}");
                 }
+
+                // Read column: Exposure
                 if (node.Values.ContainsKey(exposureColumnId))
                 {
                     item.Exposure = node.Values[exposureColumnId].NumericValue.Value; // Exposure as % NAV
                 }
                 else
                 {
-                    Debug.WriteLine($"No exposure for instrument {name}");
+                    Debug.WriteLine($"No Exposure for instrument {name}");
                 }
+
+                // Read column: NetPosition
                 if (node.Values.ContainsKey(netPositionColumnId))
                 {
                     item.NetPosition = node.Values[netPositionColumnId].NumericValue.Value; // Net Position
                 }
                 else
                 {
-                    Debug.WriteLine($"No netposition for instrument {name}");
+                    Debug.WriteLine($"No NetPosition for instrument {name}");
                 }
             }
             else
@@ -433,15 +437,22 @@ namespace Odey.ExcelAddin
 
         private void ApplyManagerOverrides(IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
         {
-            //var jhSecondaryTickers = items.Where(n => n.Ticker != null && n.ManagerId == ApplicationUserIds.JamesHanbury && (n.FundId == FundIds.DEVM || n.FundId == FundIds.FDXH));
-            //var otherTickers = items.Where(n => n.Ticker != null && n.ManagerId != ApplicationUserIds.JamesHanbury && n.FundId != FundIds.DEVM && n.FundId != FundIds.FDXH).ToArray();
-            //foreach (var item in jhSecondaryTickers)
+            // Automatic DEVM & FDXH manager override
+            //var secondaryJHFunds = new[] { FundIds.DEVM, FundIds.FDXH };
+            //var secondaryJHTickers = items.Where(n => n.Ticker != null && n.ManagerId == ApplicationUserIds.JamesHanbury && secondaryJHFunds.Contains(n.FundId)).ToArray();
+            //var primaryOtherTickers = items.Where(n => n.Ticker != null && n.ManagerId != ApplicationUserIds.JamesHanbury && !secondaryJHFunds.Contains(n.FundId)).ToArray();
+            //foreach (var item in secondaryJHTickers)
             //{
-            //    var others = otherTickers.Where(n => n.Ticker == item.Ticker).ToArray();
+            //    var others = primaryOtherTickers.Where(n => n.Ticker == item.Ticker);
             //    if (others.Select(p => p.ManagerId).Distinct().Count() == 1)
             //    {
-            //        item.ManagerId = others.First().ManagerId;
-            //        item.Manager = others.First().Manager;
+            //        var managerId = others.First().ManagerId;
+            //        if (item.ManagerId != managerId)
+            //        {
+            //            item.ManagerId = managerId;
+            //            item.ManagerInitials = ManagerInitials[managerId];
+            //            item.Manager = ManagerNames[managerId];
+            //        }
             //    }
             //}
 
