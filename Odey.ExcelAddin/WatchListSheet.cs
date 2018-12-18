@@ -152,7 +152,14 @@ namespace Odey.ExcelAddin
                 ++row;
                 ticker = sheet.Cells[row, Ticker.Index.Value].Value2 as string;
             }
-            Debug.WriteLine($"{watchList.Count} tickers loaded from Watch List");
+            Debug.WriteLine($"{watchList.Count} tickers loaded from Watch List.");
+
+            // Protect against empty ticker rows in Watch List
+            var last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing).Row;
+            if (last > row)
+            {
+                throw new Exception("You have a gap in the Watch List. Please fix.");
+            }
 
             // Add new tickers
             var newTickers = tickers.Except(watchList.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
