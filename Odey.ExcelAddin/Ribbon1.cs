@@ -189,17 +189,16 @@ namespace Odey.ExcelAddin
                 {
                     Dates = new[] { DateTime.Today },
                     Funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR }.Cast<int>(),
-                    ColumnHierarchy = new[] { ColumnHierarchyTypes.Column, ColumnHierarchyTypes.Fund, ColumnHierarchyTypes.Date },
                     Columns = new List<ColumnRequest> { instrumentColReq, tickerColReq, netPosColReq, exposureColReq },
+
+                    ColumnHierarchy = new[] { ColumnHierarchyTypes.Column, ColumnHierarchyTypes.Fund, ColumnHierarchyTypes.Date },
                     TotalFields = new List<TotalField>(),
-                    PivotFundsAsColumns = false,
                     PropsHierarchy = PropsHierarchyType.Off,
-                    IncludeOffsetCash = false,
-                    MakeWeightsSumToOne = false,
+
                     IsTransactionBasedPerformance = false,
-                    ShowColumnGroups = false,
                     ProvideEntityIds = true,
-                    //CreateCurrencyRows = false,
+                    CreateCurrencyRows = false,
+                    
                     Drilldown = new DrilldownNode
                     {
                         Field = PortfolioFields.Fund,
@@ -228,7 +227,6 @@ namespace Odey.ExcelAddin
                             }
                         }
                     },
-                    CurrencyDrilldown = new DrilldownNode { Field = PortfolioFields.Instrument },
                 };
 
                 // Log request
