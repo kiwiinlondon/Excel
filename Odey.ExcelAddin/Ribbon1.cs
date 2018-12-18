@@ -140,7 +140,7 @@ namespace Odey.ExcelAddin
         public Ribbon1()
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-            var versionString = (ApplicationDeployment.IsNetworkDeployed ? "v" + ApplicationDeployment.CurrentDeployment.CurrentVersion : "(Local)");
+            var versionString = (ApplicationDeployment.IsNetworkDeployed ? "v" + ApplicationDeployment.CurrentDeployment.CurrentVersion : "Local") + (IsDebug ? " Debug" : "");
             AddonName = $"{assemblyName} {versionString}";
             Debug.WriteLine($"Starting {AddonName}...");
         }
