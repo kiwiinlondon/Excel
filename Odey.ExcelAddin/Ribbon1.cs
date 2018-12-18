@@ -147,7 +147,7 @@ namespace Odey.ExcelAddin
 
         public string GetCustomUI(string ribbonID)
         {
-            return GetResourceText("Odey.ExcelAddin.Ribbon1.xml");
+            return GetResourceText("Odey.ExcelAddin.Ribbon1.xml").Replace("[Tooltip]", AddonName);
         }
 
         //Create callback methods here. For more information about adding callback methods, visit http://go.microsoft.com/fwlink/?LinkID=271226
