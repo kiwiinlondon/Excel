@@ -1,8 +1,6 @@
 ﻿using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
 using Odey.Framework.Keeley.Entities.Enums;
-using Odey.PortfolioCache.Clients;
-using Odey.PortfolioCache.Entities;
 using System;
 using System.IO;
 using System.Linq;
@@ -10,9 +8,86 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Odey.Query.Client;
+using Odey.Query.Reporting.Contracts;
+using Odey.Intranet.Entities.Grid;
+using System.Diagnostics;
+using Newtonsoft.Json;
+using System.Deployment.Application;
+using Odey.Query.Contracts;
 
 namespace Odey.ExcelAddin
 {
+    public class PortfolioItem
+    {
+        public PortfolioItem(PortfolioItem parent = null)
+        {
+            if (parent == null)
+            {
+                return;
+            }
+            Parent = parent;
+            ManagerId = parent.ManagerId;
+            Manager = parent.Manager;
+            ManagerInitials = parent.ManagerInitials;
+            FundId = parent.FundId;
+            Fund = parent.Fund;
+            BookId = parent.BookId;
+            Book = parent.Book;
+            IssuerId = parent.IssuerId;
+            Issuer = parent.Issuer;
+            InstrumentId = parent.InstrumentId;
+            Instrument = parent.Instrument;
+            InstrumentClassId = parent.InstrumentClassId;
+            InstrumentClass = parent.InstrumentClass;
+            IsShort = parent.IsShort;
+        }
+
+        public PortfolioItem Parent { get; set; }
+
+        public PortfolioFields Field { get; set; }
+
+        public ApplicationUserIds ManagerId { get; set; }
+        public string Manager { get; set; }
+        public string ManagerInitials { get; set; }
+
+        public FundIds FundId { get; set; }
+        public string Fund { get; set; }
+
+        public BookIds BookId { get; set; }
+        public string Book { get; set; }
+
+        public int IssuerId { get; set; }
+        public string Issuer { get; set; }
+
+        public int InstrumentId { get; set; }
+        public string Instrument { get; set; }
+
+        public InstrumentClassIds InstrumentClassId { get; set; }
+        public string InstrumentClass { get; set; }
+
+        public bool IsShort { get; set; }
+
+        /// <summary>
+        /// Ticker column
+        /// </summary>
+        public string Ticker { get; set; }
+
+        /// <summary>
+        /// Exposure column
+        /// </summary>
+        public decimal Exposure { get; set; }
+
+        /// <summary>
+        /// NetPosition column
+        /// </summary>
+        public decimal NetPosition { get; internal set; }
+
+        /// <summary>
+        /// Reference to original node object from response
+        /// </summary>
+        public Node Node { get; set; }
+    }
 
     public class ColumnDef
     {
@@ -31,51 +106,43 @@ namespace Odey.ExcelAddin
     [ComVisible(true)]
     public class Ribbon1 : Office.IRibbonExtensibility
     {
-        private Office.IRibbonUI ribbon;
-
-        private static FundIds[] funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR };
-
-        private static Dictionary<string, string> managerInitials = new Dictionary<string, string>
-        {
-            { "Adrian Courtenay", "AC" },
-            { "Jamie Grimston", "JG" },
-            { "James Hanbury", "JH" },
-        };
-
 #if DEBUG
         public const bool IsDebug = true;
 #else
         public const bool IsDebug = false;
 #endif
 
-        public static string GetFundName(FundIds fund, List<PortfolioDTO> data)
-        {
-            foreach (var item in data)
-            {
-                if (item.FundId == (int)fund)
-                {
-                    return item.FundName;
-                }
-            }
+        private Office.IRibbonUI ribbon;
 
-            // Not found
-            throw new Exception($"Received no data for '{fund}'");
-        }
-
-        public static string GetManagerInitials(string fullName)
+        public static Dictionary<ApplicationUserIds, string> ManagerInitials = new Dictionary<ApplicationUserIds, string>
         {
-            if (managerInitials.ContainsKey(fullName))
-            {
-                return managerInitials[fullName];
-            }
-            else
-            {
-                return fullName;
-            }
-        }
+            { ApplicationUserIds.AdrianCourtenay, "AC" },
+            { ApplicationUserIds.JamieGrimston, "JG" },
+            { ApplicationUserIds.JamesHanbury, "JH" },
+        };
+
+        private static Dictionary<string, ApplicationUserIds> ManagerIds = new Dictionary<string, ApplicationUserIds>
+        {
+            { "JH", ApplicationUserIds.JamesHanbury },
+            { "JG", ApplicationUserIds.JamieGrimston },
+            { "AC", ApplicationUserIds.AdrianCourtenay },
+        };
+
+        private static Dictionary<ApplicationUserIds, string> ManagerNames = new Dictionary<ApplicationUserIds, string>
+        {
+            { ApplicationUserIds.AdrianCourtenay, "Adrian Courtenay" },
+            { ApplicationUserIds.JamieGrimston, "Jamie Grimston" },
+            { ApplicationUserIds.JamesHanbury, "James Hanbury" },
+        };
+
+        private readonly string AddonName;
 
         public Ribbon1()
         {
+            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+            var versionString = (ApplicationDeployment.IsNetworkDeployed ? "v" + ApplicationDeployment.CurrentDeployment.CurrentVersion : "(Local)");
+            AddonName = $"{assemblyName} {versionString}";
+            Debug.WriteLine($"Starting {AddonName}...");
         }
 
         public string GetCustomUI(string ribbonID)
@@ -87,7 +154,7 @@ namespace Odey.ExcelAddin
 
         public void Ribbon_Load(Office.IRibbonUI ribbonUI)
         {
-            this.ribbon = ribbonUI;
+            ribbon = ribbonUI;
         }
 
         public void OnActionCallback(Office.IRibbonControl control)
@@ -112,51 +179,139 @@ namespace Odey.ExcelAddin
             try
             {
                 app.StatusBar = "Loading portfolio weightings...";
-                var data = new PortfolioCacheClient().GetPortfolioExposures(new PortfolioRequestObject
-                {
-                    FundIds = funds.Cast<int>().ToArray(),
-                    ReferenceDates = new[] { DateTime.Today },
-                });
 
-                // Override AC books manager to actually be Adrian (Geoff changed the manager of that book to James Hanbury, so that
-                // the trades appear on his trade sign off blotters)
-                var acBooks = new [] { BookIds.ArffAC, BookIds.BvffAC, BookIds.DevmAC, BookIds.FdxhAC, BookIds.OuarAC }.Cast<int>().ToList();
-                foreach (var row in data)
+                // Generate request
+                var tickerColReq = new ColumnRequest { ColumnRequestId = 2, PortfolioField = PortfolioFields.BloombergTicker };
+                var netPosColReq = new ColumnRequest { ColumnRequestId = 3, PortfolioField = PortfolioFields.NetPosition };
+                var instrumentColReq = new ColumnRequest { ColumnRequestId = 4, PortfolioField = PortfolioFields.Instrument };
+                var exposureColReq = new ColumnRequest { ColumnRequestId = 5, PortfolioField = PortfolioFields.Exposure, GrossOrNet = GrossOrNet.Net, PercentOf = PercentOf.FundNav, ApplyTenYearAdjustment = true };
+                var request = new AdhocRequest
                 {
-                    if (acBooks.Contains(row.BookId))
+                    Dates = new[] { DateTime.Today },
+                    Funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR }.Cast<int>(),
+                    Columns = new List<ColumnRequest> { instrumentColReq, tickerColReq, netPosColReq, exposureColReq },
+
+                    ColumnHierarchy = new[] { ColumnHierarchyTypes.Column, ColumnHierarchyTypes.Fund, ColumnHierarchyTypes.Date },
+                    TotalFields = new List<TotalField>(),
+                    PropsHierarchy = PropsHierarchyType.Off,
+
+                    IsTransactionBasedPerformance = false,
+                    ProvideEntityIds = true,
+                    CreateCurrencyRows = false,
+                    
+                    Drilldown = new DrilldownNode
                     {
-                        row.ManagerId = (int)ApplicationUserIds.AdrianCourtenay;
-                        row.ManagerName = "Adrian Courtenay";
-                    }
+                        Field = PortfolioFields.Fund,
+                        Default = new DrilldownNode
+                        {
+                            Field = PortfolioFields.Book,
+                            Default = new DrilldownNode
+                            {
+                                Field = PortfolioFields.Manager,
+                                Default = new DrilldownNode
+                                {
+                                    Field = PortfolioFields.NetPositionLongShortType,
+                                    Default = new DrilldownNode
+                                    {
+                                        Field = PortfolioFields.InstrumentClass,
+                                        Default = new DrilldownNode
+                                        {
+                                            Field = PortfolioFields.Issuer,
+                                            Default = new DrilldownNode
+                                            {
+                                                Field = PortfolioFields.Instrument,
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                };
+
+                // Log request
+                Debug.WriteLine("Running ExecuteAdhocReport with request:\n" + JsonConvert.SerializeObject(request));
+
+                // Run request
+                var response = new ReportClient().ExecuteAdhocReport(request);
+
+                Debug.WriteLine("Received GridResponse.");
+                Debug.WriteLine($"ResponseId: {response.GridResponseId}");
+                Debug.WriteLine($"Nodes: {response.Nodes?.Count() ?? 0}");
+                Debug.WriteLine($"Columns: {response.Columns?.Count() ?? 0}");
+
+                // Check for notifications in the response
+                if (response.Notifications != null && response.Notifications.Any())
+                {
+                    var notification = response.Notifications.First();
+                    throw new Exception($"Unexpected {notification.NotificationType}: {notification.Description}");
                 }
 
-                //var Funds = new StaticDataClient().GetAllFunds().ToDictionary(f => f.EntityId);
+                // Get ColumnIds
+                var tickerColId = response.Columns.Single(c => c.ColumnRequestId == tickerColReq.ColumnRequestId).ColumnId;
+                var netPosColId = response.Columns.Single(c => c.ColumnRequestId == netPosColReq.ColumnRequestId).ColumnId;
+                var exposureColId = response.Columns.Single(c => c.ColumnRequestId == exposureColReq.ColumnRequestId).ColumnId;
 
-                var watchList = WatchListSheet.GetWatchList(app, data);
+                // Create a map from FundId to FundName
+                var fundNames = response.Nodes
+                    .Where(n => n.NodeTypeId == (int)PortfolioFields.Fund && n.LogicalEntityId == (int)LogicalEntities.Fund && n.EntityId.HasValue)
+                    .GroupBy(n => n.EntityId.Value)
+                    .ToDictionary(g => (FundIds)g.Key, g => {
+                        var node = g.First();
+                        return node.Values[node.HierarchyColumn.Value].ToString();
+                    });
+                if (!fundNames.Any())
+                {
+                    throw new Exception("Expected funds in GridResponse");
+                }
+
+                // Unroll hierarchy
+                var rows = GetFlattenedRows(response.Nodes, tickerColId, exposureColId, netPosColId);
+
+                // Separate array that only contains the leaves of the hierarchy (Instrument nodes)
+                var instrumentRows = rows.Where(i => i.Field == PortfolioFields.Instrument).ToArray();
+                Debug.WriteLine($"Instrument nodes: {instrumentRows.Length}");
+
+                // Find current tickers
+                var currentTickers = instrumentRows.Select(i => i.Ticker).Distinct().Where(t => t != null).ToArray();
+                Debug.WriteLine($"Distinct tickers: {currentTickers.Length}");
+
+                // Read watch list sheet into a dictionary (by ticker)
+                // And append missing tickers
+                var watchList = WatchListSheet.GetWatchList(app, currentTickers);
+
+                // Reads watch list column metadata (formulas, number format, width, etc.)
+                // and puts it to the PortfolioSheet class
                 WatchListSheet.ReadColumns(app, PortfolioSheet.Columns);
-                ApplyManagerOverrides(data, watchList);
 
-                foreach (var fund in funds)
+                // Apply manager overrides that were read from the Watch List
+                ApplyManagerOverrides(rows, watchList);
+
+                // Write Excel sheets (the order matters)
+                foreach (var fund in fundNames)
                 {
-                    ScenarioSheet.Write(app, fund, data, watchList);
+                    ScenarioSheet.Write(app, fund, rows, watchList);
                 }
-                foreach (var fund in funds)
+                foreach (var fund in fundNames)
                 {
-                    ExposureSheet.Write(app, fund, data, watchList);
+                    ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
                 }
-                foreach (var fund in funds)
+                foreach (var fund in fundNames)
                 {
-                    PortfolioSheet.Write(app, fund, data, watchList);
+                    PortfolioSheet.Write(app, fund, rows, watchList);
                 }
                 WatchListSheet.Write(app, watchList, "Watch List Top", true);
                 WatchListSheet.Write(app, watchList, "Watch List Bottom", false);
                 WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
                 WatchListSheet.Write(app, watchList, "Watch List Low Quality", false, "L");
+                Debug.WriteLine("Done");
             }
+#if !DEBUG
             catch (Exception e)
             {
-                MessageBox.Show(e.Message, e.GetType().Name);
+                MessageBox.Show(e.Message, AddonName);
             }
+#endif
             finally
             {
                 app.StatusBar = null;
@@ -166,43 +321,174 @@ namespace Odey.ExcelAddin
             }
         }
 
-        private void ApplyManagerOverrides(List<PortfolioDTO> data, Dictionary<string, WatchListItem> watchList)
+        private static List<PortfolioItem> GetFlattenedRows(IEnumerable<Node> nodes, uint tickerColumnId, uint exposureColumnId, uint netPositionColumnId, List<PortfolioItem> flattened = null, PortfolioItem parent = null)
         {
-            foreach (var row in data)
+            flattened = flattened ?? new List<PortfolioItem>();
+
+            foreach (var node in nodes)
             {
-                if (row.StrategyName == "None")
+                var current = CreateItem(parent, node, tickerColumnId, exposureColumnId, netPositionColumnId);
+                if (current != null)
                 {
-                    row.StrategyName = null;
+                    flattened.Add(current);
                 }
-
-                if (row.BloombergTicker != null && row.ManagerId == (int)ApplicationUserIds.JamesHanbury)
+                if (current != null && node.Children != null)
                 {
-                    // Automatic DEVM & FDXH manager override
-                    if (row.FundId == (int)FundIds.DEVM || row.FundId == (int)FundIds.FDXH)
-                    {
-                        var others = data.Where(p => p.BloombergTicker == row.BloombergTicker && p.ManagerId != (int)ApplicationUserIds.JamesHanbury && p.FundId != (int)FundIds.DEVM && p.FundId != (int)FundIds.FDXH).ToList();
-                        var ids = others.Select(p => p.ManagerId).Distinct();
-                        if (ids.Count() == 1)
-                        {
-                            row.ManagerId = ids.Single();
-                            row.ManagerName = others.Select(p => p.ManagerName).First();
-                        }
-                    }
-
-                    // Manual manager override
-                    if (watchList.ContainsKey(row.BloombergTicker))
-                    {
-                        var item = watchList[row.BloombergTicker];
-                        if (item.JHManagerOverride != null)
-                        {
-                            row.ManagerName = item.JHManagerOverride;
-                            row.ManagerId = -1;
-                        }
-                    }
+                    GetFlattenedRows(node.Children, tickerColumnId, exposureColumnId, netPositionColumnId, flattened, current);
                 }
             }
+
+            return flattened;
         }
-        
+
+        private static PortfolioItem CreateItem(PortfolioItem parent, Node node, uint tickerColumnId, uint exposureColumnId, uint netPositionColumnId)
+        {
+            var name = node.Values[node.HierarchyColumn.Value].ToString();
+            if (name == "Currency" || node.IsTotal)
+            {
+                // Ignore Currency/Total nodes (including children)
+                return null;
+            }
+            var item = new PortfolioItem(parent);
+            var field = (PortfolioFields)node.NodeTypeId.Value;
+
+            // Get Entity ID
+            if (node.EntityId == null)
+            {
+                throw new Exception("ID not recognised");
+            }
+            var id = node.EntityId.Value;
+
+            item.Field = field;
+            item.Node = node;
+
+            // Assign values
+            if (field == PortfolioFields.Book)
+            {
+                item.Book = name;
+                item.BookId = (BookIds)id;
+            }
+            else if (field == PortfolioFields.Fund)
+            {
+                item.Fund = name;
+                item.FundId = (FundIds)id;
+            }
+            else if (field == PortfolioFields.Manager)
+            {
+                item.Manager = name;
+                item.ManagerId = (ApplicationUserIds)id;
+                item.ManagerInitials = ManagerInitials[(ApplicationUserIds)id];
+            }
+            else if (field == PortfolioFields.InstrumentClass)
+            {
+                item.InstrumentClass = name;
+                item.InstrumentClassId = (InstrumentClassIds)id;
+            }
+            else if (field == PortfolioFields.Issuer)
+            {
+                item.Issuer = name;
+                item.IssuerId = id;
+            }
+            else if (field == PortfolioFields.NetPositionLongShortType)
+            {
+                item.IsShort = (id == 1);
+            }
+            else if (field == PortfolioFields.Instrument)
+            {
+                item.Instrument = name;
+                item.InstrumentId = id;
+
+                // Read column: Ticker
+                if (node.Values.ContainsKey(tickerColumnId))
+                {
+                    item.Ticker = node.Values[tickerColumnId].ToString(); // Ticker
+                }
+                else
+                {
+                    Debug.WriteLine($"No Ticker for instrument {name}");
+                }
+
+                // Read column: Exposure
+                if (node.Values.ContainsKey(exposureColumnId))
+                {
+                    item.Exposure = node.Values[exposureColumnId].NumericValue.Value; // Exposure as % NAV
+                }
+                else
+                {
+                    Debug.WriteLine($"No Exposure for instrument {name}");
+                }
+
+                // Read column: NetPosition
+                if (node.Values.ContainsKey(netPositionColumnId))
+                {
+                    item.NetPosition = node.Values[netPositionColumnId].NumericValue.Value; // Net Position
+                }
+                else
+                {
+                    Debug.WriteLine($"No NetPosition for instrument {name}");
+                }
+            }
+            else
+            {
+                throw new NotImplementedException($"The field {field} is not implemented");
+            }
+            return item;
+        }
+
+        private void ApplyManagerOverrides(IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
+        {
+            // Automatic DEVM & FDXH manager override
+            //var secondaryJHFunds = new[] { FundIds.DEVM, FundIds.FDXH };
+            //var secondaryJHTickers = items.Where(n => n.Ticker != null && n.ManagerId == ApplicationUserIds.JamesHanbury && secondaryJHFunds.Contains(n.FundId)).ToArray();
+            //var primaryOtherTickers = items.Where(n => n.Ticker != null && n.ManagerId != ApplicationUserIds.JamesHanbury && !secondaryJHFunds.Contains(n.FundId)).ToArray();
+            //foreach (var item in secondaryJHTickers)
+            //{
+            //    var others = primaryOtherTickers.Where(n => n.Ticker == item.Ticker);
+            //    if (others.Select(p => p.ManagerId).Distinct().Count() == 1)
+            //    {
+            //        var managerId = others.First().ManagerId;
+            //        if (item.ManagerId != managerId)
+            //        {
+            //            item.ManagerId = managerId;
+            //            item.ManagerInitials = ManagerInitials[managerId];
+            //            item.Manager = ManagerNames[managerId];
+            //        }
+            //    }
+            //}
+
+            var acBooks = new[] { BookIds.ArffAC, BookIds.BvffAC, BookIds.DevmAC, BookIds.FdxhAC, BookIds.OuarAC };
+            foreach (var item in items)
+            {
+                // Make sure that the AC books' manager is actually Adrian Courtenay
+                // (Geoff changed the manager of those books to "James Hanbury", so that
+                // the trades appear on his trade blotters to sign off)
+                if (acBooks.Contains(item.BookId))
+                {
+                    item.ManagerId = ApplicationUserIds.AdrianCourtenay;
+                    item.ManagerInitials = ManagerInitials[ApplicationUserIds.AdrianCourtenay];
+                    item.Manager = ManagerNames[ApplicationUserIds.AdrianCourtenay];
+                }
+
+                // Apply manager override column from the watch list
+                if (item.Ticker == null)
+                {
+                    continue;
+                }
+                watchList.TryGetValue(item.Ticker, out var wlEntry);
+                if (wlEntry == null || wlEntry.ManagerOverride == null)
+                {
+                    continue;
+                }
+                if (!ManagerIds.ContainsKey(wlEntry.ManagerOverride))
+                {
+                    throw new Exception($"Unknown manager initials {wlEntry.ManagerOverride}");
+                }
+                item.ManagerId = ManagerIds[wlEntry.ManagerOverride];
+                item.ManagerInitials = wlEntry.ManagerOverride;
+                item.Manager = ManagerNames[item.ManagerId];
+            }
+        }
+
         private static string GetResourceText(string resourceName)
         {
             Assembly asm = Assembly.GetExecutingAssembly();

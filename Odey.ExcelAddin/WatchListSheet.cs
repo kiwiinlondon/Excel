@@ -1,9 +1,8 @@
 ﻿using Excel = Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
 using System.Linq;
-using Odey.Framework.Keeley.Entities.Enums;
-using Odey.PortfolioCache.Entities;
 using System;
+using Odey.Intranet.Entities.Grid;
 using System.Diagnostics;
 
 namespace Odey.ExcelAddin
@@ -13,7 +12,7 @@ namespace Odey.ExcelAddin
         public int RowIndex { get; set; }
         public string Ticker { get; set; }
         public string Quality { get; set; }
-        public string JHManagerOverride { get; set; }
+        public string ManagerOverride { get; set; }
         public double? Upside { get; set; }
     }
 
@@ -116,7 +115,7 @@ namespace Odey.ExcelAddin
             },
         };
 
-        public static Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, List<PortfolioDTO> data)
+        public static Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, string[] tickers)
         {
             app.StatusBar = "Reading watch list...";
 
@@ -146,16 +145,24 @@ namespace Odey.ExcelAddin
                     RowIndex = row,
                     Ticker = ticker,
                     Quality = sheet.Cells[row, Quality.Index.Value].Value2 as string,
-                    JHManagerOverride = sheet.Cells[row, Manager.Index.Value].Value2 as string,
+                    ManagerOverride = sheet.Cells[row, Manager.Index.Value].Value2 as string,
                     Upside = sheet.Cells[row, Upside.Index.Value].Value2 as double?,
                 });
 
                 ++row;
                 ticker = sheet.Cells[row, Ticker.Index.Value].Value2 as string;
             }
+            Debug.WriteLine($"{watchList.Count} tickers loaded from Watch List.");
+
+            // Protect against empty ticker rows in Watch List
+            var last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing).Row;
+            if (last > row)
+            {
+                throw new Exception($"You have a gap in the Watch List near row {row}. Please fix.");
+            }
 
             // Add new tickers
-            var newTickers = data.Select(p => p.BloombergTicker).Distinct().Where(t => t != null).Except(watchList.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
+            var newTickers = tickers.Except(watchList.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
             foreach (var newTicker in newTickers)
             {
                 watchList.Add(newTicker, new WatchListItem
@@ -166,6 +173,7 @@ namespace Odey.ExcelAddin
                 sheet.Cells[row, Ticker.Index.Value] = newTicker;
                 ++row;
             }
+            Debug.WriteLine($"Added {newTickers.Count} new tickers to the Watch List. Now has {watchList.Count}");
 
             return watchList;
         }
@@ -188,7 +196,7 @@ namespace Odey.ExcelAddin
             {
                 rows = rows.OrderBy(w => w.Upside);
             }
-            rows = rows.Take(NumItems);
+            rows = rows.Take(NumItems).ToArray();
 
             // Get the worksheet
             var isNewSheet = false;

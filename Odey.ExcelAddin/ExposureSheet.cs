@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
-using Odey.PortfolioCache.Entities;
 using System;
 
 namespace Odey.ExcelAddin
@@ -10,41 +9,44 @@ namespace Odey.ExcelAddin
     class ExposureItem
     {
         public List<string> Tickers { get; set; }
-        public string Manager { get; set; }
+        public string ManagerInitials { get; set; }
+        public ApplicationUserIds ManagerId { get; set; }
         public decimal PercentNAV { get; set; }
         public decimal NetPosition { get; set; }
-        public List<int> InstrumentClassIds { get; set; }
+        public List<InstrumentClassIds> InstrumentClassIds { get; set; }
+        public bool IsShort { get; set; }
     }
 
     class ExposureSheet
     {
-        private static Dictionary<string, int> TargetItemCountByManager = new Dictionary<string, int>
+        private static Dictionary<ApplicationUserIds, int> TargetItemCountByManager = new Dictionary<ApplicationUserIds, int>
         {
-            { "JH", 25 },
-            { "AC", 8 },
-            { "JG", 10 },
+            { ApplicationUserIds.JamesHanbury, 25 },
+            { ApplicationUserIds.AdrianCourtenay, 8 },
+            { ApplicationUserIds.JamieGrimston, 10 },
         };
 
-        public static void Write(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
+        public static void Write(Excel.Application app, DateTime date, KeyValuePair<FundIds, string> fund, IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
         {
-            var fundName = Ribbon1.GetFundName(fundId, weightings);
-            app.StatusBar = $"Writing {fundName} exposure sheet...";
+            app.StatusBar = $"Writing {fund.Value} exposure sheet...";
 
-            var rows = weightings
-                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
-                .ToLookup(p => new { p.IssuerId, p.ManagerName })
+            var rows = items
+                .Where(p => p.Ticker != null)
+                .ToLookup(p => new { p.IssuerId, p.ManagerId, p.ManagerInitials, p.IsShort })
                 .Select(g => new ExposureItem
                 {
-                    Tickers = g.Select(p => p.BloombergTicker).Distinct().ToList(),
-                    Manager = Ribbon1.GetManagerInitials(g.Key.ManagerName),
-                    PercentNAV = (g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single()) ?? 0,
-                    NetPosition = g.Sum(p => p.NetPosition) ?? 0,
+                    ManagerInitials = g.Key.ManagerInitials,
+                    ManagerId = g.Key.ManagerId,
+                    IsShort = g.Key.IsShort,
+                    PercentNAV = g.Sum(p => p.Exposure),
+                    NetPosition = g.Sum(p => p.NetPosition),
+                    Tickers = g.Select(p => p.Ticker).Distinct().ToList(),
                     InstrumentClassIds = g.Select(p => p.InstrumentClassId).Distinct().ToList(),
                 })
                 .ToList();
 
             // Get the worksheet
-            var sheetName = $"Exposure {fundName}";
+            var sheetName = $"Exposure {fund.Value}";
             Excel.Worksheet sheet;
             try
             {
@@ -68,7 +70,7 @@ namespace Odey.ExcelAddin
             totalGrossExposureCell.NumberFormat = "0.0%";
 
             // Date
-            sheet.Cells[row, 7] = weightings.Select(p => p.ReferenceDate).Distinct().Single().ToString("dd/MM/yyyy");
+            sheet.Cells[row, 7] = date.ToString("dd/MM/yyyy");
 
             ++row;
 
@@ -85,11 +87,11 @@ namespace Odey.ExcelAddin
             var column = 1;
             foreach (var manager in TargetItemCountByManager.Keys)
             {
-                var managerPositions = rows.Where(x => x.Manager == manager);
+                var managerPositions = rows.Where(x => x.ManagerId == manager);
                 var excessBelow = TargetItemCountByManager[manager];
 
                 // Manager initials
-                sheet.Cells[row, column] = manager;
+                sheet.Cells[row, column] = Ribbon1.ManagerInitials[manager];
 
                 // Manager Gross Exposure
                 sheet.Cells[row + 1, column + 1] = "Gross Exposure";
@@ -109,17 +111,17 @@ namespace Odey.ExcelAddin
                 fundPercentageCell.Formula = $"={managerExposureCell.Address}/{totalGrossExposureCell.Address}";
                 fundPercentageCell.NumberFormat = "0.0%";
 
-                // Write longs
-                var longs = managerPositions.Where(x => x.PercentNAV > 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
+                // Write longs (They want index options to show at the end)
+                var longs = managerPositions.Where(x => !x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
                 var longHeight = WriteExposureTable(sheet, row + 4, column, longs.ToList(), watchList, excessBelow, "Long", nameFormula);
                 column += headers.Length + 5;
 
-                // Write shorts
-                var shorts = managerPositions.Where(x => x.PercentNAV < 0).OrderBy(x => (x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains((int)InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
+                // Write shorts (They want index options to show at the end)
+                var shorts = managerPositions.Where(x => x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
                 var shortHeight = WriteExposureTable(sheet, row + 4, column, shorts.ToList(), watchList, excessBelow, "Short", nameFormula);
                 column += headers.Length + 5;
 
-                if (manager == "JH")
+                if (manager == ApplicationUserIds.JamesHanbury)
                 {
                     row = 4;
                 }
@@ -145,7 +147,6 @@ namespace Odey.ExcelAddin
 
         private static int WriteExposureTable(Excel.Worksheet sheet, int row, int column, List<ExposureItem> items, Dictionary<string, WatchListItem> watchList, int excessBelow, string nameHeader = "Name", string nameFormula = null)
         {
-
             var wb = sheet.Application.ActiveWorkbook;
             var headerStyle = wb.GetHeaderStyle();
             var rowStyle = wb.GetNormalRowStyle();

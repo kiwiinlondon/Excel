@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Odey.Framework.Keeley.Entities.Enums;
-using Odey.PortfolioCache.Entities;
+using Odey.Query.Reporting.Contracts;
 
 namespace Odey.ExcelAddin
 {
@@ -12,25 +12,25 @@ namespace Odey.ExcelAddin
 
         private static string[] ScenarioInputColumns = new[] { "AZ", "BA", "BB", "BC", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BK", "BL" };
 
-        public static void Write(Excel.Application app, FundIds fundId, List<PortfolioDTO> weightings, Dictionary<string, WatchListItem> watchList)
+        public static void Write(Excel.Application app, KeyValuePair<FundIds, string> fund, List<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
         {
-            var fundName = Ribbon1.GetFundName(fundId, weightings);
-            app.StatusBar = $"Writing {fundName} scenario sheet...";
+            app.StatusBar = $"Writing {fund.Value} scenario sheet...";
 
-            var rows = weightings
-                .Where(p => p.ExposureTypeId == ExposureTypeIds.Primary && p.BloombergTicker != null && p.FundId == (int)fundId)
-                .ToLookup(p => new { p.EquivalentInstrumentMarketId, p.BloombergTicker, p.ManagerName })
+            var rows = items
+                .Where(p => p.Field == PortfolioFields.Instrument && p.Ticker != null && p.FundId == fund.Key)
+                .ToLookup(p => new { p.Ticker, p.ManagerInitials })
                 .Select(g => new
                 {
-                    Ticker = g.Key.BloombergTicker,
-                    Manager = Ribbon1.GetManagerInitials(g.Key.ManagerName),
-                    PercentNAV = g.Sum(p => p.Exposure) / g.Select(p => p.FundNAV).Distinct().Single(),
+                    g.Key.Ticker,
+                    g.Key.ManagerInitials,
+                    PercentNAV = g.Sum(p => p.Exposure),
                 })
-                .ToList();
+                .OrderBy(x => x.Ticker)
+                .ToArray();
 
-            var sheet = app.GetOrCreateVstoWorksheet($"Scenarios {fundName}");
+            var sheet = app.GetOrCreateVstoWorksheet($"Scenarios {fund.Value}");
 
-            var tName = $"Scenarios_{fundName}";
+            var tName = $"Scenarios_{fund.Value}";
             var table = sheet.GetListObject(tName);
             if (table == null)
             {
