@@ -288,22 +288,22 @@ namespace Odey.ExcelAddin
                 ApplyManagerOverrides(rows, watchList);
 
                 // Write Excel sheets (the order matters)
-                //foreach (var fund in fundNames)
-                //{
-                //    ScenarioSheet.Write(app, fund, rows, watchList);
-                //}
-                //foreach (var fund in fundNames)
-                //{
-                //    ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
-                //}
+                foreach (var fund in fundNames)
+                {
+                    ScenarioSheet.Write(app, fund, rows, watchList);
+                }
+                foreach (var fund in fundNames)
+                {
+                    ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
+                }
                 foreach (var fund in fundNames)
                 {
                     PortfolioSheet.Write(app, fund, rows, watchList);
                 }
-                //WatchListSheet.Write(app, watchList, "Watch List Top", true);
-                //WatchListSheet.Write(app, watchList, "Watch List Bottom", false);
-                //WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
-                //WatchListSheet.Write(app, watchList, "Watch List Low Quality", false, "L");
+                WatchListSheet.Write(app, watchList, "Watch List Top", true);
+                WatchListSheet.Write(app, watchList, "Watch List Bottom", false);
+                WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
+                WatchListSheet.Write(app, watchList, "Watch List Low Quality", false, "L");
                 Debug.WriteLine("Done");
             }
 #if !DEBUG
