@@ -45,7 +45,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         protected bool Equals(InstrumentDTO other)
         {
-            return Identifier.Equals(other.Identifier);
+            return Identifier.Equals(other.Identifier) && AssetClass.Equals(other.AssetClass);
         }
 
         public override bool Equals(object obj)

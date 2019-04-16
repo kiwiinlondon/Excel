@@ -29,7 +29,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private string GetAssetClass(InstrumentMarket instrumentMarket)
         {
-           
+
+            if (instrumentMarket.Instrument.DerivedAssetClassId == (int)DerivedAssetClassIds.Cash)
+            {
+                return EntityBuilder.HedgeLabel;
+            }
+
             if (instrumentMarket.Instrument.DerivedAssetClassId == (int)DerivedAssetClassIds.ForeignExchange)
             {
                 return EntityBuilder.FXLabel;
@@ -137,12 +142,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
 
-        public InstrumentDTO GetFX(InstrumentMarket instrumentMarket)
+        public InstrumentDTO GetFX(InstrumentMarket instrumentMarket,Fund fund)
         {
             string currency1;
             string currency2;
 
-            GetCurrencyPair(instrumentMarket, out currency1, out currency2);
+            GetCurrencyPair(instrumentMarket, fund, out currency1, out currency2);
             string currency = GetFXCurrency(currency1, currency2);
             string ticker = GetFXTicker(currency1, currency2);
 
@@ -162,10 +167,18 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-        private void GetCurrencyPair(InstrumentMarket instrumentMarket, out string currency1, out string currency2)
+        private void GetCurrencyPair(InstrumentMarket instrumentMarket,Fund fund, out string currency1, out string currency2)
         {
-            currency1 = instrumentMarket.Name.Substring(0, 3);
-            currency2 = instrumentMarket.Name.Substring(4, 3);
+            if (instrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.Currency)
+            {
+                currency1 = fund.Currency;
+                currency2 = instrumentMarket.Name;
+            }
+            else
+            {
+                currency1 = instrumentMarket.Name.Substring(0, 3);
+                currency2 = instrumentMarket.Name.Substring(4, 3);
+            }
         }
 
         private string GetFXTicker(string currency1, string currency2)

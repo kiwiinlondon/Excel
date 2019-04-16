@@ -15,6 +15,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public static readonly string EquityLabel = "Equity";
         public static readonly string MacroLabel = "Macro";
         public static readonly string FXLabel = "FX";
+        public static readonly string HedgeLabel = "Hedge";
 
         public EntityBuilder(DataAccess dataAccess,WorkbookAccess sheetAccess)
         {
@@ -99,6 +100,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             AddAssetClass(parent, EquityLabel, 1, true);
             AddAssetClass(parent, MacroLabel, 2, true);
             AddAssetClass(parent, FXLabel, 3, false);
+            AddAssetClass(parent, HedgeLabel, 4, true);
 
         }
 
@@ -128,6 +130,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
      
             foreach (PortfolioDTO position in portfolio)
             {
+                if (position.Instrument.InstrumentTypeId == InstrumentTypeIds.FX && position.Instrument.AssetClass == HedgeLabel)
+                {
+                    if (position.Instrument.Identifier.Code.Contains("USD"))
+                    {
+                        int ii = 0;
+                    }
+                    int i = 0;
+                }
                 GroupingEntity parentForPositions = GetChildEntityWithPositions(fund, position,fund);                
                 AddDTOToParent(parentForPositions, position);
             }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.Entity;
+using E = Odey.Framework.Keeley.Entities;
 
 namespace Odey.Excel.CrispinsSpreadsheet
 {
@@ -64,25 +65,30 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
                 var portfolios = context.Portfolios
                     .Include(a => a.Position.Book)
-                    .Include(a => a.Position.Currency.Instrument)
+                    .Include(a => a.Position.Currency.Instrument.InstrumentMarkets)
                     .Include(a => a.Position.InstrumentMarket.PriceCurrency.Instrument)
                     .Include(a => a.Position.InstrumentMarket.Instrument.InstrumentClass.ParentInstrumentClassRelationships)
                     .Include(a => a.Position.InstrumentMarket.Market.LegalEntity.Country)
-                    .Where(a => a.FundId == fund.FundId 
-                        && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat);
+                    .Where(a => a.FundId == fund.FundId
+                        && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat).ToList();
 
-                
-
+                var hedging = BuildHedging(portfolios, fund);
+                var i = hedging.Where(a => a.Position.InstrumentMarketID == 41).ToList();
                 if (!fund.IncludeHedging)//Share 
                 {
-                     portfolios = portfolios.Where(a=>a.Position.InstrumentMarket.Instrument.DerivedAssetClassId != (int)DerivedAssetClassIds.Cash);
+                     portfolios = portfolios.Where(a=>a.Position.InstrumentMarket.Instrument.DerivedAssetClassId != (int)DerivedAssetClassIds.Cash).ToList();
                 }
                 if (fund.IncludeOnlyFX)//MAC and share classes
                 {
-                    portfolios = portfolios.Where(a => a.Position.InstrumentMarket.Instrument.InstrumentClassID == (int)InstrumentClassIds.ForwardFX);
+                    portfolios = portfolios.Where(a => a.Position.InstrumentMarket.Instrument.InstrumentClassID == (int)InstrumentClassIds.ForwardFX).ToList();
                 }
 
-                var portfoliosByPosition = portfolios.ToList()
+                if (fund.Name == "OEI")
+                {
+                    portfolios.AddRange(hedging);
+                }
+
+                var portfoliosByPosition = portfolios
                     .GroupBy(g => g.Position)
                     .Select(a => new DTOGrouping
                     {
@@ -93,10 +99,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     });
 
           
-                var fxPositions = portfoliosByPosition.Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.ForwardFX).ToList();
+                var fxPositions = portfoliosByPosition.Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.ForwardFX || a.Position.InstrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.Currency).ToList();
+                
                 var fxToAdd = BuildFX(fxPositions, fund);
                 var toReturn =  portfoliosByPosition
-                    .Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.ForwardFX)
+                    .Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.ForwardFX && a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.Currency)
                     .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.Get(g.Position.InstrumentMarket) })
                 .Select(a => new PortfolioDTO(
                     a.Key.Book,
@@ -113,12 +120,61 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-       
+        private List<E.Portfolio> BuildHedging(List<E.Portfolio> portfolio,Fund fund)
+        {
+            var nav = portfolio.Where(a=>a.ReferenceDate == ReferenceDate).Sum(a => a.MarketValue);
+            var toReturn =  portfolio.Where(a => a.Position.CurrencyID != fund.CurrencyId && a.Position.InstrumentMarket.Instrument.DerivedAssetClassId != (int)DerivedAssetClassIds.ForeignExchange)
+                    .GroupBy(g => new
+                    {
+                        CurrencyID = g.Position.CurrencyID,
+                        Currency = g.Position.Currency,
+                        BookID = g.Position.BookID,
+                        Book = g.Position.Book,
+                        InstrumentMarketID = g.Position.Currency.Instrument.InstrumentMarkets.First().InstrumentMarketID,
+                        InstrumentMarket = g.Position.Currency.Instrument.InstrumentMarkets.First(),
+                        IsAccrual = false,
+                        ReferenceDate = g.ReferenceDate
+                    })
+                    .Where(w=>Math.Abs(w.Sum(a => a.MarketValue))/ nav > .02m)
+                    .Select(s => new Portfolio() { Position = new E.Position()
+                    {
+                        CurrencyID = s.Key.CurrencyID,
+                        Currency = s.Key.Currency,
+                        BookID = s.Key.BookID,
+                        Book = s.Key.Book,
+                        InstrumentMarketID = s.Key.InstrumentMarketID,
+                        InstrumentMarket = s.Key.InstrumentMarket
+                    }, ReferenceDate = s.Key.ReferenceDate, NetPosition = s.Sum(a => a.MarketValue/a.FXRate), Price = s.Average(a => a.FXRate) }).ToList();
+
+
+            return toReturn;
+
+                        //).Select(a => new DTOGrouping
+                        //{
+                        //    Position = new E.Position()
+                        //    {
+                        //        CurrencyID = a.Key.CurrencyID,
+                        //        Currency = a.Key.Currency,
+                        //        BookID = a.Key.BookID,
+                        //        Book = a.Key.Book,
+                        //        InstrumentMarketID = a.Key.InstrumentMarketID,
+                        //        InstrumentMarket = a.Key.InstrumentMarket
+                        //    },
+                        //    PreviousPrevious = new Portfolio() { a.Where(f => f.ReferenceDate == PreviousPreviousReferenceDate).Select(s=> new Portfolio() {  NetPosition = s. }
+                        //    Previous = a.FirstOrDefault(f => f.ReferenceDate == PreviousReferenceDate),
+                        //    Current = a.FirstOrDefault(f => f.ReferenceDate == ReferenceDate),
+                        //}).ToList();
+
+
+                    }
+
+
+
 
         private List<PortfolioDTO> BuildFX(List<DTOGrouping> fxPositions, Fund fund)
         {
             var quantities = fxPositions
-                    .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.GetFX(g.Position.InstrumentMarket) })
+                    .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.GetFX(g.Position.InstrumentMarket, fund) })
                     .Select(a =>
                     new
                     {
@@ -134,10 +190,15 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private decimal GetFXNetPosition(IEnumerable<Portfolio> positions, InstrumentDTO instrument)
         {
+            
             positions = positions.Where(a => a != null && a.NetPosition !=0);
             if (positions == null || positions.Count() == 0)
             {
                 return 0;
+            }
+            if (instrument.AssetClass != "FX")
+            {
+                return positions.Sum(a => a.NetPosition);
             }
 
             var nonFlat = positions.GroupBy(a => new { a.Position.BookID, a.Position.InstrumentMarketID, a.Position.AccountID, a.Position.Strategy })
@@ -158,7 +219,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 bool includeHedging = fund.FundTypeId == (int)FundTypeIds.ShareClass;
                 bool IncludeOnlyFX = !isPrimary;
 
-                Fund toReturn = new Fund(fund.LegalEntityID, fund.Name, fund.Currency.IsoCode, false, fund.IsLongOnly, childEntityType, includeHedging, IncludeOnlyFX, isPrimary);              
+                Fund toReturn = new Fund(fund.LegalEntityID, fund.Name, fund.Currency.IsoCode, fund.CurrencyID, false, fund.IsLongOnly, childEntityType, includeHedging, IncludeOnlyFX, isPrimary);              
                 DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
                 var navs = context.FundNetAssetValues.Where(a => a.FundId == fund.LegalEntityID && referenceDates.Contains(a.ReferenceDate)).ToList();
                 toReturn.Nav = navs.FirstOrDefault(a => a.ReferenceDate == ReferenceDate).MarketValue;

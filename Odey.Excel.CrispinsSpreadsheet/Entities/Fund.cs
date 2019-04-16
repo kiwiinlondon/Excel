@@ -11,7 +11,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
     {
         public int FundId { get; private set; }
 
-        public Fund(int fundId, string name, string currency,bool childrenArePositions, bool isLongOnly, EntityTypes childEntityType, bool includeHedging, bool includeOnlyFX,bool isPrimary) : base(null,name,name, childEntityType, fundId)
+        public Fund(int fundId, string name, string currency, int currencyId, bool childrenArePositions, bool isLongOnly, EntityTypes childEntityType, bool includeHedging, bool includeOnlyFX,bool isPrimary) : base(null,name,name, childEntityType, fundId)
         {
             FundId = fundId;
             Currency = currency;
@@ -27,8 +27,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 _rowType = RowType.AdditionalFundTotal;
             }
-
+            CurrencyId = currencyId;
         }
+
+        public int CurrencyId { get; private set; }
+
         public string Currency { get; private set; }        
 
         public XL.Range Range { get; set; }

@@ -864,7 +864,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 columns = new string[] { _currentPriceColumn, _netPositionColumn, PriceMultiplierColumn };
             }
-            string formula = GetMultiplyFormula(rowNumber, columns, divideColumn,false, _netPositionColumn, instrumentTypeId == InstrumentTypeIds.FX);
+            string formula = GetMultiplyFormula(rowNumber, columns, divideColumn,false, _netPositionColumn, _currentPriceColumn, instrumentTypeId == InstrumentTypeIds.FX);
 
             return formula;
         }
@@ -874,17 +874,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
             
             if (position.InstrumentTypeId == InstrumentTypeIds.FX)
             {
-                return GetMultiplyFormula(position.RowNumber, new string[] { _priceChangeColumn, _netPositionColumn }, new string[] { _fxRateColumn,_currentPriceColumn }, position.InvertPNL,null,false);
+                return GetMultiplyFormula(position.RowNumber, new string[] { _priceChangeColumn, _netPositionColumn }, new string[] { _fxRateColumn,_currentPriceColumn }, position.InvertPNL,null,null,false);
             }
             else
             {
-                return GetMultiplyFormula(position.RowNumber, new string[] { _priceChangeColumn, _netPositionColumn, PriceMultiplierColumn }, new string[] { _fxRateColumn },false, null, false);
+                return GetMultiplyFormula(position.RowNumber, new string[] { _priceChangeColumn, _netPositionColumn, PriceMultiplierColumn }, new string[] { _fxRateColumn },false, null, null, false);
             }
             
         }
 
 
-        private string GetMultiplyFormula(int rowNumber, string[] columns, string[] divideColumn, bool invert, string columnToTestForZero, bool absolute)
+        private string GetMultiplyFormula(int rowNumber, string[] columns, string[] divideColumn, bool invert, string columnToTestForZero, string columnToTestForErrors, bool absolute)
         {
             string divideColumns = "";
             if (divideColumn != null && divideColumn.Length>0)
@@ -894,10 +894,20 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
             string formula = string.Join("*", columns.Select(a => a + rowNumber)) + divideColumns + (invert ? "*-1" : "");
 
-            if (!string.IsNullOrWhiteSpace(columnToTestForZero))
+            bool columnToTestForZeroExists = string.IsNullOrWhiteSpace(columnToTestForZero);
+            bool columnToTestForErrorExists = string.IsNullOrWhiteSpace(columnToTestForErrors);
+
+            if (!columnToTestForZeroExists && !columnToTestForZeroExists)
             {
-                formula = $"if({columnToTestForZero + rowNumber}=0,0,{formula})";
+                string qrc = columnToTestForZero + rowNumber;
+                string prc = columnToTestForErrors + rowNumber;
+                formula = $"if(OR(OR({qrc}=0,{prc} = {_bloombergError}),{prc}={_noRealTimePrice}),0,{formula})";
             }
+            else if (!columnToTestForZeroExists || !columnToTestForZeroExists)
+            {
+                throw new ApplicationException("Not expecting only 1 of errors and zero.");
+            }
+
             if (absolute)
             {
                 formula = $"Abs({formula})";
@@ -928,11 +938,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 string pnlFormula;
                 if (position.InstrumentTypeId == InstrumentTypeIds.FX)
                 {
-                    pnlFormula = GetMultiplyFormula(rowNumber, new string[] { PreviousPriceChangeColumn, PreviousNetPositionColumn }, new string[] { PreviousFXRateColumn, PreviousClosePriceColumn },position.InvertPNL,null, false);
+                    pnlFormula = GetMultiplyFormula(rowNumber, new string[] { PreviousPriceChangeColumn, PreviousNetPositionColumn }, new string[] { PreviousFXRateColumn, PreviousClosePriceColumn },position.InvertPNL,null, null, false);
                 }
                 else
                 {
-                    pnlFormula = GetMultiplyFormula(rowNumber, new string[] { PreviousPriceChangeColumn, PreviousNetPositionColumn, PriceMultiplierColumn }, new string[] { PreviousFXRateColumn },false, null, false);
+                    pnlFormula = GetMultiplyFormula(rowNumber, new string[] { PreviousPriceChangeColumn, PreviousNetPositionColumn, PriceMultiplierColumn }, new string[] { PreviousFXRateColumn },false, null, null, false);
                 }
                 pnlFormula = pnlFormula.Replace("=", "");
                 return $"={pnlFormula} / {PreviousNavColumn}{groupingEntity.TotalRow.RowNumber}";
