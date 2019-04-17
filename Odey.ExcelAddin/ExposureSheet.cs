@@ -64,7 +64,7 @@ namespace Odey.ExcelAddin
             var row = 1;
 
             // Total Gross Exposure
-            sheet.Cells[row, 1] = "Total Gross Exposure";
+            sheet.Cells[row, 1] = $"Total Gross {fund.Value} Exposure";
             Excel.Range totalGrossExposureCell = sheet.Cells[row, 3];
             totalGrossExposureCell.Value2 = rows.Sum(p => Math.Abs(p.PercentNAV));
             totalGrossExposureCell.NumberFormat = "0.0%";
