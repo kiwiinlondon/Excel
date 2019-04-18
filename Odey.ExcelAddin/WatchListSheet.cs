@@ -11,7 +11,8 @@ namespace Odey.ExcelAddin
     {
         public int RowIndex { get; set; }
         public string Ticker { get; set; }
-        public string Quality { get; set; }
+        public string QualityHL { get; set; }
+        public string LiquidityHL { get; set; }
         public string ManagerOverride { get; set; }
         public double? Upside { get; set; }
     }
@@ -29,91 +30,7 @@ namespace Odey.ExcelAddin
         public static ColumnDef Quality = new ColumnDef { Index = 49, AlphabeticalIndex = "AW", Name = "High (H) or Low (L) Quality?" };
         public static ColumnDef Manager = new ColumnDef { Index = 50, AlphabeticalIndex = "AX", Name = "Portfolio Manager" };
         public static ColumnDef Conviction = new ColumnDef { Index = 51, AlphabeticalIndex = "AY", Name = "Conviction Level" };
-
-        
-        public static List<ColumnDef> Columns = new List<ColumnDef>
-        {
-            new ColumnDef
-            {
-                AlphabeticalIndex = "B",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "E",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "F",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "S",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "T",
-                RefAsNumber = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "U",
-                RefAsString = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "W",
-                RefAsNumber = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "Z",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "AD",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "AI",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "AM",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "AQ",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "AS",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "AT",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "AW",
-                CopyFormula = true,
-            },
-            new ColumnDef
-            {
-                AlphabeticalIndex = "BK",
-                CopyFormula = true,
-            },
-        };
+        public static ColumnDef LiquidityHL = new ColumnDef { Index = 52, AlphabeticalIndex = "AZ", Name = "High (H) or Low (L) Liquidity" };
 
         public static Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, string[] tickers)
         {
@@ -140,14 +57,20 @@ namespace Odey.ExcelAddin
                 {
                     throw new Exception($"Duplicate watch list entry: \"{ticker}\".\n\nPlease remove all but one.");
                 }
-                watchList.Add(ticker, new WatchListItem
+                var item = new WatchListItem
                 {
                     RowIndex = row,
                     Ticker = ticker,
-                    Quality = sheet.Cells[row, Quality.Index.Value].Value2 as string,
+                    QualityHL = sheet.Cells[row, Quality.Index.Value].Value2 as string,
+                    LiquidityHL = sheet.Cells[row, LiquidityHL.Index.Value].Value2 as string,
                     ManagerOverride = sheet.Cells[row, Manager.Index.Value].Value2 as string,
                     Upside = sheet.Cells[row, Upside.Index.Value].Value2 as double?,
-                });
+                };
+                if (item.LiquidityHL != "H" && item.LiquidityHL != "L")
+                {
+                    Debug.WriteLine($"Missing liquidity category for {ticker}");
+                }
+                watchList.Add(ticker, item);
 
                 ++row;
                 ticker = sheet.Cells[row, Ticker.Index.Value].Value2 as string;
@@ -178,15 +101,19 @@ namespace Odey.ExcelAddin
             return watchList;
         }
 
-        public static void Write(Excel.Application app, Dictionary<string, WatchListItem> watchList, string sheetName, bool descending, string onlyQuality = null)
+        public static void Write(Excel.Application app, Dictionary<string, WatchListItem> watchList, string sheetName, bool descending, string onlyQuality = null, string onlyLiquidity = null)
         {
-            var columnList = new[] { "B", "E", "F", "S", "T", "U", "W", "Z", "AD", "AI", "AM", "AQ", "AS", "AT", "AW", "BK" };
+            var columnList = new[] { "B", "E", "F", "S", "T", "U", "W", "Z", "AD", "AI", "AM", "AQ", "AS", "AT", "AW" };
 
             // Query the data
             var rows = watchList.Values.Where(w => w.Upside.HasValue);
             if (onlyQuality != null)
             {
-                rows = rows.Where(w => w.Quality == onlyQuality);
+                rows = rows.Where(w => w.QualityHL == onlyQuality);
+            }
+            if (onlyLiquidity != null)
+            {
+                rows = rows.Where(w => w.LiquidityHL == onlyLiquidity);
             }
             if (descending)
             {

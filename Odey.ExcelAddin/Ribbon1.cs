@@ -302,7 +302,8 @@ namespace Odey.ExcelAddin
                 }
                 WatchListSheet.Write(app, watchList, "Watch List Top", true);
                 WatchListSheet.Write(app, watchList, "Watch List Bottom", false);
-                WatchListSheet.Write(app, watchList, "Watch List High Quality", true, "H");
+                WatchListSheet.Write(app, watchList, "Watch List HQ, High Liquidity", true, "H", "H");
+                WatchListSheet.Write(app, watchList, "Watch List HQ, Low Liquidity", true, "H", "L");
                 WatchListSheet.Write(app, watchList, "Watch List Low Quality", false, "L");
                 Debug.WriteLine("Done");
             }
