@@ -30,12 +30,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private string GetAssetClass(InstrumentMarket instrumentMarket)
         {
 
-            if (instrumentMarket.Instrument.DerivedAssetClassId == (int)DerivedAssetClassIds.Cash)
+            if (instrumentMarket.Instrument.InstrumentClassIdAsEnum == InstrumentClassIds.Currency)
             {
                 return EntityBuilder.HedgeLabel;
             }
 
-            if (instrumentMarket.Instrument.DerivedAssetClassId == (int)DerivedAssetClassIds.ForeignExchange)
+            if (instrumentMarket.Instrument.DerivedAssetClassId == (int)DerivedAssetClassIds.ForeignExchange || instrumentMarket.Instrument.DerivedAssetClassId == (int)DerivedAssetClassIds.Cash)
             {
                 return EntityBuilder.FXLabel;
             }

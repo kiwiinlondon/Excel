@@ -24,22 +24,31 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
 
+        List<Fund> _funds = new List<Fund>();
         public void Match(bool refreshFormulas) 
         {
             _workbookAccess.DisableCalculations();
 
             var rates = _dataAccess.GetFXRates();
 
-            var firstPage = MatchFundSet(FundIds.OEI, new FundIds[] {FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
+            MatchFundSet(FundIds.OEI, new FundIds[] {FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
             MatchFundSet(FundIds.SWAN, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);            
+            MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OPUS, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OPE, null, rates, refreshFormulas);
             MatchFundSet(FundIds.BEST, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OBID, null, rates, refreshFormulas);
             MatchFundSet(FundIds.FDXC, null, rates, refreshFormulas);
-            firstPage.WorksheetAccess.MakeActive();
+
             _workbookAccess.EnableCalculations();
+
+            for (int i = _funds.Count - 1; i >= 0; i--)
+            {
+                var fund = _funds[i];
+
+                fund.WorksheetAccess.FinaliseFormatting(fund.LastFund);
+            }
+
             _workbookAccess.Save();
 
         }
@@ -48,19 +57,19 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
                    
             var primaryFund = BuildFund(primaryFundId, null,null);
-            var additionalFunds = BuildAdditionalFunds(primaryFund,additionalFundIds);
+            _funds.Add(primaryFund);
+            primaryFund.AdditionalFunds = BuildAdditionalFunds(primaryFund,additionalFundIds);
 
             primaryFund.WorksheetAccess.WriteDates(_dataAccess.PreviousReferenceDate, _dataAccess.ReferenceDate);
 
             MatchFund(primaryFund, rates, refreshFormulas);
-            var lastFund = primaryFund;
-            foreach (Fund fund in additionalFunds.OrderBy(a => a.Ordering))
+            primaryFund.LastFund = primaryFund;
+            foreach (Fund fund in primaryFund.AdditionalFunds.OrderBy(a => a.Ordering))
             {
                 MatchFund(fund, rates, refreshFormulas);
-                lastFund = fund;
+                primaryFund.LastFund = fund;
             }
 
-            primaryFund.WorksheetAccess.FinaliseFormatting(lastFund);
             return primaryFund;
         }
 
@@ -190,6 +199,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private void MatchFund(Fund fund, List<FXRateDTO> rates, bool refreshFormulas)
         {
+            if (fund.FundId== 5513)
+            {
+                int i = 0;
+            }
             _entityBuilder.AddPortfolio(fund);
 
             List<Position> positionsToBeUpdatedFromDatabase = new List<Position>();

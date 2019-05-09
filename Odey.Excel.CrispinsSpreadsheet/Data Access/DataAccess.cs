@@ -73,7 +73,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                         && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat).ToList();
 
                 var hedging = BuildHedging(portfolios, fund);
-                var i = hedging.Where(a => a.Position.InstrumentMarketID == 41).ToList();
+                var i = hedging.Where(a => a.Position.InstrumentMarketID == 18331).ToList();
                 if (!fund.IncludeHedging)//Share 
                 {
                      portfolios = portfolios.Where(a=>a.Position.InstrumentMarket.Instrument.DerivedAssetClassId != (int)DerivedAssetClassIds.Cash).ToList();
@@ -190,20 +190,25 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private decimal GetFXNetPosition(IEnumerable<Portfolio> positions, InstrumentDTO instrument)
         {
-            
+            if (instrument.Name.EndsWith("ARS"))
+            {
+                int i = 0;
+            }
+
             positions = positions.Where(a => a != null && a.NetPosition !=0);
             if (positions == null || positions.Count() == 0)
             {
                 return 0;
             }
-            if (instrument.AssetClass != "FX")
+            if (instrument.AssetClass != "FX" )
             {
                 return positions.Sum(a => a.NetPosition);
             }
 
             var nonFlat = positions.GroupBy(a => new { a.Position.BookID, a.Position.InstrumentMarketID, a.Position.AccountID, a.Position.Strategy })
                 .Where(a => a.Count() >= 2).SelectMany(a => a);
-            return nonFlat.Where(a => a.Position.Currency.IsoCode == instrument.Currency).Sum(a => a.NetPosition);            
+            var netPosition = nonFlat.Where(a => a.Position.Currency.IsoCode == instrument.Currency).Sum(a => a.NetPosition);
+            return netPosition;
         }
 
        

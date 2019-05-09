@@ -28,7 +28,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 _rowType = RowType.AdditionalFundTotal;
             }
             CurrencyId = currencyId;
+            
         }
+
+        public List<Fund> AdditionalFunds { get; set; }
+
+        public Fund LastFund { get; set; }
 
         public int CurrencyId { get; private set; }
 

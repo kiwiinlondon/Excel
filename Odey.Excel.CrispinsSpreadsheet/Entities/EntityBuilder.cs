@@ -132,7 +132,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 if (position.Instrument.InstrumentTypeId == InstrumentTypeIds.FX && position.Instrument.AssetClass == HedgeLabel)
                 {
-                    if (position.Instrument.Identifier.Code.Contains("USD"))
+                    if (position.Instrument.Identifier.Code.Contains("ARS"))
                     {
                         int ii = 0;
                     }

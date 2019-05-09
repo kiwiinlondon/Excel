@@ -233,10 +233,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private string _lastColumn => PreviousNavColumn;
 
-        private static readonly string _firstColumn = _controlColumn;
+        private readonly string _firstColumn = _controlColumn;
 
       //  private static int _firstRowOfData;
-        private static int _bloombergMnemonicRow;
+        private int _bloombergMnemonicRow;
         private static readonly string _previousReferenceDateLabel = $"${_currencyColumn}$1";
         private static readonly string _referenceDateLabel = $"${_nameColumn}$1";
         private static readonly string _totalSuffix = "#Total";
@@ -284,17 +284,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void FinaliseFormatting(GroupingEntity lastFund)
         {
+            _worksheet.Select();
+            _worksheet.Activate();
             foreach (var style in ColumnDefinitions)
             {
                 _worksheet.Columns[style.Key].ColumnWidth = style.Value.Width;
                 _worksheet.Columns[style.Key].EntireColumn.Hidden = style.Value.IsHidden;
             }
-            _worksheet.Select();
-            
 
             _worksheet.Application.ActiveWindow.Zoom = 115;
             _worksheet.Application.ActiveWindow.DisplayZeros = false;
-
+            
             foreach (ColumnDefinition column in ColumnDefinitions.Values.Where(a => a.HasRightHandBorder))
             {
                 var columnToAddBorderTo = _worksheet.get_Range($"{column.ColumnLabel}{_bloombergMnemonicRow}:{column.ColumnLabel}{lastFund.TotalRow.RowNumber}");
@@ -302,6 +302,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
             _worksheet.Rows[_bloombergMnemonicRow].EntireRow.Hidden = true;
             _worksheet.Application.ActiveWindow.FreezePanes = false;
+            var a1 = _worksheet.get_Range("A1");
+            a1.Select();
+            a1.Activate();
             var toFreeze = _worksheet.get_Range($"{_closePriceColumn}{_bloombergMnemonicRow + 2}");
             toFreeze.Select();
             toFreeze.Activate();
@@ -687,10 +690,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
 
-        public void MakeActive()
-        {
-            _worksheet.Select();
-        }
+
 
         public List<ExistingGroupDTO> GetExisting(Fund fund)
         {
