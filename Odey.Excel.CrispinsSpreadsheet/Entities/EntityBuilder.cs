@@ -15,7 +15,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public static readonly string EquityLabel = "Equity";
         public static readonly string MacroLabel = "Macro";
         public static readonly string FXLabel = "FX";
-        public static readonly string HedgeLabel = "Hedge";
+        public static readonly string HedgeLabel = "Unhedged";
 
         public EntityBuilder(DataAccess dataAccess,WorkbookAccess sheetAccess)
         {
