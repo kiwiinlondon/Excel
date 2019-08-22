@@ -25,7 +25,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private static readonly int[] EquityAssetClassIds = { (int)DerivedAssetClassIds.Equity, (int)DerivedAssetClassIds.Bond };
+        private static readonly int[] EquityAssetClassIds = { (int)DerivedAssetClassIds.Equity, (int)DerivedAssetClassIds.CorporateDebt };
 
         private string GetAssetClass(InstrumentMarket instrumentMarket)
         {

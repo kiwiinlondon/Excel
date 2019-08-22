@@ -20,7 +20,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private void CrispinRibbon_Load(object sender, RibbonUIEventArgs e)
         {
-            
             log4net.Config.XmlConfigurator.Configure();
             Logger.Info("Loaded Ribbon");
             DoMatch(false);
@@ -45,16 +44,18 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             Logger.Info("Starting Match");
 
-          //  try
-         //   {
-
-                var dataAccess = new DataAccess(DateTime.Today);
-                var workbookAccess = new WorkbookAccess(Globals.ThisWorkbook);
-                var matcher = new Matcher(new EntityBuilder(dataAccess, workbookAccess), dataAccess, workbookAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
-                matcher.Match(refreshFormulas);
+            //  try
+            //   {
 
 
-          //  }
+            
+            var dataAccess = new DataAccess(DateTime.Today);
+            var workbookAccess = new WorkbookAccess(Globals.ThisWorkbook);
+            var matcher = new Matcher(new EntityBuilder(dataAccess, workbookAccess), dataAccess, workbookAccess, new InstrumentRetriever(new BloombergSecuritySetup(), dataAccess));
+            matcher.Match(refreshFormulas);
+
+            Globals.ThisWorkbook.Application.Calculation = Microsoft.Office.Interop.Excel.XlCalculation.xlCalculationAutomatic;
+            //  }
             //catch (Exception ex)
             //{
             //    Logger.Info(ex);
