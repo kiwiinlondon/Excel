@@ -27,7 +27,7 @@
     <NoStandardLibraries>false</NoStandardLibraries>
     <RootNamespace>OdeyAddIn</RootNamespace>
     <AssemblyName>OdeyAddIn</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <DefineConstants>VSTO40</DefineConstants>
@@ -178,19 +178,24 @@
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Odey.Framework.Keeley.Entities.Enums">
-      <HintPath>..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll')">..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll')">..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Clients">
-      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Clients.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Query\Odey.Query.Reporting.Clients.dll')">..\..\Binaries\Odey.Query\Odey.Query.Reporting.Clients.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Query\Odey.Query.Reporting.Clients.dll')">..\Binaries\Odey.Query\Odey.Query.Reporting.Clients.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Contracts">
-      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll')">..\..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll')">..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Entities">
-      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Entities.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.dll')">..\..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.dll')">..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Reporting.Entities.Specialised">
-      <HintPath>..\..\Binaries\Odey.Reporting\Odey.Reporting.Entities.Specialised.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.Specialised.dll')">..\..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.Specialised.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.Specialised.dll')">..\Binaries\Odey.Query\Odey.Query.Reporting.Entities.Specialised.dll</HintPath>
     </Reference>
     <Reference Include="Office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>

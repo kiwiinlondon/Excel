@@ -9,7 +9,7 @@
     <RootNamespace>Odey.Excel.CrispinsSpreadsheet</RootNamespace>
     <AssemblyName>Odey.Excel.CrispinsSpreadsheet</AssemblyName>
     <VSTO_HostDocumentName>Crispin Spreadsheet.xlsx</VSTO_HostDocumentName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <OfficeApplication>Excel</OfficeApplication>
     <ProjectGuid>{36E92E78-CF82-40A5-AC0E-A9114633E453}</ProjectGuid>
@@ -72,7 +72,8 @@
   -->
   <ItemGroup>
     <Reference Include="Bloomberglp.Blpapi">
-      <HintPath>..\..\Binaries\Bloomberg\Bloomberglp.Blpapi.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Bloomberg\Bloomberglp.Blpapi.dll')">..\..\Binaries\Bloomberg\Bloomberglp.Blpapi.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Bloomberg\Bloomberglp.Blpapi.dll')">..\Binaries\Bloomberg\Bloomberglp.Blpapi.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
@@ -81,19 +82,24 @@
       <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Framework.Infrastructure.Contracts">
-      <HintPath>..\..\Binaries\Odey.Framework.Infrastructure\Odey.Framework.Infrastructure.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Framework.Infrastructure\Odey.Framework.Infrastructure.Contracts.dll')">..\..\Binaries\Odey.Framework.Infrastructure\Odey.Framework.Infrastructure.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Framework.Infrastructure\Odey.Framework.Infrastructure.Contracts.dll')">..\Binaries\Odey.Framework.Infrastructure\Odey.Framework.Infrastructure.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Framework.Keeley.Entities">
-      <HintPath>..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.dll')">..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.dll')">..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Framework.Keeley.Entities.Enums">
-      <HintPath>..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll')">..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll')">..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Framework.Keeley.Entities.KeeleyModel">
-      <HintPath>..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.KeeleyModel.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.KeeleyModel.dll')">..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.KeeleyModel.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.KeeleyModel.dll')">..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.KeeleyModel.dll</HintPath>
     </Reference>
     <Reference Include="ServiceModelEx.IdentityCallStack">
-      <HintPath>..\..\Binaries\ServiceModelEx\ServiceModelEx.IdentityCallStack.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\ServiceModelEx\ServiceModelEx.IdentityCallStack.dll')">..\..\Binaries\ServiceModelEx\ServiceModelEx.IdentityCallStack.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\ServiceModelEx\ServiceModelEx.IdentityCallStack.dll')">..\Binaries\ServiceModelEx\ServiceModelEx.IdentityCallStack.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
