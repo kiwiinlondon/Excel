@@ -27,7 +27,7 @@
     <NoStandardLibraries>false</NoStandardLibraries>
     <RootNamespace>Odey.ExcelAddin</RootNamespace>
     <AssemblyName>Odey.ExcelAddin</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -128,19 +128,24 @@
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Framework.Keeley.Entities.Enums">
-      <HintPath>..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll')">..\..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll')">..\Binaries\Odey.Framework.Keeley.Entities\Odey.Framework.Keeley.Entities.Enums.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Intranet.Entities">
-      <HintPath>..\..\Binaries\Odey.Intranet\Odey.Intranet.Entities.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Intranet\Odey.Intranet.Entities.dll')">..\..\Binaries\Odey.Intranet\Odey.Intranet.Entities.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Intranet\Odey.Intranet.Entities.dll')">..\Binaries\Odey.Intranet\Odey.Intranet.Entities.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Query.Client">
-      <HintPath>..\..\Binaries\Odey.Query\Odey.Query.Client.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Query\Odey.Query.Client.dll')">..\..\Binaries\Odey.Query\Odey.Query.Client.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Query\Odey.Query.Client.dll')">..\Binaries\Odey.Query\Odey.Query.Client.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Query.Contracts">
-      <HintPath>..\..\Binaries\Odey.Query\Odey.Query.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Query\Odey.Query.Contracts.dll')">..\..\Binaries\Odey.Query\Odey.Query.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Query\Odey.Query.Contracts.dll')">..\Binaries\Odey.Query\Odey.Query.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Odey.Query.Reporting.Contracts">
-      <HintPath>..\..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll')">..\..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll</HintPath>
+      <HintPath Condition="Exists('..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll')">..\Binaries\Odey.Query\Odey.Query.Reporting.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net, Version=2.4.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
       <HintPath>..\packages\protobuf-net.2.4.0\lib\net40\protobuf-net.dll</HintPath>
