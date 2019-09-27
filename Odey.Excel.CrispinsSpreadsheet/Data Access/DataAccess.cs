@@ -69,6 +69,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     .Include(a => a.Position.InstrumentMarket.PriceCurrency.Instrument)
                     .Include(a => a.Position.InstrumentMarket.Instrument.InstrumentClass.ParentInstrumentClassRelationships)
                     .Include(a => a.Position.InstrumentMarket.Market.LegalEntity.Country)
+                    .Include(a => a.PriceEntity.RawPrice)
                     .Where(a => a.FundId == fund.FundId
                         && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat).ToList();
 
@@ -112,12 +113,46 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     a.Sum(s=> s.Current == null ? 0 : s.Current.NetPosition),                   
                     GetPrice(a.Select(s => s.PreviousPrevious), a.Key.Instrument.InstrumentTypeId),
                     GetPrice(a.Select(s => s.Previous), a.Key.Instrument.InstrumentTypeId),
-                    GetPrice(a.Select(s=>s.Current), a.Key.Instrument.InstrumentTypeId)
+                    GetPrice(a.Select(s=>s.Current), a.Key.Instrument.InstrumentTypeId),
+                    GetPriceIsManual(a.Select(s => s.PreviousPrevious)),
+                    GetPriceIsManual(a.Select(s => s.Previous)),
+                    GetPriceIsManual(a.Select(s => s.Current))
                     ))
                     .Union(fxToAdd);
            
                 return toReturn.Where(a => a.CurrentNetPosition != 0 || a.PreviousNetPosition != 0).ToList();
             }
+        }
+
+
+
+        private bool GetPriceIsManual(IEnumerable<Portfolio> positions)
+        {
+            positions = positions.Where(a => a != null && a.PriceEntity !=null);
+            if (positions == null || positions.Count() == 0)
+            {
+                return false;
+            }
+
+            var prices = positions.Select(a => a.PriceEntity.RawPrice.EntityRankingSchemeItemId).Distinct().ToArray();
+
+            var containsManual = prices.Where(a => a == (int)EntityRankingSchemeItemIds.ManualPrice || a== (int)EntityRankingSchemeItemIds.AdministratorPrice).Count();
+
+            if (containsManual>0)
+            {
+                var arg = positions.FirstOrDefault(a => a.Position.InstrumentMarket.Instrument.Name.StartsWith("ARG"));
+                if (arg != null)
+                {
+                    int i = 0;
+                }
+                if (prices.Length != containsManual)
+                {
+                    throw new ApplicationException("Cant establish whether price is manual");
+                }
+                return true;
+            }
+
+            return false;
         }
 
         private List<E.Portfolio> BuildHedging(List<E.Portfolio> portfolio,Fund fund)
@@ -184,7 +219,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                         CurrentNetPosition = GetFXNetPosition(a.Select(s => s.Current), a.Key.Instrument)
                     }
                     );
-            return quantities.Select(a => new PortfolioDTO(a.Key.Book, a.Key.Instrument,a.PreviousNetPosition, a.CurrentNetPosition, null, null, null)
+            return quantities.Select(a => new PortfolioDTO(a.Key.Book, a.Key.Instrument,a.PreviousNetPosition, a.CurrentNetPosition, null, null, null, false, false, false)
             ).ToList();
         }
 

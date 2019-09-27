@@ -53,9 +53,15 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public decimal? OdeyCurrentPrice { get; set; }
 
+        public bool OdeyCurrentPriceIsManual { get; set; }
+
         public decimal? OdeyPreviousPrice { get; set; }
 
+        public bool OdeyPreviousPriceIsManual { get; set; }
+
         public decimal? OdeyPreviousPreviousPrice { get; set; }
+
+        public bool OdeyPreviousPreviousPriceIsManual { get; set; }
 
         public decimal PriceDivisor { get; set; }
 

@@ -285,6 +285,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             position.OdeyPreviousPreviousPrice = dto.PreviousPreviousPrice;
             position.OdeyPreviousPrice = dto.PreviousPrice;
             position.OdeyCurrentPrice = dto.CurrentPrice;
+            position.OdeyCurrentPriceIsManual = dto.CurrentPriceIsManual;
+            position.OdeyPreviousPriceIsManual = dto.PreviousPriceIsManual;
+            position.OdeyPreviousPreviousPriceIsManual = dto.PreviousPreviousPriceIsManual;
 
         }
 

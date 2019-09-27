@@ -343,9 +343,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             
             WriteName(position.Row, position.InstrumentTypeId, position.Name, updateFormulas);
             WriteCurrency(position.Row, position.InstrumentTypeId, position.Currency, updateFormulas);
-            WriteClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPrice, updateFormulas);
-            WriteCurrentPrice(position.Row, position.InstrumentTypeId, position.OdeyCurrentPrice, updateFormulas);
-            WritePreviousClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPreviousPrice, updateFormulas);
+            WriteClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPrice, updateFormulas,position.OdeyPreviousPriceIsManual);
+            WriteCurrentPrice(position.Row, position.InstrumentTypeId, position.OdeyCurrentPrice, updateFormulas, position.OdeyCurrentPriceIsManual);
+            WritePreviousClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPreviousPrice, updateFormulas, position.OdeyPreviousPreviousPriceIsManual);
 
             WriteFormula(position.Row, ColumnDefinitions[ _priceChangeColumnNumber], GetSubtractFormula(position.RowNumber, _currentPriceColumn, _closePriceColumn), updateFormulas);
             WriteFormula(position.Row, ColumnDefinitions[_pricePercentageChangeColumnNumber], GetDivideFormula(position.RowNumber, _priceChangeColumn, _closePriceColumn, false), updateFormulas);
@@ -443,10 +443,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WriteClosePrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyPreviousPrice, bool updateFormulas)
+        private void WriteClosePrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyPreviousPrice, bool updateFormulas,bool isManual)
         {
             var columnDefinition = ColumnDefinitions[_closePriceColumnNumber];
-            if (instrumentTypeId == InstrumentTypeIds.FX || instrumentTypeId == InstrumentTypeIds.PrivatePlacement)
+            if (instrumentTypeId == InstrumentTypeIds.FX || instrumentTypeId == InstrumentTypeIds.PrivatePlacement || isManual)
             {
                 WriteValue(row,  columnDefinition, odeyPreviousPrice, updateFormulas);           
             }
@@ -456,10 +456,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WriteCurrentPrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyCurrentPrice, bool updateFormulas)
+        private void WriteCurrentPrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyCurrentPrice, bool updateFormulas, bool isManual)
         {
             var columnDefinition = ColumnDefinitions[_currentPriceColumnNumber];
-            if (instrumentTypeId == InstrumentTypeIds.PrivatePlacement)
+            if (instrumentTypeId == InstrumentTypeIds.PrivatePlacement || isManual)
             {
                 WriteValue(row, columnDefinition, odeyCurrentPrice, updateFormulas);
             }
@@ -469,10 +469,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WritePreviousClosePrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyPreviousPreviousPrice, bool updateFormulas)
+        private void WritePreviousClosePrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyPreviousPreviousPrice, bool updateFormulas, bool isManual)
         {
             var columnDefinition = ColumnDefinitions[_previousClosePriceColumnNumber];
-            if (instrumentTypeId == InstrumentTypeIds.FX || instrumentTypeId == InstrumentTypeIds.PrivatePlacement)
+            if (instrumentTypeId == InstrumentTypeIds.FX || instrumentTypeId == InstrumentTypeIds.PrivatePlacement || isManual)
             {
 
                 WriteValue(row, columnDefinition, odeyPreviousPreviousPrice, updateFormulas);        
