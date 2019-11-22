@@ -36,7 +36,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
             MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OPUS, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OPE, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.BEST, null, rates, refreshFormulas);
             MatchFundSet(FundIds.FDXC, null, rates, refreshFormulas);
 
             _workbookAccess.EnableCalculations();
