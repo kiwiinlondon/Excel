@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using Odey.Intranet.Entities.Grid;
 using System.Diagnostics;
 
 namespace Odey.ExcelAddin

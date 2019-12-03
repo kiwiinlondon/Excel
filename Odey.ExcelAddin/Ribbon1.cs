@@ -191,7 +191,8 @@ namespace Odey.ExcelAddin
                     Funds = new[] { FundIds.ARFF, FundIds.BVFF, FundIds.DEVM, FundIds.FDXH, FundIds.OUAR, FundIds.IAR }.Cast<int>(),
                     Columns = new List<ColumnRequest> { instrumentColReq, tickerColReq, netPosColReq, exposureColReq },
 
-                    ColumnHierarchy = new[] { ColumnHierarchyTypes.Column, ColumnHierarchyTypes.Fund, ColumnHierarchyTypes.Date },
+                    ColumnDrilldown = new [] { new ColumnDrilldown { ColumnHierarchyType = ColumnHierarchyTypes.Column } },
+                    ShowColumnGroups = false,
                     TotalFields = new List<TotalField>(),
                     PropsHierarchy = PropsHierarchyType.Off,
 
