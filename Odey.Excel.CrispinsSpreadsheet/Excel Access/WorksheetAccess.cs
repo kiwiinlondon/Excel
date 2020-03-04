@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using XL=Microsoft.Office.Interop.Excel;
 using System.Text.RegularExpressions;
 using System.Drawing;
+using Odey.Framework.Keeley.Entities.Enums;
 
 namespace Odey.Excel.CrispinsSpreadsheet
 {
@@ -338,20 +339,27 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void WritePosition(Position position, Book book, Fund fund, bool updateFormulas)
         {
+            bool isArgentina = position.Currency == "ARS";
+            bool isArgentinaCash = isArgentina && position.InstrumentTypeId == InstrumentTypeIds.FX;
+            if (isArgentina)
+            {
+                int i = 0;
+            }
             WriteValue(position.Row, ColumnDefinitions[_instrumentMarketIdColumnNumber], position.Identifier.Id, updateFormulas);
-            WriteValue(position.Row, ColumnDefinitions[_tickerColumnNumber], position.Identifier.Code, updateFormulas);
+            WriteValue(position.Row, ColumnDefinitions[_tickerColumnNumber], isArgentinaCash ? _argentinaCurrencyTicker : position.Identifier.Code, updateFormulas);
             
             WriteName(position.Row, position.InstrumentTypeId, position.Name, updateFormulas);
             WriteCurrency(position.Row, position.InstrumentTypeId, position.Currency, updateFormulas);
             WriteClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPrice, updateFormulas,position.OdeyPreviousPriceIsManual);
-            WriteCurrentPrice(position.Row, position.InstrumentTypeId, position.OdeyCurrentPrice, updateFormulas, position.OdeyCurrentPriceIsManual);
+            WriteCurrentPrice(position.Row, position.InstrumentTypeId, position.OdeyCurrentPrice, updateFormulas, position.OdeyCurrentPriceIsManual, isArgentinaCash);
             WritePreviousClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPreviousPrice, updateFormulas, position.OdeyPreviousPreviousPriceIsManual);
 
             WriteFormula(position.Row, ColumnDefinitions[ _priceChangeColumnNumber], GetSubtractFormula(position.RowNumber, _currentPriceColumn, _closePriceColumn), updateFormulas);
             WriteFormula(position.Row, ColumnDefinitions[_pricePercentageChangeColumnNumber], GetDivideFormula(position.RowNumber, _priceChangeColumn, _closePriceColumn, false), updateFormulas);
             WriteValue(position.Row, ColumnDefinitions[_netPositionColumnNumber], position.NetPosition, updateFormulas);
-            WriteFormula(position.Row, ColumnDefinitions[_currencyTickerColumnNumber], GetCurrencyTickerFormula(position.RowNumber,fund.TotalRow.RowNumber), updateFormulas);
-            WriteFormula(position.Row, ColumnDefinitions[_quoteFactorColumnNumber], GetQuoteFactorFormula(position.RowNumber, fund.TotalRow.RowNumber), updateFormulas);
+            
+            WriteFormula(position.Row, ColumnDefinitions[_currencyTickerColumnNumber], GetCurrencyTickerFormula(position.RowNumber,fund.TotalRow.RowNumber, isArgentina), updateFormulas);
+            WriteFormula(position.Row, ColumnDefinitions[_quoteFactorColumnNumber], GetQuoteFactorFormula(position.RowNumber, fund.TotalRow.RowNumber, isArgentina,fund.CurrencyId), updateFormulas);
             WriteFormula(position.Row, ColumnDefinitions[_fxRateColumnNumber], GetFXRateFormula(position.RowNumber, _fxRateColumn, fund.TotalRow.RowNumber), updateFormulas);
             WriteFormula(position.Row, ColumnDefinitions[_pnlColumnNumber], GetPNLFormula(position), updateFormulas);
             if (_contributionBookColumnNumber.HasValue)
@@ -456,7 +464,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WriteCurrentPrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyCurrentPrice, bool updateFormulas, bool isManual)
+        private void WriteCurrentPrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyCurrentPrice, bool updateFormulas, bool isManual,bool isArgentinaCash)
         {
             var columnDefinition = ColumnDefinitions[_currentPriceColumnNumber];
             if (instrumentTypeId == InstrumentTypeIds.PrivatePlacement || isManual)
@@ -465,7 +473,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
             else
             {
-                WriteFormula(row, columnDefinition, GetBloombergMnemonicFormula(row.RowNumber, _currentPriceColumn), updateFormulas);
+                var formula = GetBloombergMnemonicFormula(row.RowNumber, _currentPriceColumn);
+                if (isArgentinaCash)
+                {
+                    formula = $"{formula} * {_quoteFactorColumn}{row.RowNumber}";
+                }
+                WriteFormula(row, columnDefinition, formula, updateFormulas);
             }
         }
 
@@ -973,8 +986,20 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"=BDH({tickerColumn}{rowNumber},${column}${_bloombergMnemonicRow},{_previousReferenceDateLabel},{_previousReferenceDateLabel})";
         }
 
-        private string GetQuoteFactorFormula(int rowNumber,int fundTotalRowNumber)
+        private string GetQuoteFactorFormula(int rowNumber,int fundTotalRowNumber,bool isArgentina, int fundCurrencyId)
         {
+            if (isArgentina)
+            {
+                if (fundCurrencyId == (int)CurrencyIds.USD)
+                {
+                    return "=1";
+                }
+                else if (fundCurrencyId!= (int)CurrencyIds.EUR)
+                {
+                    throw new ApplicationException("Need to map fx currency thats not eur"); 
+                }
+                return  $"=BDP(\"EURUSD Curncy\", \"PX_LAST\")";
+            }
             return $"=IF({_currencyColumn}{rowNumber} = {_currencyColumn}{fundTotalRowNumber},1,{GetBloombergMnemonicFormula(rowNumber, _quoteFactorColumn, _currencyTickerColumn).Replace("=", "")})";
         }
 
@@ -988,8 +1013,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return $"=BDP({tickerColumn}{rowNumber},${mnemonicColumn}${_bloombergMnemonicRow})";
         }
 
-        private string GetCurrencyTickerFormula(int rowNumber,int fundTotalRowNumber)
+        private static readonly string _argentinaCurrencyTicker = ".AREQIMP G Index";
+
+        private string GetCurrencyTickerFormula(int rowNumber,int fundTotalRowNumber, bool isArgentina)
         {
+            if (isArgentina)
+            {
+                return _argentinaCurrencyTicker;
+            }
             return $"=CONCATENATE({_currencyColumn}{fundTotalRowNumber},{_currencyColumn}{rowNumber}, \" Curncy\")";
         }
 

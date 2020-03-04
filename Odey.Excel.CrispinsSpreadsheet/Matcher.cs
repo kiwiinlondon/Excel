@@ -363,6 +363,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private void EnhanceFXPosition(Position position, List<FXRateDTO> rates)
         {
             string ticker = position.Identifier.Code;
+            if (ticker == ".AREQIMP G Index")
+            {
+                ticker = "EURARS";
+            }
             string currency1 = ticker.Substring(0, 3);
             string currency2 = ticker.Substring(3, 3);
 

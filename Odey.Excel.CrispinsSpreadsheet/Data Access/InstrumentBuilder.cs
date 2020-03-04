@@ -180,9 +180,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 currency2 = instrumentMarket.Name.Substring(4, 3);
             }
         }
-
         private string GetFXTicker(string currency1, string currency2)
         {
+
             return $"{currency1}{currency2} Curncy";
         }
 
