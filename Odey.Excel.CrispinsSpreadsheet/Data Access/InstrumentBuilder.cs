@@ -182,9 +182,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
         private string GetFXTicker(string currency1, string currency2)
         {
-
+            if (currency1 == "ARS" || currency2 == "ARS")
+            {
+                return _argentinaCurrencyTicker;
+            }
             return $"{currency1}{currency2} Curncy";
         }
+        private static readonly string _argentinaCurrencyTicker = ".AREQIMP G Index";
 
         private string ChangeCurrencyToSymbol(string currency)
         {
