@@ -84,7 +84,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     portfolios = portfolios.Where(a => a.Position.InstrumentMarket.Instrument.InstrumentClassID == (int)InstrumentClassIds.ForwardFX).ToList();
                 }
 
-                if (fund.Name == "OEI")
+                if (fund.Name == "OEI" || fund.Name == "SWAN")
                 {
                     portfolios.AddRange(hedging);
                 }
