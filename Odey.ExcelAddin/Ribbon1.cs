@@ -295,7 +295,7 @@ namespace Odey.ExcelAddin
                 }
                 foreach (var fund in fundNames)
                 {
-                    ExposureSheet.Write(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
+                    ExposureSheet.WriteCombined(app, request.Dates.First(), fund, instrumentRows.Where(x => x.FundId == fund.Key), watchList);
                 }
                 foreach (var fund in fundNames)
                 {

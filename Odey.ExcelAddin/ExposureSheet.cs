@@ -26,6 +26,76 @@ namespace Odey.ExcelAddin
             { ApplicationUserIds.JamieGrimston, 10 },
         };
 
+        public static void WriteCombined(Excel.Application app, DateTime date, KeyValuePair<FundIds, string> fund, IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
+        {
+            app.StatusBar = $"Writing {fund.Value} exposure sheet...";
+
+            var rows = items
+                .Where(p => p.Ticker != null)
+                .ToLookup(p => new { p.IssuerId, p.IsShort })
+                .Select(g => new ExposureItem
+                {
+                    IsShort = g.Key.IsShort,
+                    PercentNAV = g.Sum(p => p.Exposure),
+                    NetPosition = g.Sum(p => p.NetPosition),
+                    Tickers = g.Select(p => p.Ticker).Distinct().ToList(),
+                    InstrumentClassIds = g.Select(p => p.InstrumentClassId).Distinct().ToList(),
+                })
+                .ToList();
+
+            // Get the worksheet
+            var sheetName = $"Exposure {fund.Value}";
+            Excel.Worksheet sheet;
+            try
+            {
+                sheet = app.Sheets[sheetName];
+            }
+            catch
+            {
+                sheet = app.Sheets.Add();
+                sheet.Name = sheetName;
+            }
+
+            sheet.Cells.ClearContents();
+            sheet.Cells.ClearFormats();
+
+            var row = 1;
+
+            // Total Gross Exposure
+            sheet.Cells[row, 1] = $"Gross {fund.Value} Exposure";
+            Excel.Range totalGrossExposureCell = sheet.Cells[row, 3];
+            totalGrossExposureCell.Value2 = rows.Sum(p => Math.Abs(p.PercentNAV));
+            totalGrossExposureCell.NumberFormat = "0.0%";
+
+            // Date
+            sheet.Cells[row, 7] = date.ToString("dd/MM/yyyy");
+
+            ++row;
+
+            // Total Net Exposure
+            sheet.Cells[row, 1] = $"Net {fund.Value} Exposure";
+            Excel.Range totalNetExposureCell = sheet.Cells[row, 3];
+            totalNetExposureCell.Value2 = rows.Sum(p => p.PercentNAV);
+            totalNetExposureCell.NumberFormat = "0.0%";
+
+            ++row;
+            ++row;
+
+            var nameFormula = (Ribbon1.IsDebug ? "[Ticker]" : "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+            var column = 1;
+            var excessBelow = 25;
+
+            // Write longs (They want index options to show at the end)
+            var longs = rows.Where(x => !x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenByDescending(x => x.PercentNAV);
+            var longHeight = WriteExposureTable(sheet, row, column, longs.ToList(), watchList, excessBelow, "Long", nameFormula);
+            column += headers.Length + 5;
+
+            // Write shorts (They want index options to show at the end)
+            var shorts = rows.Where(x => x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
+            var shortHeight = WriteExposureTable(sheet, row, column, shorts.ToList(), watchList, excessBelow, "Short", nameFormula);
+            column += headers.Length + 5;
+        }
+
         public static void Write(Excel.Application app, DateTime date, KeyValuePair<FundIds, string> fund, IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
         {
             app.StatusBar = $"Writing {fund.Value} exposure sheet...";
