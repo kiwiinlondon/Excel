@@ -41,7 +41,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             WorksheetAccess worksheetAccess;
             if (!_worksheets.TryGetValue(fund.Name, out worksheetAccess))
             {                
-                worksheetAccess = WorksheetAccessFactory.Instance.Get(_workbook.Sheets[sheetName],fund.IsLongOnly,fund.ChildEntityType== EntityTypes.Book);
+                worksheetAccess = WorksheetAccessFactory.Instance.Get(_workbook.Sheets[sheetName],fund.IsLongOnly);
                 worksheetAccess.SetupSheet();
                 _worksheets.Add(sheetName, worksheetAccess);
             }

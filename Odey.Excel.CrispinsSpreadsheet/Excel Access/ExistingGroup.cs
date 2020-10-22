@@ -15,9 +15,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
             ControlString = controlString;
             var values = ControlString.Split('#');
             FundCode = values[0];
-            BookCode = values[1];
-            AssetClassCode = values[2];
-            CountryCode = values[3];
+            AssetClassCode = values[1];
+            CountryCode = values[2];
             Name = name;
             TotalRow = totalRow;
             Positions = positions;
@@ -25,7 +24,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
         public string FundCode { get; private set; }
-        public string BookCode { get; private set; }
         public string AssetClassCode { get; private set; }
         public string CountryCode { get; private set; }
 

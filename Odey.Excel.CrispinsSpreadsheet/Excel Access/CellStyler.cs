@@ -63,9 +63,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     backgroundColour = HeaderGrey;
                     topBorder = XL.XlLineStyle.xlContinuous;
                     break;
-                case RowType.SecondaryBookTotal:
-                    isItalic = true;
-                    break;
                 case RowType.MainBookOrAssetClassTotal:
                     isBold = column.TotalIsBold;
                     topBorder = XL.XlLineStyle.xlContinuous;

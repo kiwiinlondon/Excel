@@ -16,7 +16,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         Total,
         FundTotal,
         MainBookOrAssetClassTotal,
-        SecondaryBookTotal,
+       // SecondaryBookTotal,
         AdditionalFundTotal
 
     }

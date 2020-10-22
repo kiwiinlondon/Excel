@@ -14,20 +14,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
         }
-        protected override string ContributionBookColumn => null;
         protected override string ContributionFundColumn => "O";
         protected override string ExposureColumn => "P";
-        protected override string ExposurePercentageBookColumn => null;
         protected override string ExposurePercentageFundColumn => "Q";
-        protected override string ShortBookColumn => null;
-        protected override string LongBookColumn => null;
+
         protected override string ShortFundColumn => null;
         protected override string LongFundColumn => null;
         protected override string PriceMultiplierColumn => "R";
         protected override string InstrumentTypeColumn => "S";
         protected override string PriceDivisorColumn => "T";
-        protected override string ShortBookWinnersColumn => null;
-        protected override string LongBookWinnersColumn => null;
+
         protected override string ShortFundWinnersColumn => null;
         protected override string LongFundWinnersColumn => null;
 
@@ -37,7 +33,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
         protected override string PreviousPricePercentageChangeColumn => "X";
         protected override string PreviousNetPositionColumn => "Y";
         protected override string PreviousFXRateColumn => "Z";
-        protected override string PreviousContributionBookColumn => null;
         protected override string PreviousContributionFundColumn => "AA";
         protected override string PreviousNavColumn => "AB";
     }

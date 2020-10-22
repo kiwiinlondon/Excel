@@ -25,33 +25,20 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        public WorksheetAccess Get(XL.Worksheet worksheet, bool isLong, bool hasBooks)
+        public WorksheetAccess Get(XL.Worksheet worksheet, bool isLong)
         {
             if (!isLong)
             {
-                if (hasBooks)
-                {
-                    return new LongShortWithBooksWorksheetAccess(worksheet);
-                }
-                else
-                {
-                    return new LongShortWithoutBooksWorksheetAccess(worksheet);
-                }
+
+                return new LongShortWithoutBooksWorksheetAccess(worksheet);
+
             }
             else
             {
-                if (hasBooks)
-                {
-                    throw new ApplicationException("No worksheet access for long with books");
-                }
-                else
-                {
-                    return new LongOnlyWorksheetAccess(worksheet);
-                }
+
+                return new LongOnlyWorksheetAccess(worksheet);
+
             }
-
-
-
         }
     }
 }

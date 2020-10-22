@@ -64,7 +64,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
                 var portfolios = context.Portfolios
-                    .Include(a => a.Position.Book)
                     .Include(a => a.Position.Currency.Instrument.InstrumentMarkets)
                     .Include(a => a.Position.InstrumentMarket.PriceCurrency.Instrument)
                     .Include(a => a.Position.InstrumentMarket.Instrument.InstrumentClass.ParentInstrumentClassRelationships)
@@ -105,9 +104,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 var fxToAdd = BuildFX(fxPositions, fund);
                 var toReturn =  portfoliosByPosition
                     .Where(a => a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.ForwardFX && a.Position.InstrumentMarket.InstrumentClassIdAsEnum != InstrumentClassIds.Currency)
-                    .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.Get(g.Position.InstrumentMarket) })
+                    .GroupBy(g => new { Instrument = InstrumentBuilder.Instance.Get(g.Position.InstrumentMarket) })
                 .Select(a => new PortfolioDTO(
-                    a.Key.Book,
                     a.Key.Instrument,
                     a.Sum(s => s.Previous == null ? 0 : s.Previous.NetPosition),
                     a.Sum(s=> s.Current == null ? 0 : s.Current.NetPosition),                   
@@ -209,7 +207,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private List<PortfolioDTO> BuildFX(List<DTOGrouping> fxPositions, Fund fund)
         {
             var quantities = fxPositions
-                    .GroupBy(g => new { Book = g.Position.Book.Name, Instrument = InstrumentBuilder.Instance.GetFX(g.Position.InstrumentMarket, fund) })
+                    .GroupBy(g => new {  Instrument = InstrumentBuilder.Instance.GetFX(g.Position.InstrumentMarket, fund) })
                     .Select(a =>
                     new
                     {
@@ -219,7 +217,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                         CurrentNetPosition = GetFXNetPosition(a.Select(s => s.Current), a.Key.Instrument)
                     }
                     );
-            return quantities.Select(a => new PortfolioDTO(a.Key.Book, a.Key.Instrument,a.PreviousNetPosition, a.CurrentNetPosition, null, null, null, false, false, false)
+            return quantities.Select(a => new PortfolioDTO(a.Key.Instrument,a.PreviousNetPosition, a.CurrentNetPosition, null, null, null, false, false, false)
             ).ToList();
         }
 
@@ -270,34 +268,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
 
-        public List<Book> GetBooks(Fund fund)
-        {
-            using (KeeleyModel context = new KeeleyModel())
-            {
-                var books = context.Books.Where(a => a.FundID == fund.FundId);
-                var booksById = books.ToDictionary(a => a.BookID, a => new Book(fund,a.BookID, a.Name, EntityTypes.Position,a.IsPrimary  ));
-                DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
-                var navs = context.BookNetAssetValues.Where(a => booksById.Keys.Contains(a.BookId) && referenceDates.Contains(a.ReferenceDate)).ToList();
-                foreach (var nav in navs)
-                {
-                    var book = booksById[nav.BookId];
-                    if (nav.ReferenceDate == PreviousReferenceDate)
-                    {
-                        book.PreviousNav = nav.MarketValue.Value;
-                    }
-                    else if (nav.ReferenceDate == ReferenceDate)
-                    {
-                        book.Nav = nav.MarketValue.Value;
-                    }
-                    else
-                    {
-                        throw new ApplicationException($"Unknown date {nav.ReferenceDate}");
-                    }
-
-                }
-                return booksById.Values.ToList();
-            }
-        }
+        
 
 
 

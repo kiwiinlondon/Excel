@@ -9,7 +9,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class AssetClass : GroupingEntity, IChildEntity
     {
-        public AssetClass(GroupingEntity book, string code, EntityTypes childEntityType, int ordering) : base(book, code, code, childEntityType, ordering)
+        public AssetClass(GroupingEntity fund, string code, EntityTypes childEntityType, int ordering) : base(fund, code, code, childEntityType, ordering)
         {
         }
 

@@ -65,8 +65,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
         private static readonly string _pnlColumn = "N";
         private static readonly int _pnlColumnNumber = GetColumnNumber(_pnlColumn).Value;
 
-        protected abstract string ContributionBookColumn { get; }
-        private int? _contributionBookColumnNumber => GetColumnNumber(ContributionBookColumn);
 
         protected abstract string ContributionFundColumn { get; }
         private int _contributionFundColumnNumber => GetColumnNumber(ContributionFundColumn).Value;
@@ -74,17 +72,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
         protected abstract string ExposureColumn { get; }
         private int _exposureColumnNumber => GetColumnNumber(ExposureColumn).Value;
 
-        protected abstract string ExposurePercentageBookColumn { get; }
-        private int? _exposurePercentageBookColumnNumber => GetColumnNumber(ExposurePercentageBookColumn);
 
         protected abstract string ExposurePercentageFundColumn { get; }
         private int _exposurePercentageFundColumnNumber => GetColumnNumber(ExposurePercentageFundColumn).Value;
 
-        protected abstract string ShortBookColumn { get; }
-        private int? _shortBookColumnNumber => GetColumnNumber(ShortBookColumn);
-
-        protected abstract string LongBookColumn { get; }
-        private int? _longBookColumnNumber => GetColumnNumber(LongBookColumn);
 
         protected abstract string ShortFundColumn { get; }
         private int? _shortFundColumnNumber => GetColumnNumber(ShortFundColumn);
@@ -100,11 +91,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
         protected abstract string PriceDivisorColumn { get; }
         private int _priceDivisorColumnNumber => GetColumnNumber(PriceDivisorColumn).Value;
 
-        protected abstract string ShortBookWinnersColumn { get; }
-        private int? _shortBookWinnersColumnNumber => GetColumnNumber(ShortBookWinnersColumn);
-
-        protected abstract string LongBookWinnersColumn { get; }
-        private int? _longBookWinnersColumnNumber => GetColumnNumber(LongBookWinnersColumn);
 
         protected abstract string ShortFundWinnersColumn { get; }
         private int? _shortFundWinnersColumnNumber => GetColumnNumber(ShortFundWinnersColumn);
@@ -130,8 +116,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
         protected abstract string PreviousFXRateColumn { get; }
         private int _previousFXRateColumnNumber => GetColumnNumber(PreviousFXRateColumn).Value;
 
-        protected abstract string PreviousContributionBookColumn { get; }
-        private int? _previousContributionBookColumnNumber => GetColumnNumber(PreviousContributionBookColumn);
 
 
         protected abstract string PreviousContributionFundColumn { get; }
@@ -147,87 +131,63 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public void SetColumnDefinitions()
         {
             
-            ColumnDefinitions.Add(_controlColumnNumber, new ColumnDefinition(_controlColumnNumber, _controlColumn, "Control",CellStyler.StyleNormal,true,25.14m, null, null,null,XL.XlHAlign.xlHAlignLeft, true, false, false,false));
-            ColumnDefinitions.Add(_instrumentMarketIdColumnNumber, new ColumnDefinition(_instrumentMarketIdColumnNumber, _instrumentMarketIdColumn, "Instrument Market Id", CellStyler.StyleNormal, true,18.57m, null, null, null, XL.XlHAlign.xlHAlignLeft, true, false, false, false));
-            ColumnDefinitions.Add(_tickerColumnNumber, new ColumnDefinition(_tickerColumnNumber, _tickerColumn,"Ticker", CellStyler.StyleNormal, true,21.29m,null, null, null, XL.XlHAlign.xlHAlignLeft, true, false, false, false));
-            ColumnDefinitions.Add(_currencyColumnNumber, new ColumnDefinition(_currencyColumnNumber, _currencyColumn,"Currency", CellStyler.StyleNormal, true, 11.86m,"CRNCY", null, null, XL.XlHAlign.xlHAlignLeft, true, false, false, false));
-            ColumnDefinitions.Add(_nameColumnNumber, new ColumnDefinition(_nameColumnNumber, _nameColumn,"Name", CellStyler.StyleNormal, false,51.57m,"NAME", null, null,  XL.XlHAlign.xlHAlignLeft, true, false, false, false));
-            ColumnDefinitions.Add(_closePriceColumnNumber, new ColumnDefinition(_closePriceColumnNumber, _closePriceColumn,"Close", CellStyler.StylePrice, false,12m,"PX_YEST_CLOSE", null, CellStyler.StyleFXRate, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_currentPriceColumnNumber, new ColumnDefinition(_currentPriceColumnNumber, _currentPriceColumn,"Current", CellStyler.StylePrice, false, 12m,"LAST_PRICE", null, CellStyler.StyleFXRate, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_priceChangeColumnNumber, new ColumnDefinition(_priceChangeColumnNumber, _priceChangeColumn,"Change", CellStyler.StylePriceChange, false, 12m, null, null, CellStyler.StyleFXRate, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_pricePercentageChangeColumnNumber, new ColumnDefinition(_pricePercentageChangeColumnNumber, _pricePercentageChangeColumn,"% Change", CellStyler.StylePercentageChange, false, 12m, null, null,null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_netPositionColumnNumber, new ColumnDefinition(_netPositionColumnNumber, _netPositionColumn,"Units", CellStyler.StyleUnits, false,13.14m,null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_currencyTickerColumnNumber, new ColumnDefinition(_currencyTickerColumnNumber, _currencyTickerColumn,"Currency Ticker", CellStyler.StyleNormal, true, 21.29m,null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_quoteFactorColumnNumber, new ColumnDefinition(_quoteFactorColumnNumber, _quoteFactorColumn,"Quote Factor", CellStyler.StyleNormal, true,14.57m,"QUOTE_FACTOR",  null, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_fxRateColumnNumber, new ColumnDefinition(_fxRateColumnNumber, _fxRateColumn,"FX Rate", CellStyler.StyleFXRate, false,9m,"LAST_PRICE", null, null, XL.XlHAlign.xlHAlignCenter, true, false, false, true));           
-            ColumnDefinitions.Add(_pnlColumnNumber, new ColumnDefinition(_pnlColumnNumber, _pnlColumn,"PNL", CellStyler.StylePNL, false, 12m,null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false, false));
-            if (_contributionBookColumnNumber.HasValue)
-            {
-                ColumnDefinitions.Add(_contributionBookColumnNumber.Value, new ColumnDefinition(_contributionBookColumnNumber.Value, ContributionBookColumn,"% Book", CellStyler.StyleContribution, false,9m, null, null, null, XL.XlHAlign.xlHAlignCenter, false,true,true,false));
-            }
-            ColumnDefinitions.Add(_contributionFundColumnNumber, new ColumnDefinition(_contributionFundColumnNumber, ContributionFundColumn,"% Fund", CellStyler.StyleContribution, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, false,true,false,true));
-            ColumnDefinitions.Add(_exposureColumnNumber, new ColumnDefinition(_exposureColumnNumber, ExposureColumn, "Exposure", CellStyler.StyleExposure, false,12m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true,false, false));
-            if (_exposurePercentageBookColumnNumber.HasValue)
-            {
-                ColumnDefinitions.Add(_exposurePercentageBookColumnNumber.Value, new ColumnDefinition(_exposurePercentageBookColumnNumber.Value, ExposurePercentageBookColumn, "% Book", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true,true, false));
-            }
-            ColumnDefinitions.Add(_exposurePercentageFundColumnNumber, new ColumnDefinition(_exposurePercentageFundColumnNumber, ExposurePercentageFundColumn,"% Fund", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true,false, true));
-            if (_shortBookColumnNumber.HasValue)
-            {
-                ColumnDefinitions.Add(_shortBookColumnNumber.Value, new ColumnDefinition(_shortBookColumnNumber.Value, ShortBookColumn,"Short", CellStyler.StyleExposurePercentage, false,9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true,true,false));
-            }
-            if (_longBookColumnNumber.HasValue)
-            {
-                ColumnDefinitions.Add(_longBookColumnNumber.Value, new ColumnDefinition(_longBookColumnNumber.Value, LongBookColumn, "Long", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true,true,true));
-            }
+            ColumnDefinitions.Add(_controlColumnNumber, new ColumnDefinition(_controlColumnNumber, _controlColumn, "Control",CellStyler.StyleNormal,true,25.14m, null, null,null,XL.XlHAlign.xlHAlignLeft, true, false,false));
+            ColumnDefinitions.Add(_instrumentMarketIdColumnNumber, new ColumnDefinition(_instrumentMarketIdColumnNumber, _instrumentMarketIdColumn, "Instrument Market Id", CellStyler.StyleNormal, true,18.57m, null, null, null, XL.XlHAlign.xlHAlignLeft, true, false, false));
+            ColumnDefinitions.Add(_tickerColumnNumber, new ColumnDefinition(_tickerColumnNumber, _tickerColumn,"Ticker", CellStyler.StyleNormal, true,21.29m,null, null, null, XL.XlHAlign.xlHAlignLeft, true, false, false));
+            ColumnDefinitions.Add(_currencyColumnNumber, new ColumnDefinition(_currencyColumnNumber, _currencyColumn,"Currency", CellStyler.StyleNormal, true, 11.86m,"CRNCY", null, null, XL.XlHAlign.xlHAlignLeft, true, false, false));
+            ColumnDefinitions.Add(_nameColumnNumber, new ColumnDefinition(_nameColumnNumber, _nameColumn,"Name", CellStyler.StyleNormal, false,51.57m,"NAME", null, null,  XL.XlHAlign.xlHAlignLeft, true, false, false));
+            ColumnDefinitions.Add(_closePriceColumnNumber, new ColumnDefinition(_closePriceColumnNumber, _closePriceColumn,"Close", CellStyler.StylePrice, false,12m,"PX_YEST_CLOSE", null, CellStyler.StyleFXRate, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_currentPriceColumnNumber, new ColumnDefinition(_currentPriceColumnNumber, _currentPriceColumn,"Current", CellStyler.StylePrice, false, 12m,"LAST_PRICE", null, CellStyler.StyleFXRate, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_priceChangeColumnNumber, new ColumnDefinition(_priceChangeColumnNumber, _priceChangeColumn,"Change", CellStyler.StylePriceChange, false, 12m, null, null, CellStyler.StyleFXRate, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_pricePercentageChangeColumnNumber, new ColumnDefinition(_pricePercentageChangeColumnNumber, _pricePercentageChangeColumn,"% Change", CellStyler.StylePercentageChange, false, 12m, null, null,null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_netPositionColumnNumber, new ColumnDefinition(_netPositionColumnNumber, _netPositionColumn,"Units", CellStyler.StyleUnits, false,13.14m,null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_currencyTickerColumnNumber, new ColumnDefinition(_currencyTickerColumnNumber, _currencyTickerColumn,"Currency Ticker", CellStyler.StyleNormal, true, 21.29m,null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_quoteFactorColumnNumber, new ColumnDefinition(_quoteFactorColumnNumber, _quoteFactorColumn,"Quote Factor", CellStyler.StyleNormal, true,14.57m,"QUOTE_FACTOR",  null, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_fxRateColumnNumber, new ColumnDefinition(_fxRateColumnNumber, _fxRateColumn,"FX Rate", CellStyler.StyleFXRate, false,9m,"LAST_PRICE", null, null, XL.XlHAlign.xlHAlignCenter, true, false, true));           
+            ColumnDefinitions.Add(_pnlColumnNumber, new ColumnDefinition(_pnlColumnNumber, _pnlColumn,"PNL", CellStyler.StylePNL, false, 12m,null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false));
+            
+            ColumnDefinitions.Add(_contributionFundColumnNumber, new ColumnDefinition(_contributionFundColumnNumber, ContributionFundColumn,"% Fund", CellStyler.StyleContribution, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, false,true,true));
+            ColumnDefinitions.Add(_exposureColumnNumber, new ColumnDefinition(_exposureColumnNumber, ExposureColumn, "Exposure", CellStyler.StyleExposure, false,12m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true, false));
+
+            ColumnDefinitions.Add(_exposurePercentageFundColumnNumber, new ColumnDefinition(_exposurePercentageFundColumnNumber, ExposurePercentageFundColumn,"% Fund", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true, true));
+
             if (_shortFundColumnNumber.HasValue)
             {
-                ColumnDefinitions.Add(_shortFundColumnNumber.Value, new ColumnDefinition(_shortFundColumnNumber.Value, ShortFundColumn, "Short", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false, false));
+                ColumnDefinitions.Add(_shortFundColumnNumber.Value, new ColumnDefinition(_shortFundColumnNumber.Value, ShortFundColumn, "Short", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false));
             }
             if (_longFundColumnNumber.HasValue)
             {
-                ColumnDefinitions.Add(_longFundColumnNumber.Value, new ColumnDefinition(_longFundColumnNumber.Value, LongFundColumn, "Long", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false, true));
+                ColumnDefinitions.Add(_longFundColumnNumber.Value, new ColumnDefinition(_longFundColumnNumber.Value, LongFundColumn, "Long", CellStyler.StyleExposurePercentage, false, 9m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, true));
             }
 
-            ColumnDefinitions.Add(_priceMultiplierColumnNumber, new ColumnDefinition(_priceMultiplierColumnNumber, PriceMultiplierColumn,"Price Multiplier", CellStyler.StyleNormal,true,13.43m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,false,false, false));
-            ColumnDefinitions.Add(_instrumentTypeColumnNumber, new ColumnDefinition(_instrumentTypeColumnNumber, InstrumentTypeColumn,"Instrument Type", CellStyler.StyleNormal, true,14.29m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_priceDivisorColumnNumber, new ColumnDefinition(_priceDivisorColumnNumber, PriceDivisorColumn,"Price Divisor", CellStyler.StyleNormal, true,11.29m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            if (_shortBookWinnersColumnNumber.HasValue)
-            {
-                ColumnDefinitions.Add(_shortBookWinnersColumnNumber.Value, new ColumnDefinition(_shortBookWinnersColumnNumber.Value, ShortBookWinnersColumn, "Short Winners", CellStyler.StyleContribution, true,12.57m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,true,true, false));
-            }
-            if (_longBookWinnersColumnNumber.HasValue)
-            {
-                ColumnDefinitions.Add(_longBookWinnersColumnNumber.Value, new ColumnDefinition(_longBookWinnersColumnNumber.Value, LongBookWinnersColumn,"Long Winners", CellStyler.StyleContribution, true, 12.57m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, true, false));
-            }
+            ColumnDefinitions.Add(_priceMultiplierColumnNumber, new ColumnDefinition(_priceMultiplierColumnNumber, PriceMultiplierColumn,"Price Multiplier", CellStyler.StyleNormal,true,13.43m, null, null, null, XL.XlHAlign.xlHAlignCenter, true,false, false));
+            ColumnDefinitions.Add(_instrumentTypeColumnNumber, new ColumnDefinition(_instrumentTypeColumnNumber, InstrumentTypeColumn,"Instrument Type", CellStyler.StyleNormal, true,14.29m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_priceDivisorColumnNumber, new ColumnDefinition(_priceDivisorColumnNumber, PriceDivisorColumn,"Price Divisor", CellStyler.StyleNormal, true,11.29m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+           
 
             if (_shortFundWinnersColumnNumber.HasValue)
             {
-                ColumnDefinitions.Add(_shortFundWinnersColumnNumber.Value, new ColumnDefinition(_shortFundWinnersColumnNumber.Value, ShortFundWinnersColumn, "Short Winners", CellStyler.StyleContribution, true, 12.57m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false, false));
+                ColumnDefinitions.Add(_shortFundWinnersColumnNumber.Value, new ColumnDefinition(_shortFundWinnersColumnNumber.Value, ShortFundWinnersColumn, "Short Winners", CellStyler.StyleContribution, true, 12.57m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false));
             }
             if (_longFundWinnersColumnNumber.HasValue)
             {
-                ColumnDefinitions.Add(_longFundWinnersColumnNumber.Value, new ColumnDefinition(_longFundWinnersColumnNumber.Value, LongFundWinnersColumn, "Long Winners", CellStyler.StyleContribution, true, 12.57m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false, false));
+                ColumnDefinitions.Add(_longFundWinnersColumnNumber.Value, new ColumnDefinition(_longFundWinnersColumnNumber.Value, LongFundWinnersColumn, "Long Winners", CellStyler.StyleContribution, true, 12.57m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, true, false));
             }
 
-            ColumnDefinitions.Add(_navColumnNumber, new ColumnDefinition(_navColumnNumber, NavColumn,"Nav", CellStyler.StyleNormal, true,11.29m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
+            ColumnDefinitions.Add(_navColumnNumber, new ColumnDefinition(_navColumnNumber, NavColumn,"Nav", CellStyler.StyleNormal, true,11.29m, null, null, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
             
-            ColumnDefinitions.Add(_previousClosePriceColumnNumber, new ColumnDefinition(_previousClosePriceColumnNumber, PreviousClosePriceColumn,"Close", CellStyler.StylePrice, true,12m,"PX_CLOSE_1D", CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true,false,false, false));
-            ColumnDefinitions.Add(_previousPriceChangeColumnNumber, new ColumnDefinition(_previousPriceChangeColumnNumber, PreviousPriceChangeColumn,"Change", CellStyler.StylePrice, true,9m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
+            ColumnDefinitions.Add(_previousClosePriceColumnNumber, new ColumnDefinition(_previousClosePriceColumnNumber, PreviousClosePriceColumn,"Close", CellStyler.StylePrice, true,12m,"PX_CLOSE_1D", CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true,false, false));
+            ColumnDefinitions.Add(_previousPriceChangeColumnNumber, new ColumnDefinition(_previousPriceChangeColumnNumber, PreviousPriceChangeColumn,"Change", CellStyler.StylePrice, true,9m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
 
 
-            ColumnDefinitions.Add(_previousPricePercentageChangeColumnNumber, new ColumnDefinition(_previousPricePercentageChangeColumnNumber, PreviousPricePercentageChangeColumn, "% Change", CellStyler.StylePercentageChange, false,9m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_previousNetPositionColumnNumber, new ColumnDefinition(_previousNetPositionColumnNumber, PreviousNetPositionColumn,"Units", CellStyler.StyleUnits, true, 13.14m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            ColumnDefinitions.Add(_previousFXRateColumnNumber, new ColumnDefinition(_previousFXRateColumnNumber, PreviousFXRateColumn, "FX Rate", CellStyler.StyleFXRate, true,9m, "PX_YEST_CLOSE", CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false, false));
-            if (_previousContributionBookColumnNumber.HasValue)
-            {
-                ColumnDefinitions.Add(_previousContributionBookColumnNumber.Value, new ColumnDefinition(_previousContributionBookColumnNumber.Value, PreviousContributionBookColumn, "% Book", CellStyler.StyleContribution, false, 9m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, false,true,true, false));
-            }
+            ColumnDefinitions.Add(_previousPricePercentageChangeColumnNumber, new ColumnDefinition(_previousPricePercentageChangeColumnNumber, PreviousPricePercentageChangeColumn, "% Change", CellStyler.StylePercentageChange, false,9m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_previousNetPositionColumnNumber, new ColumnDefinition(_previousNetPositionColumnNumber, PreviousNetPositionColumn,"Units", CellStyler.StyleUnits, true, 13.14m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
+            ColumnDefinitions.Add(_previousFXRateColumnNumber, new ColumnDefinition(_previousFXRateColumnNumber, PreviousFXRateColumn, "FX Rate", CellStyler.StyleFXRate, true,9m, "PX_YEST_CLOSE", CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false));
 
-            ColumnDefinitions.Add(_previousContributionFundColumnNumber, new ColumnDefinition(_previousContributionFundColumnNumber, PreviousContributionFundColumn, "% Fund", CellStyler.StyleContribution, false, 9m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, false, true, false, true));
+            ColumnDefinitions.Add(_previousContributionFundColumnNumber, new ColumnDefinition(_previousContributionFundColumnNumber, PreviousContributionFundColumn, "% Fund", CellStyler.StyleContribution, false, 9m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, false, true, true));
 
 
-            ColumnDefinitions.Add(_previousNavColumnNumber, new ColumnDefinition(_previousNavColumnNumber, PreviousNavColumn, "Nav", CellStyler.StyleNormal, true, 11.29m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false, false,false));
+            ColumnDefinitions.Add(_previousNavColumnNumber, new ColumnDefinition(_previousNavColumnNumber, PreviousNavColumn, "Nav", CellStyler.StyleNormal, true, 11.29m, null, CellStyler.PreviousSectionGrey, null, XL.XlHAlign.xlHAlignCenter, true, false,false));
         }
 
         
@@ -314,7 +274,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         
 
 
-        public void AddPosition(Position previousPosition, Position position, GroupingEntity parent, Book book, Fund fund)
+        public void AddPosition(Position previousPosition, Position position, GroupingEntity parent, Fund fund)
         {
             int rowToAddAt;
             if (previousPosition == null)
@@ -334,10 +294,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
             position.Row = AddRow(position.RowType, rowToAddAt);
 
-            WritePosition(position, book, fund, true);
+            WritePosition(position, fund, true);
         }
 
-        public void WritePosition(Position position, Book book, Fund fund, bool updateFormulas)
+        public void WritePosition(Position position, Fund fund, bool updateFormulas)
         {
             bool isArgentina = position.Currency == "ARS";
             bool isArgentinaCash = isArgentina && position.InstrumentTypeId == InstrumentTypeIds.FX;
@@ -362,27 +322,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             WriteFormula(position.Row, ColumnDefinitions[_quoteFactorColumnNumber], GetQuoteFactorFormula(position.RowNumber, fund.TotalRow.RowNumber, isArgentina,fund.CurrencyId), updateFormulas);
             WriteFormula(position.Row, ColumnDefinitions[_fxRateColumnNumber], GetFXRateFormula(position.RowNumber, _fxRateColumn, fund.TotalRow.RowNumber), updateFormulas);
             WriteFormula(position.Row, ColumnDefinitions[_pnlColumnNumber], GetPNLFormula(position), updateFormulas);
-            if (_contributionBookColumnNumber.HasValue)
-            {
-                WriteFormula(position.Row, ColumnDefinitions[_contributionBookColumnNumber.Value], GetDivideByNavFormula(position.RowNumber, _pnlColumn, true, book), updateFormulas);
-            }
+            
             WriteFormula(position.Row, ColumnDefinitions[_contributionFundColumnNumber], GetDivideByNavFormula(position.RowNumber, _pnlColumn, true, fund), updateFormulas);
 
             WriteFormula(position.Row, ColumnDefinitions[_exposureColumnNumber], GetExposureFormula(position.InstrumentTypeId, position.RowNumber), updateFormulas);
-            if (_exposurePercentageBookColumnNumber.HasValue)
-            {
-                WriteFormula(position.Row, ColumnDefinitions[_exposurePercentageBookColumnNumber.Value], GetDivideByNavFormula(position.RowNumber, ExposureColumn, false, book), updateFormulas);
-            }
+
             WriteFormula(position.Row, ColumnDefinitions[_exposurePercentageFundColumnNumber], GetDivideByNavFormula(position.RowNumber, ExposureColumn, false, fund), updateFormulas);
 
-            if (_shortBookColumnNumber.HasValue)
-            {
-                WriteFormula(position.Row, ColumnDefinitions[_shortBookColumnNumber.Value], GetWriteIfIsLongCorrectColumn(position.InstrumentTypeId, position.RowNumber, false, ExposurePercentageBookColumn), updateFormulas);
-            }
-            if (_longBookColumnNumber.HasValue)
-            {
-                WriteFormula(position.Row, ColumnDefinitions[_longBookColumnNumber.Value], GetWriteIfIsLongCorrectColumn(position.InstrumentTypeId, position.RowNumber, true, ExposurePercentageBookColumn), updateFormulas);
-            }
+            
             if (_shortFundColumnNumber.HasValue)
             {
                 WriteFormula(position.Row, ColumnDefinitions[_shortFundColumnNumber.Value], GetWriteIfIsLongCorrectColumn(position.InstrumentTypeId, position.RowNumber, false,ExposurePercentageFundColumn), updateFormulas);
@@ -395,14 +342,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             WriteFormula(position.Row, ColumnDefinitions[_priceMultiplierColumnNumber], GetPriceMultiplierFormula(position.RowNumber), updateFormulas);
             WriteValue(position.Row, ColumnDefinitions[_instrumentTypeColumnNumber], position.InstrumentTypeId, updateFormulas);
             WriteValue(position.Row, ColumnDefinitions[_priceDivisorColumnNumber], position.PriceDivisor, updateFormulas);
-            if (_shortBookWinnersColumnNumber.HasValue)
-            {
-                WriteFormula(position.Row, ColumnDefinitions[_shortBookWinnersColumnNumber.Value], GetWinnerColumn(position.RowNumber, false, ContributionBookColumn), updateFormulas);
-            }
-            if (_longBookWinnersColumnNumber.HasValue)
-            {
-                WriteFormula(position.Row, ColumnDefinitions[_longBookWinnersColumnNumber.Value], GetWinnerColumn(position.RowNumber, true, ContributionBookColumn), updateFormulas);
-            }
+           
             if (_shortFundWinnersColumnNumber.HasValue)
             {
                 WriteFormula(position.Row, ColumnDefinitions[_shortFundWinnersColumnNumber.Value], GetWinnerColumn(position.RowNumber, false, ContributionFundColumn), updateFormulas);
@@ -418,10 +358,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
             WriteValue(position.Row, ColumnDefinitions[_previousNetPositionColumnNumber], position.PreviousNetPosition, updateFormulas);
             WriteFormula(position.Row, ColumnDefinitions[_previousFXRateColumnNumber], GetFXRateFormula(position.RowNumber, PreviousFXRateColumn, fund.TotalRow.RowNumber), updateFormulas);
-            if (_previousContributionBookColumnNumber.HasValue)
-            {
-                WriteFormula(position.Row, ColumnDefinitions[_previousContributionBookColumnNumber.Value], GetPreviousContribution(position, position.RowNumber, book), updateFormulas);
-            }
             WriteFormula(position.Row, ColumnDefinitions[_previousContributionFundColumnNumber], GetPreviousContribution(position, position.RowNumber, fund), updateFormulas);
         }
 
@@ -588,14 +524,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
 
             string formula;
-            if (row.RowType == RowType.FundTotal && column.IsBook)
-            {
-                formula = null;
-            }
-            else
-            {
-                formula = "=" + string.Join("+", rowNumbers.Select(a => column.ColumnLabel + a));
-            }
+
+            formula = "=" + string.Join("+", rowNumbers.Select(a => column.ColumnLabel + a));
+
             WriteFormula(row, column, formula, true);
 
         }
@@ -607,7 +538,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             if (parent == null)
             {
                 entityType = EntityTypes.Fund;
-                parentControlString = "####Total";
+                parentControlString = "###Total";
             }
             else
             {
@@ -670,9 +601,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return mnemonicRow;
         }
 
-        private string CreateTotalLabel(string fund, string book, string assetClass, string country)
+        private string CreateTotalLabel(string fund,  string assetClass, string country)
         {
-            return string.Join("#", new[] { fund, book, assetClass, country }) + _totalSuffix;                
+            return string.Join("#", new[] { fund, assetClass, country }) + _totalSuffix;                
         }
 
         public void AddFundRange(Fund fund)
@@ -684,7 +615,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 firstRowOfData = previousRange.Row + previousRange.Rows.Count;
             }
 
-            string fundTotalLabel = CreateTotalLabel(fund.Name, null, null, null);
+            string fundTotalLabel = CreateTotalLabel(fund.Name, null, null);
             int? lastRow = FindRow(fundTotalLabel, _controlColumn);
 
             if (!lastRow.HasValue)

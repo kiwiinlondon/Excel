@@ -12,30 +12,23 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public LongShortWithBooksWorksheetAccess(Worksheet worksheet) : base(worksheet)
         {
         }
-        protected override string ContributionBookColumn => "O";
-        protected override string ContributionFundColumn => "P";
-        protected override string ExposureColumn => "Q";
-        protected override string ExposurePercentageBookColumn => "R";
-        protected override string ExposurePercentageFundColumn => "S";
-        protected override string ShortBookColumn => "T";
-        protected override string LongBookColumn => "U";
-        protected override string ShortFundColumn => null;
-        protected override string LongFundColumn => null;
-        protected override string PriceMultiplierColumn => "V";
-        protected override string InstrumentTypeColumn => "W";
-        protected override string PriceDivisorColumn => "X";
-        protected override string ShortBookWinnersColumn => "Y";
-        protected override string LongBookWinnersColumn => "Z";
-        protected override string ShortFundWinnersColumn => null;
-        protected override string LongFundWinnersColumn => null;
-        protected override string NavColumn => "AA";
-        protected override string PreviousClosePriceColumn => "AB";
-        protected override string PreviousPriceChangeColumn => "AC";
-        protected override string PreviousPricePercentageChangeColumn => "AD";
-        protected override string PreviousNetPositionColumn => "AE";
-        protected override string PreviousFXRateColumn => "AF";
-        protected override string PreviousContributionBookColumn => "AG";
-        protected override string PreviousContributionFundColumn => "AH";       
-        protected override string PreviousNavColumn => "AI";
+        protected override string ContributionFundColumn => "O";
+        protected override string ExposureColumn => "P";
+        protected override string ExposurePercentageFundColumn => "Q";        
+        protected override string ShortFundColumn => "R";
+        protected override string LongFundColumn => "S";
+        protected override string PriceMultiplierColumn => "T";
+        protected override string InstrumentTypeColumn => "U";
+        protected override string PriceDivisorColumn => "V";
+        protected override string ShortFundWinnersColumn => "W";
+        protected override string LongFundWinnersColumn => "X";
+        protected override string NavColumn => "Y";
+        protected override string PreviousClosePriceColumn => "Z";
+        protected override string PreviousPriceChangeColumn => "AA";
+        protected override string PreviousPricePercentageChangeColumn => "AB";
+        protected override string PreviousNetPositionColumn => "AC";
+        protected override string PreviousFXRateColumn => "AD";
+        protected override string PreviousContributionFundColumn => "AE";       
+        protected override string PreviousNavColumn => "AF";
     }
 }

@@ -12,7 +12,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
     {
 
 
-        public ColumnDefinition(int columnNumber,string columnLabel, string headerLabel, string style, bool isHidden, decimal width, string bloombergMneumonic, Color? backgroundColour,string fxStyleName, XL.XlHAlign headerJustification, bool totalIsBold, bool isSummable, bool isBook,bool hasRightHandBorder)
+        public ColumnDefinition(int columnNumber,string columnLabel, string headerLabel, string style, bool isHidden, decimal width, string bloombergMneumonic, Color? backgroundColour,string fxStyleName, XL.XlHAlign headerJustification, bool totalIsBold, bool isSummable,bool hasRightHandBorder)
         {
             ColumnNumber = columnNumber;
             ColumnLabel = columnLabel;
@@ -26,7 +26,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
             HeaderJustification = headerJustification;
             TotalIsBold = totalIsBold;
             IsSummable = isSummable;
-            IsBook = isBook;
             HasRightHandBorder = hasRightHandBorder;
         }
 
@@ -54,7 +53,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public bool IsSummable { get; set; }
 
-        public bool IsBook { get; set; }
+
 
         public bool HasRightHandBorder { get; set; }
     }

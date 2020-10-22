@@ -37,18 +37,18 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CrispinRibbon));
             this.CrispinTab = this.Factory.CreateRibbonTab();
             this.group1 = this.Factory.CreateRibbonGroup();
+            this.box2 = this.Factory.CreateRibbonBox();
             this.button1 = this.Factory.CreateRibbonButton();
+            this.checkBox1 = this.Factory.CreateRibbonCheckBox();
             this.box1 = this.Factory.CreateRibbonBox();
             this.editBox1 = this.Factory.CreateRibbonEditBox();
             this.button2 = this.Factory.CreateRibbonButton();
             this.button3 = this.Factory.CreateRibbonButton();
             this.label1 = this.Factory.CreateRibbonLabel();
-            this.checkBox1 = this.Factory.CreateRibbonCheckBox();
-            this.box2 = this.Factory.CreateRibbonBox();
             this.CrispinTab.SuspendLayout();
             this.group1.SuspendLayout();
-            this.box1.SuspendLayout();
             this.box2.SuspendLayout();
+            this.box1.SuspendLayout();
             this.SuspendLayout();
             // 
             // CrispinTab
@@ -66,6 +66,12 @@
             this.group1.Label = "Crsipin";
             this.group1.Name = "group1";
             // 
+            // box2
+            // 
+            this.box2.Items.Add(this.button1);
+            this.box2.Items.Add(this.checkBox1);
+            this.box2.Name = "box2";
+            // 
             // button1
             // 
             this.button1.Image = ((System.Drawing.Image)(resources.GetObject("button1.Image")));
@@ -73,6 +79,11 @@
             this.button1.Name = "button1";
             this.button1.ShowImage = true;
             this.button1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button1_Click);
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.Label = "Refresh Formulas";
+            this.checkBox1.Name = "checkBox1";
             // 
             // box1
             // 
@@ -106,17 +117,6 @@
             this.label1.Name = "label1";
             this.label1.ShowLabel = false;
             // 
-            // checkBox1
-            // 
-            this.checkBox1.Label = "Refresh Formulas";
-            this.checkBox1.Name = "checkBox1";
-            // 
-            // box2
-            // 
-            this.box2.Items.Add(this.button1);
-            this.box2.Items.Add(this.checkBox1);
-            this.box2.Name = "box2";
-            // 
             // CrispinRibbon
             // 
             this.Name = "CrispinRibbon";
@@ -127,10 +127,10 @@
             this.CrispinTab.PerformLayout();
             this.group1.ResumeLayout(false);
             this.group1.PerformLayout();
-            this.box1.ResumeLayout(false);
-            this.box1.PerformLayout();
             this.box2.ResumeLayout(false);
             this.box2.PerformLayout();
+            this.box1.ResumeLayout(false);
+            this.box1.PerformLayout();
             this.ResumeLayout(false);
 
         }

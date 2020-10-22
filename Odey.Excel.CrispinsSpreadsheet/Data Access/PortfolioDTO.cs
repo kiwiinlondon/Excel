@@ -9,11 +9,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
     public class PortfolioDTO
     {
 
-        public PortfolioDTO(string book,InstrumentDTO instrument,
+        public PortfolioDTO(InstrumentDTO instrument,
              decimal previousNetPosition, decimal currentNetPosition, decimal? previousPreviousPrice, decimal? previousPrice, decimal? currentPrice, bool previousPreviousPriceIsManual, bool previousPriceIsManual, bool currentPriceIsManual)
         {
 
-            Book = book;
             Instrument = instrument;
             
             PreviousNetPosition = previousNetPosition;
@@ -31,7 +30,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         }
 
-        public string Book { get; set; }
+
 
         public InstrumentDTO Instrument { get; set;}
 

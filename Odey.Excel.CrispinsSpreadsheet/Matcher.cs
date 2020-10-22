@@ -32,6 +32,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             var rates = _dataAccess.GetFXRates();
 
             MatchFundSet(FundIds.OEI, new FundIds[] {FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
+            MatchFundSet(FundIds.ODIF, null, rates, refreshFormulas);
             MatchFundSet(FundIds.SWAN, null, rates, refreshFormulas);
             MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OPUS, null, rates, refreshFormulas);
@@ -105,7 +106,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     {
                         var rates = _dataAccess.GetFXRates();
                         var country = _entityBuilder.AddInstrument(fund, instrument);
-                        WriteGroupingEntity(fund, rates, null, fund, false, false);
+                        WriteGroupingEntity(fund, rates, fund, false, false);
                         Position position = (Position)country.Children[instrument.Identifier];
                         message = $"Success. {ticker} added to Country {instrument.ExchangeCountryName} at row {position.RowNumber}";
                     }
@@ -207,7 +208,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             _entityBuilder.AddExistingPortfolio(fund, positionsToBeUpdatedFromDatabase);
             UpdatePositionsFromDatabase(positionsToBeUpdatedFromDatabase);
 
-            WriteGroupingEntity(fund, rates, null, fund, true, refreshFormulas);
+             WriteGroupingEntity(fund, rates, fund, true, refreshFormulas);
         }
 
         private void UpdatePositionsFromDatabase(List<Position> positions)
@@ -230,7 +231,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WriteGroupingEntity(GroupingEntity entity, List<FXRateDTO> rates, Book book, Fund fund, bool updateExistingPositions, bool forceRefresh)
+        private void WriteGroupingEntity(GroupingEntity entity, List<FXRateDTO> rates, Fund fund, bool updateExistingPositions, bool forceRefresh)
         {
             ChangeGroupVisiblity(entity, fund.WorksheetAccess, false);
             if (entity.TotalRow == null)
@@ -239,7 +240,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
             if (entity.ChildEntityType == EntityTypes.Position)
             {
-                WritePositions(entity, rates, book, fund, updateExistingPositions, forceRefresh);               
+                WritePositions(entity, rates, fund, updateExistingPositions, forceRefresh);               
             }
             else 
             {
@@ -248,17 +249,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 GroupingEntity previous = null;
                 foreach (IChildEntity childEntity in entity.Children.Values.OrderBy(a => a.Ordering))
                 {       
-                    if (childEntity is Book)
-                    {
-                        book = (Book)childEntity;
-                    }
                     GroupingEntity groupingEntity = (GroupingEntity)childEntity;
                     if (groupingEntity.TotalRow==null)
                     {
                         updateTotal = true;
                     }
                     groupingEntity.Previous = previous;
-                    WriteGroupingEntity(groupingEntity, rates, book, fund, updateExistingPositions, forceRefresh);
+                    WriteGroupingEntity(groupingEntity, rates, fund, updateExistingPositions, forceRefresh);
                     if (groupingEntity.Children.Count == 0 && entity.ChildrenAreDeleteable)
                     {
                         updateTotal = true;
@@ -318,14 +315,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WritePositions( GroupingEntity entity, List<FXRateDTO> rates, Book book, Fund fund, bool updateExisting, bool forceRefresh)
+        private void WritePositions( GroupingEntity entity, List<FXRateDTO> rates, Fund fund, bool updateExisting, bool forceRefresh)
         {
             Position previous = null;
             var orderedPositions = entity.Children.Values.OrderBy(a => a.Ordering).ToList();
             var updateSums = false;
             foreach (Position position in orderedPositions)
             {
-                WritePosition(previous, position, entity, rates, book, fund, updateExisting, forceRefresh, ref updateSums);
+                WritePosition(previous, position, entity, rates, fund, updateExisting, forceRefresh, ref updateSums);
                 previous = position;
             }
             RemoveChildrenToBeDeleted(entity, updateExisting, fund.WorksheetAccess);
@@ -338,8 +335,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
        
        
 
-        private void WritePosition(Position previousPosition,Position position,GroupingEntity parent,List<FXRateDTO> rates,
-            Book book,Fund fund, bool updateExisting,bool forceRefresh, ref bool updateSums)
+        private void WritePosition(Position previousPosition,Position position,GroupingEntity parent,List<FXRateDTO> rates,Fund fund, bool updateExisting,bool forceRefresh, ref bool updateSums)
         {
             if (position.InstrumentTypeId == InstrumentTypeIds.FX)
             {
@@ -349,13 +345,13 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 if (updateExisting || forceRefresh)
                 {                    
-                    fund.WorksheetAccess.WritePosition(position, book, fund, forceRefresh);
+                    fund.WorksheetAccess.WritePosition(position, fund, forceRefresh);
                 }
             }
             else
             {
                 updateSums = true;
-                fund.WorksheetAccess.AddPosition(previousPosition, position, parent, book, fund);
+                fund.WorksheetAccess.AddPosition(previousPosition, position, parent, fund);
             }
         }
 

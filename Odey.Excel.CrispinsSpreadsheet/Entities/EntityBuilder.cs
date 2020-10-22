@@ -27,8 +27,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             switch (fundId)
             {
-                case FundIds.OEI:
-                    return EntityTypes.Book;
+                
                 case FundIds.OEIMAC:
                 case FundIds.OEIMACGBPBSHARECLASS:
                 case FundIds.OEIMACGBPBMSHARECLASS:
@@ -38,9 +37,11 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 case FundIds.ALEG:
                 case FundIds.FDXC:
                 case FundIds.OPUS:
-                case FundIds.OPE:
-                    return EntityTypes.Country;                    
+                case FundIds.OPE:                
+                    return EntityTypes.Country;
+                case FundIds.ODIF:
                 case FundIds.SWAN:
+                case FundIds.OEI:
                     return EntityTypes.AssetClass;
                 default:
                     throw new ApplicationException($"Unknown Fund {fundId}");
@@ -57,9 +58,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             fund.ChildrenAreDeleteable = isPrimary && (fundId != FundIds.OEI);
             switch (fund.ChildEntityType)
             {
-                case EntityTypes.Book:
-                    AddBooks(fund);
-                    break;
+                //case EntityTypes.Book:
+                //    AddBooks(fund);
+                //    break;
                 case EntityTypes.AssetClass:
                     AddAssetClasses(fund);
                     break;
@@ -70,30 +71,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         
 
-        private void AddBooks(Fund fund)
-        {
-            var books = _dataAccess.GetBooks(fund);
-            foreach (var book in books)
-            {
-                AddBook(fund, book);
-            }
 
-        }
 
-        private void AddBook(Fund fund, Book book)
-        {
-            if (book.BookId == (int)BookIds.OEI)
-            {
-                book.ChildEntityType = EntityTypes.AssetClass;
-            }
-            book.ChildrenAreDeleteable = book.ChildEntityType == EntityTypes.Position;
-            book.ChildrenAreHidden = book.ChildEntityType == EntityTypes.Position; 
-            if (book.ChildEntityType== EntityTypes.AssetClass)
-            {
-                AddAssetClasses(book);
-            }
-            fund.Children.Add(book.Identifier, book);
-        }
+
 
         private void AddAssetClasses(GroupingEntity parent)
         {
@@ -150,9 +130,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 case EntityTypes.Position:
                     return parentEntity;
-                case EntityTypes.Book:
-                    child = (GroupingEntity)parentEntity.Children[new Identifier(null, position.Book)];
-                    break;
+                //case EntityTypes.Book:
+                //    child = (GroupingEntity)parentEntity.Children[new Identifier(null, position.Book)];
+                //    break;
                 case EntityTypes.AssetClass:
                     child = (GroupingEntity)parentEntity.Children[new Identifier(null, position.Instrument.AssetClass)];
                     break;
@@ -167,7 +147,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void AddExistingPortfolio(Fund fund,List<Position> toBeUpdatedFromDatabase)
         {
-            if (fund.Name == "SWAN")
+            if (fund.Name == "OEIMAC")
             {
                 int i = 0;
             }
@@ -175,10 +155,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
             foreach(var existingGroup in existingGroups)
             {
                 GroupingEntity entity = fund;
-                if (!string.IsNullOrWhiteSpace(existingGroup.BookCode))
-                {
-                    entity = GetEntity(entity, existingGroup.BookCode);
-                }
 
                 if (!string.IsNullOrWhiteSpace(existingGroup.AssetClassCode))
                 {
@@ -273,7 +249,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private void AddDTOToParent(GroupingEntity parent, PortfolioDTO dto)
         {
-
+            if (dto.Instrument.Name == "VAL 6 7/8 08/15/20")
+            {
+                int i = 0;
+            }
             Position position = new Position(dto.Instrument.Identifier, dto.Instrument.Name, dto.Instrument.PriceDivisor, dto.Instrument.InstrumentTypeId, dto.Instrument.InvertPNL);
             parent.Children.Add(dto.Instrument.Identifier, position);
 
@@ -301,10 +280,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 return GetWhereChildrenAreCountry((AssetClass)groupingEntity.Children[new Identifier(null, EntityBuilder.EquityLabel)]);
             }
-            else if (groupingEntity.ChildEntityType == EntityTypes.Book)
-            {
-                return GetWhereChildrenAreCountry((Book)groupingEntity.Children.Values.FirstOrDefault(a => ((Book)a).IsPrimary));
-            }
+            //else if (groupingEntity.ChildEntityType == EntityTypes.Book)
+            //{
+            //    return GetWhereChildrenAreCountry((Book)groupingEntity.Children.Values.FirstOrDefault(a => ((Book)a).IsPrimary));
+            //}
             else
             { 
                 throw new ApplicationException("Unknown way to find country");

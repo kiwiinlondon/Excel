@@ -9,9 +9,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
     public enum EntityTypes
     {
         Fund=0,
-        Book=1,
-        AssetClass=2,
-        Country=3,
-        Position=4
+        AssetClass=1,
+        Country=2,
+        Position=3
     }
 }
