@@ -32,14 +32,16 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 case FundIds.OEIMACGBPBSHARECLASS:
                 case FundIds.OEIMACGBPBMSHARECLASS:
                 case FundIds.BEST:
-                case FundIds.OBID:                
+                case FundIds.OBID:   
+                case FundIds.ODIF:
+                case FundIds.GILT:
                     return EntityTypes.Position;
                 case FundIds.ALEG:
                 case FundIds.FDXC:
                 case FundIds.OPUS:
                 case FundIds.OPE:                
                     return EntityTypes.Country;
-                case FundIds.ODIF:
+                
                 case FundIds.SWAN:
                 case FundIds.OEI:
                     return EntityTypes.AssetClass;

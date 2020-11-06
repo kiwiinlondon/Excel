@@ -261,7 +261,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
                 var navs = context.FundNetAssetValues.Where(a => a.FundId == fund.LegalEntityID && referenceDates.Contains(a.ReferenceDate)).ToList();
                 toReturn.Nav = navs.FirstOrDefault(a => a.ReferenceDate == ReferenceDate).MarketValue;
-                toReturn.PreviousNav = navs.FirstOrDefault(a => a.ReferenceDate == PreviousReferenceDate).MarketValue;
+                var previousNav = navs.FirstOrDefault(a => a.ReferenceDate == PreviousReferenceDate);
+                var previousNavValue = 0m;
+                if (previousNav!=null)
+                {
+                    previousNavValue = previousNav.MarketValue;
+
+                }
+                toReturn.PreviousNav = previousNavValue;
                 return toReturn;
             }
         }
