@@ -19,7 +19,7 @@
     <PublishUrl>\\oam.odey.com\shared\Applications\CrispinSpreadsheet\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.52</ApplicationVersion>
+    <ApplicationVersion>1.0.0.53</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
@@ -272,7 +272,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>8AE875A7DB5BC816CFAB9E231C31FC71229A140F</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>783F357CB5FA03A480CCF5109CF5B6394D0A6AFD</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -282,7 +282,7 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Crispin Spreadsheet.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="CS" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\root\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]Crispin Spreadsheet.xlsx&quot;" />
+        <ProjectProperties HostName="Crispin Spreadsheet.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="CS" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]Crispin Spreadsheet.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Crispin Spreadsheet.xlsx" GeneratedCodeNamespace="Odey.Excel.CrispinsSpreadsheet" PublishedHash="CFA074DD923E1B0189258B503AE76F3E3824AAD6">
           <HostItem Name="Sheet1" Code="Sheet1.cs" CanonicalName="Sheet1" PublishedHash="8B186B8CB63D73CE5B0BBA7C51025B1A0AC39D15" DisplayName="Sheet1" Blueprint="Sheet1.Designer.xml" GeneratedCode="Sheet1.Designer.cs" />
           <HostItem Name="Sheet2" Code="Sheet2.cs" CanonicalName="Sheet2" PublishedHash="BEF85FE6EDA7154310D49F8846F451A8BC6A6027" DisplayName="Portfolio" Blueprint="Sheet2.Designer.xml" GeneratedCode="Sheet2.Designer.cs" />
