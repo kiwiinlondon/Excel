@@ -266,10 +266,11 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Odey.ExcelAddin_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>9A9BE82FC544BB902AD5B807A89EC1C080E0D7EF</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>8AE875A7DB5BC816CFAB9E231C31FC71229A140F</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

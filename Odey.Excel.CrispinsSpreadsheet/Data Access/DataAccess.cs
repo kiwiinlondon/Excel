@@ -244,7 +244,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return netPosition;
         }
 
-       
+       private decimal GetNav(List<FundNetAssetValue> navs,DateTime referenceDate)
+        {
+            var nav = navs.FirstOrDefault(a => a.ReferenceDate == referenceDate);
+            var navValue = 0m;
+            if (nav != null)
+            {
+                navValue = nav.MarketValue;
+
+            }
+            return navValue;
+        }
 
         public Fund GetFund(FundIds fundId, EntityTypes childEntityType, bool isPrimary)
         {
@@ -260,15 +270,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 Fund toReturn = new Fund(fund.LegalEntityID, fund.Name, fund.Currency.IsoCode, fund.CurrencyID, false, fund.IsLongOnly, childEntityType, includeHedging, IncludeOnlyFX, isPrimary);              
                 DateTime[] referenceDates = { PreviousReferenceDate, ReferenceDate };
                 var navs = context.FundNetAssetValues.Where(a => a.FundId == fund.LegalEntityID && referenceDates.Contains(a.ReferenceDate)).ToList();
-                toReturn.Nav = navs.FirstOrDefault(a => a.ReferenceDate == ReferenceDate).MarketValue;
-                var previousNav = navs.FirstOrDefault(a => a.ReferenceDate == PreviousReferenceDate);
-                var previousNavValue = 0m;
-                if (previousNav!=null)
-                {
-                    previousNavValue = previousNav.MarketValue;
-
-                }
-                toReturn.PreviousNav = previousNavValue;
+                toReturn.Nav = GetNav(navs, ReferenceDate);
+                toReturn.PreviousNav = GetNav(navs, PreviousReferenceDate);
                 return toReturn;
             }
         }
