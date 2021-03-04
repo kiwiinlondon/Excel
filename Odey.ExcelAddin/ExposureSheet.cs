@@ -208,8 +208,8 @@ namespace Odey.ExcelAddin
             new ColumnDef { Name = "Name", Width = 23 },
             new ColumnDef { Name = "% NAV", Width = 7 },
             //new ColumnDef { Name = "Merged From", Width = 0 },
-            new ColumnDef { Name = "Net Position", Width = 0 },
-            new ColumnDef { Name = "Daily Volume", Width = 0 },
+            new ColumnDef { Name = "Target Price", Width = 7 },
+            new ColumnDef { Name = "Basis For Target Price", Width = 23 },
             new ColumnDef { Name = "Upside", Width = 7 },
             new ColumnDef { Name = "Conviction", Width = 9.7 },
             new ColumnDef { Name = "% Annual Volume", Width = 15 },
@@ -291,8 +291,9 @@ namespace Odey.ExcelAddin
                 ++x;
                 if (item != null)
                 {
-                    cell.NumberFormat = "#,##0";
-                    cell.Value2 = item.NetPosition;
+                    var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.TargetPrice.AlphabeticalIndex, watchListItem.RowIndex);
+                    cell.Formula = "=" + address;
+                    cell.NumberFormat = "#,##0.00";                    
                 }
 
                 // AverageVolume
@@ -301,7 +302,7 @@ namespace Odey.ExcelAddin
                 ++x;
                 if (watchListItem != null)
                 {
-                    var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.AverageVolume.AlphabeticalIndex, watchListItem.RowIndex);
+                    var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.BasisForTargetPrice.AlphabeticalIndex, watchListItem.RowIndex);
                     cell.Formula = "=" + address;
                 }
 
