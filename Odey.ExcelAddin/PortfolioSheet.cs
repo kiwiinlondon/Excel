@@ -310,9 +310,9 @@ namespace Odey.ExcelAddin
             }
             
             // Sort
-            table.Sort.SortFields.Add(sortyByColumn.Range, Excel.XlSortOn.xlSortOnValues, Excel.XlSortOrder.xlAscending);
-            table.Sort.Header = Excel.XlYesNoGuess.xlYes;
-            table.Sort.Apply();
+            //table.Sort.SortFields.Add(sortyByColumn.Range, Excel.XlSortOn.xlSortOnValues, Excel.XlSortOrder.xlAscending);
+            //table.Sort.Header = Excel.XlYesNoGuess.xlYes;
+            //table.Sort.Apply();
 
             app.AutoCorrect.AutoFillFormulasInLists = true;
         }
