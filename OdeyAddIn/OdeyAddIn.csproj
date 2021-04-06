@@ -156,10 +156,11 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>odeyappcert.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>670BA1A4842084D08EE13C25AC72242EC894521B</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>D9B64F73265C5EBD27BD3806595DE9D5AC70CE9A</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!--
     This section specifies references for the project.
