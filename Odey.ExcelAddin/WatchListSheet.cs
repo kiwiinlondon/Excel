@@ -25,13 +25,13 @@ namespace Odey.ExcelAddin
 
         public static ColumnDef Ticker = new ColumnDef { Index = 1, AlphabeticalIndex = "A", Name = "Ticker" };
         public static ColumnDef Upside = new ColumnDef { Index = 20, AlphabeticalIndex = "T", Name = "Upside" };
-        public static ColumnDef AverageVolume = new ColumnDef { Index = 47, AlphabeticalIndex = "AU", Name = "Average volume all exchanges 3m" };
+        public static ColumnDef AverageVolume = new ColumnDef { Index = 48, AlphabeticalIndex = "AV", Name = "Average volume all exchanges 3m" };
         public static ColumnDef TargetPrice = new ColumnDef { Index = 5, AlphabeticalIndex = "E", Name = "Target Price" };
         public static ColumnDef BasisForTargetPrice = new ColumnDef { Index = 6, AlphabeticalIndex = "F", Name = "Bais For Target Price" };
-        public static ColumnDef Quality = new ColumnDef { Index = 49, AlphabeticalIndex = "AW", Name = "High (H) or Low (L) Quality?" };
-        public static ColumnDef Manager = new ColumnDef { Index = 50, AlphabeticalIndex = "AX", Name = "Portfolio Manager" };
-        public static ColumnDef Conviction = new ColumnDef { Index = 51, AlphabeticalIndex = "AY", Name = "Conviction Level" };
-        public static ColumnDef LiquidityHL = new ColumnDef { Index = 52, AlphabeticalIndex = "AZ", Name = "High (H) or Low (L) Liquidity" };
+        public static ColumnDef Quality = new ColumnDef { Index = 50, AlphabeticalIndex = "AX", Name = "High (H) or Low (L) Quality?" };
+        public static ColumnDef Manager = new ColumnDef { Index = 51, AlphabeticalIndex = "AY", Name = "Portfolio Manager" };
+        public static ColumnDef Conviction = new ColumnDef { Index = 52, AlphabeticalIndex = "AZ", Name = "Conviction Level" };
+        public static ColumnDef LiquidityHL = new ColumnDef { Index = 53, AlphabeticalIndex = "BA", Name = "High (H) or Low (L) Liquidity" };
 
         public static Dictionary<string, WatchListItem> GetWatchList(Excel.Application app, string[] tickers)
         {
