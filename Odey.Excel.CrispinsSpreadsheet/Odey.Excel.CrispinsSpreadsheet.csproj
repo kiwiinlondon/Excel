@@ -19,7 +19,7 @@
     <PublishUrl>\\oam.odey.com\shared\Applications\CrispinSpreadsheet\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.53</ApplicationVersion>
+    <ApplicationVersion>1.0.0.55</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
@@ -272,7 +272,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>D9B64F73265C5EBD27BD3806595DE9D5AC70CE9A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>783F357CB5FA03A480CCF5109CF5B6394D0A6AFD</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
