@@ -31,7 +31,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         {
             if (System.Diagnostics.Debugger.IsAttached)
             {
-                return "Debug Mode";
+                return "Debug Mode2";
             }
             else
             {

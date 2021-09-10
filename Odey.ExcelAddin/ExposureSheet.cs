@@ -213,6 +213,8 @@ namespace Odey.ExcelAddin
             new ColumnDef { Name = "Upside", Width = 7 },
             new ColumnDef { Name = "Conviction", Width = 9.7 },
             new ColumnDef { Name = "% Annual Volume", Width = 15 },
+            new ColumnDef { Name = "High (H) or Low (L) Liquidity", Width = 20 },
+
         };
 
         private static int WriteExposureTable(Excel.Worksheet sheet, int row, int column, List<ExposureItem> items, Dictionary<string, WatchListItem> watchList, int excessBelow, string nameHeader = "Name", string nameFormula = null)
@@ -337,6 +339,16 @@ namespace Odey.ExcelAddin
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.AverageVolume.AlphabeticalIndex, watchListItem.RowIndex);
                     cell.NumberFormat = "0.0%";
                     cell.Formula = $"={Math.Abs(item.NetPosition)}/{address}/250";
+                }
+
+                cell = sheet.Cells[row + y, column + x];
+                cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
+                if (watchListItem != null)
+                {
+                    var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.LiquidityHL.AlphabeticalIndex, watchListItem.RowIndex);
+                    //cell.NumberFormat = "0.0%";
+                    cell.Formula = $"={address}";
                 }
             }
 
