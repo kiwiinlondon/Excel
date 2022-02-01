@@ -32,10 +32,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
             var rates = _dataAccess.GetFXRates();
 
             MatchFundSet(FundIds.OEI, new FundIds[] {FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
-            MatchFundSet(FundIds.ODIF, null, rates, refreshFormulas);
+            //MatchFundSet(FundIds.ODIF, null, rates, refreshFormulas);
             MatchFundSet(FundIds.SWAN, null, rates, refreshFormulas);
             MatchFundSet(FundIds.GILT, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.ALEG, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OPUS, null, rates, refreshFormulas);
             MatchFundSet(FundIds.OPE, null, rates, refreshFormulas);
             MatchFundSet(FundIds.FDXC, null, rates, refreshFormulas);
