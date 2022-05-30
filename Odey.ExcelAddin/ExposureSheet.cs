@@ -81,7 +81,8 @@ namespace Odey.ExcelAddin
             ++row;
             ++row;
 
-            var nameFormula = (Ribbon1.IsDebug ? "[Ticker]" : "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+            //var nameFormula = (Ribbon1.IsDebug ? "[Ticker]" : "=BDP(\"[Ticker]\",\"SHORT_NAME\")");
+            var nameFormula = "=BDP(\"[Ticker]\",\"SHORT_NAME\")";
             var column = 1;
             var excessBelow = 25;
 
@@ -94,6 +95,27 @@ namespace Odey.ExcelAddin
             var shorts = rows.Where(x => x.IsShort).OrderBy(x => (x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexFuture) || x.InstrumentClassIds.Contains(InstrumentClassIds.EquityIndexOption) ? 1 : 0)).ThenBy(x => x.PercentNAV);
             var shortHeight = WriteExposureTable(sheet, row, column, shorts.ToList(), watchList, excessBelow, "Short", nameFormula);
             column += headers.Length + 5;
+
+            AddConditionalFormatting(sheet, "J");
+            AddConditionalFormatting(sheet, "K");
+            AddConditionalFormatting(sheet, "L");
+            AddConditionalFormatting(sheet, "AA");
+            AddConditionalFormatting(sheet, "AB");
+            AddConditionalFormatting(sheet, "AC");
+
+        }
+
+        private static void AddConditionalFormatting(Excel.Worksheet worksheet, string column)
+        {
+            Excel.ColorScale cfColorScale = (Excel.ColorScale)(worksheet.get_Range($"{column}:{column}", $"{column}:{column}").FormatConditions.AddColorScale(3));
+            cfColorScale.ColorScaleCriteria[1].Type = Excel.XlConditionValueTypes.xlConditionValueLowestValue;
+            cfColorScale.ColorScaleCriteria[1].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(248, 105, 107)); //System.Drawing..ColorTranslator.FromHtml("#F8696B");  // Red
+
+            cfColorScale.ColorScaleCriteria[2].Type = Excel.XlConditionValueTypes.xlConditionValuePercentile;
+            cfColorScale.ColorScaleCriteria[2].Value = 50;
+            cfColorScale.ColorScaleCriteria[2].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(255, 235, 132)); //System.Drawing.ColorTranslator.FromHtml("#FFEB84");  // yellow
+            cfColorScale.ColorScaleCriteria[3].Type = Excel.XlConditionValueTypes.xlConditionValueHighestValue;
+            cfColorScale.ColorScaleCriteria[3].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(99, 190, 123));// System.Drawing.ColorTranslator.FromHtml("#63BE7B");  // green 
         }
 
         public static void Write(Excel.Application app, DateTime date, KeyValuePair<FundIds, string> fund, IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
@@ -209,12 +231,14 @@ namespace Odey.ExcelAddin
             new ColumnDef { Name = "% NAV", Width = 7 },
             //new ColumnDef { Name = "Merged From", Width = 0 },
             new ColumnDef { Name = "Target Price", Width = 7 },
-            new ColumnDef { Name = "Basis For Target Price", Width = 23 },
+            new ColumnDef { Name = "Basis For Target Price", Width = 130 },
             new ColumnDef { Name = "Upside", Width = 7 },
             new ColumnDef { Name = "Conviction", Width = 9.7 },
             new ColumnDef { Name = "% Annual Volume", Width = 15 },
             new ColumnDef { Name = "High (H) or Low (L) Liquidity", Width = 20 },
-
+            new ColumnDef { Name = "Total Score", Width = 12 },
+            new ColumnDef { Name = "Valuation+ Liquidity+ Brook Edge", Width = 12 },
+            new ColumnDef { Name = "Company Score (Quality, Risk, ESG, other)", Width = 15 },
         };
 
         private static int WriteExposureTable(Excel.Worksheet sheet, int row, int column, List<ExposureItem> items, Dictionary<string, WatchListItem> watchList, int excessBelow, string nameHeader = "Name", string nameFormula = null)
@@ -341,6 +365,7 @@ namespace Odey.ExcelAddin
                     cell.Formula = $"={Math.Abs(item.NetPosition)}/{address}/250";
                 }
 
+                //High or LOw LIquidity
                 cell = sheet.Cells[row + y, column + x];
                 cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
                 ++x;
@@ -349,6 +374,34 @@ namespace Odey.ExcelAddin
                     var address = VstoExtensions.GetAddress(WatchListSheet.Name, WatchListSheet.LiquidityHL.AlphabeticalIndex, watchListItem.RowIndex);
                     //cell.NumberFormat = "0.0%";
                     cell.Formula = $"={address}";
+                }
+
+                //Total Score
+                cell = sheet.Cells[row + y, column + x];
+           //     cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
+                if (watchListItem != null)
+                {
+                    cell.NumberFormat = "0.00";
+                    cell.Formula = $"= IF(ISNUMBER(K{row+y} + L{row + y}), (K{row + y} + L{row + y}),\"\")";
+                }
+                //Valuation Liquidity 
+                cell = sheet.Cells[row + y, column + x];
+               // cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
+                if (watchListItem != null)
+                {
+                    cell.NumberFormat = "0.00";
+                    cell.Formula = $"=XLOOKUP(B{row +y},Summary!$C:$C,Summary!$P:$P)";
+                }
+                //Company Score
+                cell = sheet.Cells[row + y, column + x];
+               // cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
+                ++x;
+                if (watchListItem != null)
+                {
+                    cell.NumberFormat = "0.00";
+                    cell.Formula = $"=XLOOKUP(B{row + y},Summary!$C:$C,Summary!$Q:$Q)";
                 }
             }
 
