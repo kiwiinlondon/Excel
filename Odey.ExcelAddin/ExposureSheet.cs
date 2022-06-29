@@ -389,10 +389,11 @@ namespace Odey.ExcelAddin
                 cell = sheet.Cells[row + y, column + x];
                // cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
                 ++x;
+                var sheetName = nameHeader == "ShortSummary" ? "Short" : "Summary";
                 if (watchListItem != null)
                 {
-                    cell.NumberFormat = "0.00";
-                    cell.Formula = $"=XLOOKUP(B{row +y},Summary!$C:$C,Summary!$P:$P)";
+                    cell.NumberFormat = "0.00";                    
+                    cell.Formula = $"=XLOOKUP(B{row +y},{sheetName}!$C:$C,{sheetName}!$P:$P)";
                 }
                 //Company Score
                 cell = sheet.Cells[row + y, column + x];
@@ -401,7 +402,7 @@ namespace Odey.ExcelAddin
                 if (watchListItem != null)
                 {
                     cell.NumberFormat = "0.00";
-                    cell.Formula = $"=XLOOKUP(B{row + y},Summary!$C:$C,Summary!$Q:$Q)";
+                    cell.Formula = $"=XLOOKUP(B{row + y},{sheetName}!$C:$C,{sheetName}!$Q:$Q)";
                 }
             }
 
