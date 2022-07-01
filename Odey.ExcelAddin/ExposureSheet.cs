@@ -99,9 +99,9 @@ namespace Odey.ExcelAddin
             AddConditionalFormatting(sheet, "J");
             AddConditionalFormatting(sheet, "K");
             AddConditionalFormatting(sheet, "L");
-            AddConditionalFormatting(sheet, "AA");
-            AddConditionalFormatting(sheet, "AB");
-            AddConditionalFormatting(sheet, "AC");
+            AddConditionalFormattingShort(sheet, "AA");
+            AddConditionalFormattingShort(sheet, "AB");
+            AddConditionalFormattingShort(sheet, "AC");
 
         }
 
@@ -116,6 +116,19 @@ namespace Odey.ExcelAddin
             cfColorScale.ColorScaleCriteria[2].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(255, 235, 132)); //System.Drawing.ColorTranslator.FromHtml("#FFEB84");  // yellow
             cfColorScale.ColorScaleCriteria[3].Type = Excel.XlConditionValueTypes.xlConditionValueHighestValue;
             cfColorScale.ColorScaleCriteria[3].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(99, 190, 123));// System.Drawing.ColorTranslator.FromHtml("#63BE7B");  // green 
+        }
+
+        private static void AddConditionalFormattingShort(Excel.Worksheet worksheet, string column)
+        {
+            Excel.ColorScale cfColorScale = (Excel.ColorScale)(worksheet.get_Range($"{column}:{column}", $"{column}:{column}").FormatConditions.AddColorScale(3));
+            cfColorScale.ColorScaleCriteria[1].Type = Excel.XlConditionValueTypes.xlConditionValueLowestValue;
+            cfColorScale.ColorScaleCriteria[1].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(99, 190, 123));
+
+            cfColorScale.ColorScaleCriteria[2].Type = Excel.XlConditionValueTypes.xlConditionValuePercentile;
+            cfColorScale.ColorScaleCriteria[2].Value = 50;
+            cfColorScale.ColorScaleCriteria[2].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(255, 235, 132)); 
+            cfColorScale.ColorScaleCriteria[3].Type = Excel.XlConditionValueTypes.xlConditionValueHighestValue;           
+            cfColorScale.ColorScaleCriteria[3].FormatColor.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(248, 105, 107));
         }
 
         public static void Write(Excel.Application app, DateTime date, KeyValuePair<FundIds, string> fund, IEnumerable<PortfolioItem> items, Dictionary<string, WatchListItem> watchList)
@@ -380,22 +393,28 @@ namespace Odey.ExcelAddin
                 cell = sheet.Cells[row + y, column + x];
            //     cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
                 ++x;
+                var sheetName = "Summary";
+                var lookUpColumn = "B";
+                var totalColumn1 = "K";
+                var totalColumn2 = "L";
+                if (nameHeader == "Short")
+                {
+                    sheetName = "ShortSummary";
+                    lookUpColumn = "S";
+                    totalColumn1 = "AB";
+                    totalColumn2 = "AC";
+                }
+
                 if (watchListItem != null)
                 {
                     cell.NumberFormat = "0.00";
-                    cell.Formula = $"= IF(ISNUMBER(K{row+y} + L{row + y}), (K{row + y} + L{row + y}),\"\")";
+                    cell.Formula = $"= IF(ISNUMBER({totalColumn1}{row+y} + {totalColumn2}{row + y}), ({totalColumn1}{row + y} + {totalColumn2}{row + y}),\"\")";
                 }
                 //Valuation Liquidity 
                 cell = sheet.Cells[row + y, column + x];
                // cell.Style = (y < excessBelow ? rowStyle : excessRowStyle);
                 ++x;
-                var sheetName = "Summary";
-                var lookUpColumn = "B";
-                if (nameHeader == "Short")
-                {
-                    sheetName = "ShortSummary";
-                    lookUpColumn = "S";
-                } 
+
                 if (watchListItem != null)
                 {
                     cell.NumberFormat = "0.00";                    
