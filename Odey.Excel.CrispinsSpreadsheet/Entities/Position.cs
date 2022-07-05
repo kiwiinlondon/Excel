@@ -9,16 +9,19 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     public class Position : IChildEntity
     {
-        public Position(Identifier identifier, string name, decimal priceDivisor, InstrumentTypeIds instrumentTypeId, bool invertPNL)
+        public Position(Identifier identifier, string name, decimal priceDivisor, InstrumentTypeIds instrumentTypeId, bool invertPNL,bool isInflationAdjusted)
         {
             Identifier = identifier;
             Name = name;
             InstrumentTypeId = instrumentTypeId;
             PriceDivisor = priceDivisor;
             InvertPNL = invertPNL;
+            IsInflationAdjusted = isInflationAdjusted;
         }
 
         public Identifier Identifier { get; private set; }
+
+        public bool IsInflationAdjusted { get; private set; }
 
         public Row Row { get; set; }
 
@@ -56,6 +59,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public bool OdeyCurrentPriceIsManual { get; set; }
 
         public decimal? OdeyPreviousPrice { get; set; }
+
+        public decimal? PreviousInflationRatio { get; set; }
 
         public bool OdeyPreviousPriceIsManual { get; set; }
 

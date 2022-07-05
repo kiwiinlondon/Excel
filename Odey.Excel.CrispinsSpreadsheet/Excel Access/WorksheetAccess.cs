@@ -310,8 +310,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
             
             WriteName(position.Row, position.InstrumentTypeId, position.Name, updateFormulas);
             WriteCurrency(position.Row, position.InstrumentTypeId, position.Currency, updateFormulas);
-            WriteClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPrice, updateFormulas,position.OdeyPreviousPriceIsManual);
-            WriteCurrentPrice(position.Row, position.InstrumentTypeId, position.OdeyCurrentPrice, updateFormulas, position.OdeyCurrentPriceIsManual, isArgentinaCash);
+            WriteClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPrice, updateFormulas,position.OdeyPreviousPriceIsManual,position.PreviousInflationRatio);
+            WriteCurrentPrice(position.Row, position.InstrumentTypeId, position.OdeyCurrentPrice, updateFormulas, position.OdeyCurrentPriceIsManual, isArgentinaCash,position.IsInflationAdjusted);
             WritePreviousClosePrice(position.Row, position.InstrumentTypeId, position.OdeyPreviousPreviousPrice, updateFormulas, position.OdeyPreviousPreviousPriceIsManual);
 
             WriteFormula(position.Row, ColumnDefinitions[ _priceChangeColumnNumber], GetSubtractFormula(position.RowNumber, _currentPriceColumn, _closePriceColumn), updateFormulas);
@@ -387,20 +387,30 @@ namespace Odey.Excel.CrispinsSpreadsheet
             }
         }
 
-        private void WriteClosePrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyPreviousPrice, bool updateFormulas,bool isManual)
+        private void WriteClosePrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyPreviousPrice, bool updateFormulas,bool isManual,decimal? previousIndexRatio)
         {
             var columnDefinition = ColumnDefinitions[_closePriceColumnNumber];
             if (instrumentTypeId == InstrumentTypeIds.FX || instrumentTypeId == InstrumentTypeIds.PrivatePlacement || isManual)
             {
-                WriteValue(row,  columnDefinition, odeyPreviousPrice, updateFormulas);           
+                decimal? value = odeyPreviousPrice;
+                if (odeyPreviousPrice.HasValue && previousIndexRatio.HasValue)
+                {
+                    value = odeyPreviousPrice.Value * previousIndexRatio.Value;
+                }
+                WriteValue(row,  columnDefinition, value, updateFormulas);           
             }
             else
             {
-                WriteFormula(row, columnDefinition, GetBloombergMnemonicFormula(row.RowNumber, _closePriceColumn), updateFormulas);
+                var formula = GetBloombergMnemonicFormula(row.RowNumber, _closePriceColumn);
+                if (previousIndexRatio.HasValue)
+                {
+                    formula = $"{formula}*{previousIndexRatio.Value}";
+                }
+                WriteFormula(row, columnDefinition,formula , updateFormulas);
             }
         }
 
-        private void WriteCurrentPrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyCurrentPrice, bool updateFormulas, bool isManual,bool isArgentinaCash)
+        private void WriteCurrentPrice(Row row, InstrumentTypeIds instrumentTypeId, decimal? odeyCurrentPrice, bool updateFormulas, bool isManual,bool isArgentinaCash, bool isInflationAdjusted)
         {
             var columnDefinition = ColumnDefinitions[_currentPriceColumnNumber];
             if (instrumentTypeId == InstrumentTypeIds.PrivatePlacement || isManual)
@@ -413,6 +423,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 if (isArgentinaCash)
                 {
                     formula = $"{formula} * {_quoteFactorColumn}{row.RowNumber}";
+                }
+                if (isInflationAdjusted)
+                {
+                    formula = $@"{formula} * BDP({_tickerColumn}{row.RowNumber},""MOST_RECENT_REPORTED_FACTOR"")";
                 }
                 WriteFormula(row, columnDefinition, formula, updateFormulas);
             }
@@ -689,7 +703,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 invertPNL = !existingPosition.Identifier.Code.StartsWith(currency);
             }
             decimal? priceDivisor = GetDecimalValue(row, _priceDivisorColumnNumber);
-            return new Position(existingPosition.Identifier, name, priceDivisor ?? 1, instrumentTypeId, invertPNL) { Currency = currency};
+            return new Position(existingPosition.Identifier, name, priceDivisor ?? 1, instrumentTypeId, invertPNL,false) { Currency = currency};
         }
 
         private bool RowIsTotal(string valueInControlColumn)

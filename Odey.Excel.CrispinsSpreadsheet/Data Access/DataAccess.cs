@@ -42,7 +42,35 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return prices.First();
         }
 
-        
+
+        private decimal? GetIndexRatio(IEnumerable<Portfolio> positions, bool isInflationAdjusted)
+        {
+            positions = positions.Where(a => a != null);
+            if (positions == null || positions.Count() == 0)
+            {
+                return null;
+            }
+
+            var indexRatios = positions.Select(a => a.IndexRatio).Distinct();
+
+            if (indexRatios.Count() != 1)
+            {
+                throw new ApplicationException("Cannot establish unique inflation adjustement");
+            }
+
+            var indexRatio = indexRatios.First();
+           
+
+            if (!isInflationAdjusted && indexRatio.HasValue)
+            {
+                throw new ApplicationException("Not expecting inflation adjustment on non inflation adjusted instrument");
+            }
+            return indexRatio;
+
+
+        }
+
+
 
 
         private DateTime GetPreviousReferenceDate(DateTime referenceDate)
@@ -114,7 +142,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     GetPrice(a.Select(s=>s.Current), a.Key.Instrument.InstrumentTypeId),
                     GetPriceIsManual(a.Select(s => s.PreviousPrevious)),
                     GetPriceIsManual(a.Select(s => s.Previous)),
-                    GetPriceIsManual(a.Select(s => s.Current))
+                    GetPriceIsManual(a.Select(s => s.Current)),
+                    GetIndexRatio(a.Select(s => s.PreviousPrevious),a.Key.Instrument.IsInflationAdjusted),
+                    GetIndexRatio(a.Select(s => s.Previous), a.Key.Instrument.IsInflationAdjusted),
+                    GetIndexRatio(a.Select(s => s.Current), a.Key.Instrument.IsInflationAdjusted)
                     ))
                     .Union(fxToAdd);
            
@@ -217,7 +248,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                         CurrentNetPosition = GetFXNetPosition(a.Select(s => s.Current), a.Key.Instrument)
                     }
                     );
-            return quantities.Select(a => new PortfolioDTO(a.Key.Instrument,a.PreviousNetPosition, a.CurrentNetPosition, null, null, null, false, false, false)
+            return quantities.Select(a => new PortfolioDTO(a.Key.Instrument,a.PreviousNetPosition, a.CurrentNetPosition, null, null, null, false, false, false,null,null,null)
             ).ToList();
         }
 

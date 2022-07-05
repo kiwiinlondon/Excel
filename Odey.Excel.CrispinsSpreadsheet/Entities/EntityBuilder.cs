@@ -255,7 +255,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             {
                 int i = 0;
             }
-            Position position = new Position(dto.Instrument.Identifier, dto.Instrument.Name, dto.Instrument.PriceDivisor, dto.Instrument.InstrumentTypeId, dto.Instrument.InvertPNL);
+            Position position = new Position(dto.Instrument.Identifier, dto.Instrument.Name, dto.Instrument.PriceDivisor, dto.Instrument.InstrumentTypeId, dto.Instrument.InvertPNL, dto.Instrument.IsInflationAdjusted);
             parent.Children.Add(dto.Instrument.Identifier, position);
 
             position.PreviousNetPosition = dto.PreviousNetPosition;
@@ -265,6 +265,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             position.InstrumentTypeId = dto.Instrument.InstrumentTypeId;
             position.OdeyPreviousPreviousPrice = dto.PreviousPreviousPrice;
             position.OdeyPreviousPrice = dto.PreviousPrice;
+            position.PreviousInflationRatio = dto.PreviousIndexRatio;
             position.OdeyCurrentPrice = dto.CurrentPrice;
             position.OdeyCurrentPriceIsManual = dto.CurrentPriceIsManual;
             position.OdeyPreviousPriceIsManual = dto.PreviousPriceIsManual;
@@ -298,7 +299,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             GroupingEntity countryParent = GetWhereChildrenAreCountry(fund);
 
             Country country = GetCountry(countryParent, instrument.ExchangeCountryIsoCode, instrument.ExchangeCountryName,fund);
-            var position = new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor, instrument.InstrumentTypeId,instrument.InvertPNL);
+            var position = new Position(instrument.Identifier, instrument.Name, instrument.PriceDivisor, instrument.InstrumentTypeId,instrument.InvertPNL,instrument.IsInflationAdjusted);
             country.Children.Add(position.Identifier, position);
             
             return country;

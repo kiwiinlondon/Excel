@@ -13,7 +13,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-        public InstrumentDTO (int? instrumentMarketId, string ticker, string name, string assetClass, string exchangeCountryIsoCode, string exchangeCountryName, decimal priceDivisor, InstrumentTypeIds instrumentTypeId, string currency,bool invertPNL)
+        public InstrumentDTO (int? instrumentMarketId, string ticker, string name, string assetClass, string exchangeCountryIsoCode, string exchangeCountryName, decimal priceDivisor, InstrumentTypeIds instrumentTypeId, string currency,bool invertPNL,bool isInflationAdjusted)
         {
             InstrumentTypeId = instrumentTypeId;
             Identifier = new Identifier(instrumentMarketId, ticker);            
@@ -24,11 +24,15 @@ namespace Odey.Excel.CrispinsSpreadsheet
             PriceDivisor = priceDivisor;
             Currency = currency;
             InvertPNL = invertPNL;
+            IsInflationAdjusted = isInflationAdjusted;
         }
+
 
         public Identifier Identifier { get; set; }
 
+
         public bool InvertPNL { get; set; }
+        public bool IsInflationAdjusted { get; set; }
 
         public string Name { get; set; }
 

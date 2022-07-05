@@ -104,7 +104,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     instrumentMarket.PriceDivisor,
                     instrumentTypeId,
                     GetCurrency(instrumentMarket, instrumentTypeId),
-                    false);
+                    false,instrumentMarket.InstrumentClassIdAsEnum == InstrumentClassIds.InflationLinkedBond);
         }
 
         private string GetTicker(InstrumentMarket instrumentMarket, InstrumentTypeIds instrumentTypeId)
@@ -162,7 +162,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     1,
                     InstrumentTypeIds.FX,
                     currency,
-                    invertPNL
+                    invertPNL,
+                    false
                     );
         }
 
