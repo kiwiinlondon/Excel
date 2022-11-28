@@ -299,6 +299,10 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public void WritePosition(Position position, Fund fund, bool updateFormulas)
         {
+            if (position.Identifier.Code != null && position.Identifier.Code.StartsWith("GB00BDX8CX86"))
+            {
+                int i = 0;
+            }
             bool isArgentina = position.Currency == "ARS";
             bool isArgentinaCash = isArgentina && position.InstrumentTypeId == InstrumentTypeIds.FX;
             if (isArgentina)
@@ -406,7 +410,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 {
                     formula = $"{formula}*{previousIndexRatio.Value}";
                 }
-                WriteFormula(row, columnDefinition,formula , updateFormulas);
+                WriteFormula(row, columnDefinition,formula , updateFormulas || previousIndexRatio.HasValue);
             }
         }
 
