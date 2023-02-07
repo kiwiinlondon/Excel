@@ -163,6 +163,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BloombergSecuritySetup.cs" />
+    <Compile Include="Data Access\FXExposure.cs" />
+    <Compile Include="Data Access\FXExposureManager.cs" />
+    <Compile Include="Data Access\FXExposureTypeIds.cs" />
     <Compile Include="Data Access\InstrumentBuilder.cs" />
     <Compile Include="Data Access\DTOGrouping.cs" />
     <Compile Include="Entities\AssetClass.cs" />
@@ -272,7 +275,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>1CC55304E87743E4595C6DE96DE3C7B91AAB2EDE</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>D6F2B6FAAB248BC2D49B11B4A2E8DF13A65EA97D</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>

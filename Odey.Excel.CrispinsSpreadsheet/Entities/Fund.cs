@@ -31,6 +31,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
             
         }
 
+        public FXExposureManager FXExposureManager { get; set; }
+
         public List<Fund> AdditionalFunds { get; set; }
 
         public Fund LastFund { get; set; }

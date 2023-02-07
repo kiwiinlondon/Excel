@@ -100,7 +100,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     .Where(a => a.FundId == fund.FundId
                         && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat).ToList();
 
-                var hedging = BuildHedging(portfolios, fund);
+                fund.FXExposureManager = new FXExposureManager(portfolios, fund);
+                var hedging = fund.FXExposureManager.GetUnhedged();
+                var hedgingOld = fund.FXExposureManager.GetUnhedgedOld(ReferenceDate);
                 var i = hedging.Where(a => a.Position.InstrumentMarketID == 18331).ToList();
                 if (!fund.IncludeHedging)//Share 
                 {
@@ -184,53 +186,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return false;
         }
 
-        private List<E.Portfolio> BuildHedging(List<E.Portfolio> portfolio,Fund fund)
-        {
-            var nav = portfolio.Where(a=>a.ReferenceDate == ReferenceDate).Sum(a => a.MarketValue);
-            var toReturn =  portfolio.Where(a => a.Position.CurrencyID != fund.CurrencyId && a.Position.InstrumentMarket.Instrument.DerivedAssetClassId != (int)DerivedAssetClassIds.ForeignExchange)
-                    .GroupBy(g => new
-                    {
-                        CurrencyID = g.Position.CurrencyID,
-                        Currency = g.Position.Currency,
-                        BookID = g.Position.BookID,
-                        Book = g.Position.Book,
-                        InstrumentMarketID = g.Position.Currency.Instrument.InstrumentMarkets.First().InstrumentMarketID,
-                        InstrumentMarket = g.Position.Currency.Instrument.InstrumentMarkets.First(),
-                        IsAccrual = false,
-                        ReferenceDate = g.ReferenceDate
-                    })
-                    .Where(w=>Math.Abs(w.Sum(a => a.MarketValue))/ nav > .02m)
-                    .Select(s => new Portfolio() { Position = new E.Position()
-                    {
-                        CurrencyID = s.Key.CurrencyID,
-                        Currency = s.Key.Currency,
-                        BookID = s.Key.BookID,
-                        Book = s.Key.Book,
-                        InstrumentMarketID = s.Key.InstrumentMarketID,
-                        InstrumentMarket = s.Key.InstrumentMarket
-                    }, ReferenceDate = s.Key.ReferenceDate, NetPosition = s.Sum(a => a.MarketValue/a.FXRate), Price = s.Average(a => a.FXRate) }).ToList();
 
-
-            return toReturn;
-
-                        //).Select(a => new DTOGrouping
-                        //{
-                        //    Position = new E.Position()
-                        //    {
-                        //        CurrencyID = a.Key.CurrencyID,
-                        //        Currency = a.Key.Currency,
-                        //        BookID = a.Key.BookID,
-                        //        Book = a.Key.Book,
-                        //        InstrumentMarketID = a.Key.InstrumentMarketID,
-                        //        InstrumentMarket = a.Key.InstrumentMarket
-                        //    },
-                        //    PreviousPrevious = new Portfolio() { a.Where(f => f.ReferenceDate == PreviousPreviousReferenceDate).Select(s=> new Portfolio() {  NetPosition = s. }
-                        //    Previous = a.FirstOrDefault(f => f.ReferenceDate == PreviousReferenceDate),
-                        //    Current = a.FirstOrDefault(f => f.ReferenceDate == ReferenceDate),
-                        //}).ToList();
-
-
-                    }
 
 
 

@@ -198,7 +198,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private void MatchFund(Fund fund, List<FXRateDTO> rates, bool refreshFormulas)
         {
-            if (fund.FundId== 5513)
+            if (fund.FundId == 5513)
             {
                 int i = 0;
             }
@@ -208,7 +208,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             _entityBuilder.AddExistingPortfolio(fund, positionsToBeUpdatedFromDatabase);
             UpdatePositionsFromDatabase(positionsToBeUpdatedFromDatabase);
 
-             WriteGroupingEntity(fund, rates, fund, true, refreshFormulas);
+            WriteGroupingEntity(fund, rates, fund, true, refreshFormulas);
         }
 
         private void UpdatePositionsFromDatabase(List<Position> positions)
