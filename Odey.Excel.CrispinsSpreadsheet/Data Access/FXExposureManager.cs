@@ -70,7 +70,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
                 case InstrumentClassIds.ForwardFX:
                     if (instrumentMarket.Instrument.DerivedAssetClassId == (int)DerivedAssetClassIds.ForeignExchange)
                     {
-                        fxExposureTypeId = FXExposureTypeIds.HedgeFX;
+                        fxExposureTypeId = FXExposureTypeIds.PropFX;
                         var label = instrumentMarket.Instrument.Name.Substring(0, 12);
                         return label;
                     }
