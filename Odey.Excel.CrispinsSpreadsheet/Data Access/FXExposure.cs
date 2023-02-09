@@ -1,4 +1,4 @@
-﻿using Odey.Excel.CrispinsSpreadsheet.Data_Access;
+﻿
 using Odey.Framework.Keeley.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 {
     internal class FXExposure
     {
-        public FXExposure(Currency currency, int bookId, InstrumentMarket instrumentMarket, string label, FXExposureTypeIds fxExposureTypeId, DateTime referenceDate, decimal netPosition, decimal price, decimal marketValue)
+        public FXExposure(Currency currency, int bookId, InstrumentMarket instrumentMarket, string label, FXExposureTypeIds fxExposureTypeId, DateTime referenceDate, decimal netPosition, decimal price, decimal marketValue,decimal fundNav)
         {
             BookId = bookId;
             Currency = currency;
@@ -21,6 +21,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             Price = price;
             MarketValue = marketValue;
             FXExposureTypeId = fxExposureTypeId;
+            FundNav = fundNav;
         }
 
         public Currency Currency { get; private set; }
@@ -40,5 +41,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
         public decimal MarketValue { get; private set; }
 
         public FXExposureTypeIds FXExposureTypeId { get; private set; }
+
+        public decimal FundNav { get; private set; }
+
+        public override string ToString()
+        {
+            return $"{Currency.IsoCode} {Label} {Math.Round(MarketValue/FundNav*100,2)}%";
+        }
     }
 }

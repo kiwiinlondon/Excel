@@ -181,6 +181,7 @@
     <Compile Include="Entities\Row.cs" />
     <Compile Include="Excel Access\CellStyler.cs" />
     <Compile Include="Excel Access\CellStyling.cs" />
+    <Compile Include="Excel Access\FXWorksheetAccess.cs" />
     <Compile Include="Excel Access\ExistingGroup.cs" />
     <Compile Include="Excel Access\ExistingPosition.cs" />
     <Compile Include="Entities\Fund.cs" />
@@ -216,6 +217,36 @@
       <DependentUpon>Sheet2.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Excel Access\WorksheetAccess.cs" />
+    <Compile Include="Sheet3.cs">
+      <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet3.Designer.cs">
+      <DependentUpon>Sheet3.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet4.cs">
+      <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet4.Designer.cs">
+      <DependentUpon>Sheet4.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet5.cs">
+      <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet5.Designer.cs">
+      <DependentUpon>Sheet5.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet6.cs">
+      <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet6.Designer.cs">
+      <DependentUpon>Sheet6.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet7.cs">
+      <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Sheet7.Designer.cs">
+      <DependentUpon>Sheet7.Designer.xml</DependentUpon>
+    </Compile>
     <Compile Include="ThisWorkbook.cs">
       <DependentUpon>Crispin Spreadsheet.xlsx</DependentUpon>
     </Compile>
@@ -263,6 +294,31 @@
       <DependentUpon>Sheet2.cs</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Sheet3.Designer.xml">
+      <DependentUpon>Sheet3.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Sheet4.Designer.xml">
+      <DependentUpon>Sheet4.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Sheet5.Designer.xml">
+      <DependentUpon>Sheet5.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Sheet6.Designer.xml">
+      <DependentUpon>Sheet6.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Sheet7.Designer.xml">
+      <DependentUpon>Sheet7.cs</DependentUpon>
+    </None>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -275,7 +331,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>D6F2B6FAAB248BC2D49B11B4A2E8DF13A65EA97D</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>DC0E0B61D5455999A9FA05BD7E22668D71D3D81A</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -287,8 +343,13 @@
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
         <ProjectProperties HostName="Crispin Spreadsheet.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="CS" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\root\Office16\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]Crispin Spreadsheet.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Crispin Spreadsheet.xlsx" GeneratedCodeNamespace="Odey.Excel.CrispinsSpreadsheet" PublishedHash="CFA074DD923E1B0189258B503AE76F3E3824AAD6">
-          <HostItem Name="Sheet1" Code="Sheet1.cs" CanonicalName="Sheet1" PublishedHash="8B186B8CB63D73CE5B0BBA7C51025B1A0AC39D15" DisplayName="Sheet1" Blueprint="Sheet1.Designer.xml" GeneratedCode="Sheet1.Designer.cs" />
-          <HostItem Name="Sheet2" Code="Sheet2.cs" CanonicalName="Sheet2" PublishedHash="BEF85FE6EDA7154310D49F8846F451A8BC6A6027" DisplayName="Portfolio" Blueprint="Sheet2.Designer.xml" GeneratedCode="Sheet2.Designer.cs" />
+          <HostItem Name="Sheet1" Code="Sheet1.cs" CanonicalName="Sheet1" PublishedHash="8B186B8CB63D73CE5B0BBA7C51025B1A0AC39D15" DisplayName="OEI" Blueprint="Sheet1.Designer.xml" GeneratedCode="Sheet1.Designer.cs" />
+          <HostItem Name="Sheet2" Code="Sheet2.cs" CanonicalName="Sheet2" PublishedHash="BEF85FE6EDA7154310D49F8846F451A8BC6A6027" DisplayName="SWAN" Blueprint="Sheet2.Designer.xml" GeneratedCode="Sheet2.Designer.cs" />
+          <HostItem Name="Sheet3" Code="Sheet3.cs" CanonicalName="Sheet3" DisplayName="GILT" Blueprint="Sheet3.Designer.xml" GeneratedCode="Sheet3.Designer.cs" />
+          <HostItem Name="Sheet4" Code="Sheet4.cs" CanonicalName="Sheet4" DisplayName="OPUS" Blueprint="Sheet4.Designer.xml" GeneratedCode="Sheet4.Designer.cs" />
+          <HostItem Name="Sheet5" Code="Sheet5.cs" CanonicalName="Sheet5" DisplayName="OPE" Blueprint="Sheet5.Designer.xml" GeneratedCode="Sheet5.Designer.cs" />
+          <HostItem Name="Sheet6" Code="Sheet6.cs" CanonicalName="Sheet6" DisplayName="FDXC" Blueprint="Sheet6.Designer.xml" GeneratedCode="Sheet6.Designer.cs" />
+          <HostItem Name="Sheet7" Code="Sheet7.cs" CanonicalName="Sheet7" DisplayName="FX" Blueprint="Sheet7.Designer.xml" GeneratedCode="Sheet7.Designer.cs" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.cs" CanonicalName="ThisWorkbook" PublishedHash="33724CC6912D44F817174F905BF6FA11E3957A1E" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.cs" />
         </Host>
       </FlavorProperties>

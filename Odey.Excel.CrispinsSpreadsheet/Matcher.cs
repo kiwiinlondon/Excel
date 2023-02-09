@@ -25,19 +25,23 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
 
         List<Fund> _funds = new List<Fund>();
-        public void Match(bool refreshFormulas) 
+        public void Match(bool refreshFormulas)
         {
             _workbookAccess.DisableCalculations();
 
             var rates = _dataAccess.GetFXRates();
 
-            MatchFundSet(FundIds.OEI, new FundIds[] {FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas);
+            var funds = new List<Fund>();
+            funds.AddRange(MatchFundSet(FundIds.OEI, new FundIds[] { FundIds.OEIMAC, FundIds.OEIMACGBPBSHARECLASS, FundIds.OEIMACGBPBMSHARECLASS }, rates, refreshFormulas));
             //MatchFundSet(FundIds.ODIF, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.SWAN, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.GILT, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.OPUS, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.OPE, null, rates, refreshFormulas);
-            MatchFundSet(FundIds.FDXC, null, rates, refreshFormulas);
+            funds.AddRange(MatchFundSet(FundIds.SWAN, null, rates, refreshFormulas));
+            funds.AddRange(MatchFundSet(FundIds.GILT, null, rates, refreshFormulas));
+            funds.AddRange(MatchFundSet(FundIds.OPUS, null, rates, refreshFormulas));
+            funds.AddRange(MatchFundSet(FundIds.OPE, null, rates, refreshFormulas));
+            funds.AddRange(MatchFundSet(FundIds.FDXC, null, rates, refreshFormulas));
+
+            var fxWorksheet = _workbookAccess.GetFXWorksheetAccess();
+            fxWorksheet.Write(funds, new FundIds[] { FundIds.OEI, FundIds.OEIMAC, FundIds.SWAN });
 
             _workbookAccess.EnableCalculations();
 
@@ -52,11 +56,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         }
 
-        private Fund MatchFundSet(FundIds primaryFundId,FundIds[] additionalFundIds,List<FXRateDTO> rates, bool refreshFormulas)
+        private List<Fund> MatchFundSet(FundIds primaryFundId,FundIds[] additionalFundIds,List<FXRateDTO> rates, bool refreshFormulas)
         {
-                   
+            List<Fund> fundsToReturn = new List<Fund>();
+
+
             var primaryFund = BuildFund(primaryFundId, null,null);
             _funds.Add(primaryFund);
+            fundsToReturn.Add(primaryFund);
             primaryFund.AdditionalFunds = BuildAdditionalFunds(primaryFund,additionalFundIds);
 
             primaryFund.WorksheetAccess.WriteDates(_dataAccess.PreviousReferenceDate, _dataAccess.ReferenceDate);
@@ -65,11 +72,12 @@ namespace Odey.Excel.CrispinsSpreadsheet
             primaryFund.LastFund = primaryFund;
             foreach (Fund fund in primaryFund.AdditionalFunds.OrderBy(a => a.Ordering))
             {
+                fundsToReturn.Add(fund);
                 MatchFund(fund, rates, refreshFormulas);
                 primaryFund.LastFund = fund;
             }
 
-            return primaryFund;
+            return fundsToReturn;
         }
 
 

@@ -48,6 +48,14 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return worksheetAccess;
         }
 
+        public FXWorksheetAccess GetFXWorksheetAccess()
+        {
+            return new FXWorksheetAccess(_workbook.Sheets["FX"]);            
+        }
+
+
+
+
         public void DisableCalculations()
         {
             _workbook.Application.Calculation = XL.XlCalculation.xlCalculationManual;

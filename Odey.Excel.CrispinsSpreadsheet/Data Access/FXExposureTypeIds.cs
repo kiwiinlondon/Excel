@@ -4,19 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Odey.Excel.CrispinsSpreadsheet.Data_Access
+namespace Odey.Excel.CrispinsSpreadsheet
 {
     internal enum FXExposureTypeIds
     {
         PropFX,
         HedgeFX,
         Equity,
-        Cash,
+        
         Gilts,
         GiltSwaps,
-        OtherGovernmentBonds,
         InflationLinkedBonds,
+        IRS,
+        OtherGovernmentBonds,
+        
+        Cash,
         Miscellaneous,
-        IRS
+        
     }
 }

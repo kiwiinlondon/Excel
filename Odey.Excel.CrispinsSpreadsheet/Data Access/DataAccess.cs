@@ -100,9 +100,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     .Where(a => a.FundId == fund.FundId
                         && referenceDates.Contains(a.ReferenceDate) && a.Position.IsAccrual == false && !a.IsFlat).ToList();
 
-                fund.FXExposureManager = new FXExposureManager(portfolios, fund);
+                fund.FXExposureManager = new FXExposureManager(portfolios, fund,ReferenceDate);
                 var hedging = fund.FXExposureManager.GetUnhedged();
-                var hedgingOld = fund.FXExposureManager.GetUnhedgedOld(ReferenceDate);
                 var i = hedging.Where(a => a.Position.InstrumentMarketID == 18331).ToList();
                 if (!fund.IncludeHedging)//Share 
                 {

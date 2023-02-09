@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using E = Odey.Framework.Keeley.Entities;
-using Odey.Excel.CrispinsSpreadsheet.Data_Access;
 
 namespace Odey.Excel.CrispinsSpreadsheet
 {
@@ -17,15 +16,17 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private readonly Fund _fund;
 
-
-        public FXExposureManager(List<E.Portfolio> portfolio, Fund fund)
+        private readonly DateTime _referenceDate;
+        public FXExposureManager(List<E.Portfolio> portfolio, Fund fund,DateTime referenceDate)
         {
             _portfolio = portfolio;
             _fund = fund;
+            _referenceDate = referenceDate;
         }
 
         private List<FXExposure> Build()
         {
+            var navs = _portfolio.GroupBy(a => a.ReferenceDate).ToDictionary(a => a.Key, a => a.Sum(s => s.MarketValue));
             return _portfolio.GroupBy(g => new
             {
                 Currency = g.Position.Currency,
@@ -45,7 +46,8 @@ namespace Odey.Excel.CrispinsSpreadsheet
                     s.Key.ReferenceDate,
                     s.Sum(a => a.MarketValue / a.FXRate),
                     s.Average(a => a.FXRate),
-                    s.Sum(a => a.MarketValue)
+                    s.Sum(a => a.MarketValue),
+                    navs[s.Key.ReferenceDate]
                     )).ToList();
 
         }
@@ -118,19 +120,34 @@ namespace Odey.Excel.CrispinsSpreadsheet
             
         }
 
+        internal List<FXExposure> GetFXExposureOnReferenceDate()
+        {
+            return FXExposure
+                .Where(a => a.ReferenceDate == _referenceDate)
+                .GroupBy(g => new
+                {
+                    CurrencyId = g.CurrencyId,
+                    Nav = g.FundNav
+                })
+                .Where(w => Math.Abs(w.Sum(a => a.MarketValue)) / w.Key.Nav > .02m || w.Key.CurrencyId == (int)CurrencyIds.GBP || w.Key.CurrencyId == (int)CurrencyIds.USD || w.Key.CurrencyId == (int)CurrencyIds.EUR)
+                .SelectMany(a=>a)
+                .ToList();
+        }
+
         public List<E.Portfolio> GetUnhedged()
         {
             var fxExposure = FXExposure;
-            var navs = _portfolio.GroupBy(a=>a.ReferenceDate).ToDictionary(a=>a.Key,a=>a.Sum(s => s.MarketValue));
+            
             var toReturn = fxExposure.Where(a => a.CurrencyId != _fund.CurrencyId && a.FXExposureTypeId != FXExposureTypeIds.PropFX)
                 .GroupBy(g => new
                 {
                     Currency = g.Currency,
                     BookId = g.BookId,
                     InstrumentMarket = g.InstrumentMarket,                    
-                    ReferenceDate = g.ReferenceDate
+                    ReferenceDate = g.ReferenceDate,
+                    Nav = g.FundNav
                 })
-                .Where(w => Math.Abs(w.Sum(a => a.MarketValue)) / navs[w.Key.ReferenceDate] > .02m)
+                .Where(w => Math.Abs(w.Sum(a => a.MarketValue)) / w.Key.Nav > .02m)
                     .Select(s => new Portfolio()
                     {
                         Position = new E.Position()
