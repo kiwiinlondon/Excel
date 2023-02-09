@@ -27,7 +27,6 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public WorksheetAccess Get(XL.Worksheet worksheet, bool isLong)
         {
-           
             if (!isLong)
             {
 

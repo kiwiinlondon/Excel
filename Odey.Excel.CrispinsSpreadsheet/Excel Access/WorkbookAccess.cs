@@ -25,7 +25,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         private Dictionary<string, WorksheetAccess> _worksheets = new Dictionary<string, WorksheetAccess>();
 
-       // private static readonly string _bulkLoadTickerWorksheetName = "Sheet1";
+        // private static readonly string _bulkLoadTickerWorksheetName = "Sheet1";
 
         public WorksheetAccess GetBulkLoadTickerWorksheetAccess()
         {
@@ -33,15 +33,15 @@ namespace Odey.Excel.CrispinsSpreadsheet
         }
 
 
-       
+
 
         public WorksheetAccess GetWorksheetAccess(Fund fund)
         {
             string sheetName = fund.Name;
             WorksheetAccess worksheetAccess;
             if (!_worksheets.TryGetValue(fund.Name, out worksheetAccess))
-            {                
-                worksheetAccess = WorksheetAccessFactory.Instance.Get(_workbook.Sheets[sheetName],fund.IsLongOnly);
+            {
+                worksheetAccess = WorksheetAccessFactory.Instance.Get(_workbook.Sheets[sheetName], fund.IsLongOnly);
                 worksheetAccess.SetupSheet();
                 _worksheets.Add(sheetName, worksheetAccess);
             }
@@ -50,11 +50,9 @@ namespace Odey.Excel.CrispinsSpreadsheet
 
         public FXWorksheetAccess GetFXWorksheetAccess()
         {
-            return new FXWorksheetAccess(_workbook.Sheets["FX"]);            
+            return new FXWorksheetAccess(_workbook.Sheets["FX"]);
+
         }
-
-
-
 
         public void DisableCalculations()
         {

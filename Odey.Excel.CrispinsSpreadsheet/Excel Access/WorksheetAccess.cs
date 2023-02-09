@@ -219,7 +219,7 @@ namespace Odey.Excel.CrispinsSpreadsheet
             return null;
         }
 
-        public static int? GetColumnNumber(string letter)
+        private static int? GetColumnNumber(string letter)
         {
             if (letter == null)
             {
