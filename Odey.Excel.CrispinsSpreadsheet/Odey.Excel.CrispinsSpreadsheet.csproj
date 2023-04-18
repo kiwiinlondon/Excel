@@ -276,7 +276,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>DC0E0B61D5455999A9FA05BD7E22668D71D3D81A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>D6F2B6FAAB248BC2D49B11B4A2E8DF13A65EA97D</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
